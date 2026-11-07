@@ -1316,3 +1316,7 @@
 127.0.0.1:47062 - "GET /health HTTP/1.1" 200
 127.0.0.1:34894 - "GET /health HTTP/1.1" 200
 127.0.0.1:40916 - "GET /health HTTP/1.1" 200
+127.0.0.1:35962 - "GET /health HTTP/1.1" 200
+127.0.0.1:36830 - "GET /health HTTP/1.1" 200
+127.0.0.1:53632 - "GET /health HTTP/1.1" 200
+127.0.0.1:44636 - "GET /health HTTP/1.1" 200
