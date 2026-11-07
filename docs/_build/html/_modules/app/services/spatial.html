@@ -1,0 +1,686 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.spatial &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.spatial</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.spatial</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Spatial location tracking and asset custody management service.</span>
+
+<span class="sd">This module provides the core business logic for tracking physical asset</span>
+<span class="sd">movements, enforcing security clearance interlocks during relocations,</span>
+<span class="sd">and querying the inventory of assets contained within a location hierarchy.</span>
+
+<span class="sd">In defence programme management, the physical custody chain of classified</span>
+<span class="sd">equipment must be rigorously tracked.  This service ensures that every</span>
+<span class="sd">move is audited, that clearance rules are enforced at move time, and that</span>
+<span class="sd">programme managers can answer the question "what equipment is in this room?"</span>
+<span class="sd">with a complete, recursive inventory.</span>
+
+<span class="sd">Core Operations</span>
+<span class="sd">~~~~~~~~~~~~~~~</span>
+
+<span class="sd">1. **Asset Relocation** — ``relocate_asset()`` moves an asset from one</span>
+<span class="sd">   location to another with full clearance validation and audit logging.</span>
+
+<span class="sd">2. **Location Inventory** — ``get_contained_assets()`` recursively finds</span>
+<span class="sd">   all assets within a location and its sub-locations using ltree path</span>
+<span class="sd">   containment.</span>
+
+<span class="sd">3. **Custody History** — ``get_asset_custody_history()`` returns the</span>
+<span class="sd">   complete chronological movement trail for an asset.</span>
+
+<span class="sd">Clearance Interlocks</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Before any move is permitted, the system enforces two security checks:</span>
+
+<span class="sd">1. **User Clearance** — The moving user must have a clearance level at or</span>
+<span class="sd">   above the target location's ``security_classification``.  An OFFICIAL</span>
+<span class="sd">   user cannot move an asset into a SECRET-rated SCIF.</span>
+
+<span class="sd">2. **Asset Classification** — The asset's own ``security_classification``</span>
+<span class="sd">   must not exceed the target location's rating.  A SECRET asset cannot</span>
+<span class="sd">   be placed in an OFFICIAL storage bay.</span>
+
+<span class="sd">If either check fails, the move is rejected with an ``HTTPException``</span>
+<span class="sd">(status 403) and the reason is logged.</span>
+
+<span class="sd">Integration with ForensicAuditLog</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Every successful relocation creates an entry in the :class:`ForensicAuditLog`</span>
+<span class="sd">with action type ``ASSET_RELOCATE``.  This provides a tamper-evident audit</span>
+<span class="sd">trail: if anyone modifies a past audit entry, the SHA-256 hash chain breaks</span>
+<span class="sd">for all subsequent entries.</span>
+
+<span class="sd">Usage Examples</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">Relocate an asset::</span>
+
+<span class="sd">    from app.services.spatial import relocate_asset</span>
+
+<span class="sd">    result = await relocate_asset(</span>
+<span class="sd">        resource_id="asset-uuid",</span>
+<span class="sd">        target_location_id="room-uuid",</span>
+<span class="sd">        user_id=42,</span>
+<span class="sd">        reason="Move test bench to integration bay for Phase 2",</span>
+<span class="sd">        db=session,</span>
+<span class="sd">    )</span>
+
+<span class="sd">Query location inventory::</span>
+
+<span class="sd">    from app.services.spatial import get_contained_assets</span>
+
+<span class="sd">    inventory = await get_contained_assets(</span>
+<span class="sd">        location_id="facility-uuid",</span>
+<span class="sd">        db=session,</span>
+<span class="sd">    )</span>
+<span class="sd">    # Returns all assets in the facility and all sub-locations</span>
+
+<span class="sd">Get custody history::</span>
+
+<span class="sd">    from app.services.spatial import get_asset_custody_history</span>
+
+<span class="sd">    history = await get_asset_custody_history(</span>
+<span class="sd">        resource_id="asset-uuid",</span>
+<span class="sd">        db=session,</span>
+<span class="sd">    )</span>
+<span class="sd">    # Returns chronological list of all moves</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AssetLocationLedger</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span>
+    <span class="n">LocationNode</span><span class="p">,</span>
+    <span class="n">ResourceNode</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.abac</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLEARANCE_LEVELS</span><span class="p">,</span> <span class="n">has_sufficient_clearance</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Asset Relocation</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="relocate_asset">
+<a class="viewcode-back" href="../../../modules.html#app.services.spatial.relocate_asset">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">relocate_asset</span><span class="p">(</span>
+    <span class="n">resource_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_location_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">authorized_by_user_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetLocationLedger</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Relocate a physical asset to a new location with clearance validation.</span>
+
+<span class="sd">    This is the primary entry point for recording a physical asset move.</span>
+<span class="sd">    It performs the following steps atomically:</span>
+
+<span class="sd">    1. **Validate the asset** — Confirm the ResourceNode exists and is</span>
+<span class="sd">       an ASSET or EQUIPMENT type.</span>
+
+<span class="sd">    2. **Validate the target location** — Confirm the LocationNode exists</span>
+<span class="sd">       and is active.</span>
+
+<span class="sd">    3. **Clearance interlock: User vs Location** — Ensure the moving user's</span>
+<span class="sd">       clearance level is at or above the target location's classification.</span>
+
+<span class="sd">    4. **Clearance interlock: Asset vs Location** — Ensure the asset's</span>
+<span class="sd">       classification does not exceed the target location's rating.</span>
+
+<span class="sd">    5. **Execute the move** — Atomically update ``ResourceNode.current_location_id``</span>
+<span class="sd">       and create an ``AssetLocationLedger`` entry.</span>
+
+<span class="sd">    6. **Audit log** — Record the move in ``ForensicAuditLog`` with SHA-256</span>
+<span class="sd">       chained hash.</span>
+
+<span class="sd">    Clearance Rules</span>
+<span class="sd">    ~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    - A user with OFFICIAL clearance cannot move an asset into a SECRET location.</span>
+<span class="sd">    - A SECRET asset cannot be placed in an OFFICIAL-rated storage bay.</span>
+<span class="sd">    - The user must have clearance &gt;= the target location's classification.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    resource_id : str</span>
+<span class="sd">        UUID of the ResourceNode (asset/equipment) being moved.</span>
+<span class="sd">    target_location_id : str</span>
+<span class="sd">        UUID of the LocationNode the asset is being moved to.</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        ID of the user performing the move.</span>
+<span class="sd">    reason : str</span>
+<span class="sd">        Human-readable explanation of why the asset is being moved.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    task_id : str or None</span>
+<span class="sd">        Optional UUID of the PortfolioNode associated with this move.</span>
+<span class="sd">    authorized_by_user_id : int or None</span>
+<span class="sd">        Optional user ID of a supervisor who authorised the move.</span>
+<span class="sd">    notes : str or None</span>
+<span class="sd">        Additional free-text notes about the move.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    AssetLocationLedger</span>
+<span class="sd">        The newly created ledger entry recording this move.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException(404)</span>
+<span class="sd">        If the resource, target location, or user is not found.</span>
+<span class="sd">    HTTPException(403)</span>
+<span class="sd">        If the user lacks clearance for the target location or the asset's</span>
+<span class="sd">        classification exceeds the location's rating.</span>
+<span class="sd">    HTTPException(400)</span>
+<span class="sd">        If the resource is not an ASSET or EQUIPMENT type.</span>
+<span class="sd">    """</span>
+
+    <span class="c1"># 1. Validate the asset exists</span>
+    <span class="n">resource</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">resource_id</span><span class="p">))</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">resource</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Resource </span><span class="si">{</span><span class="n">resource_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check resource type is ASSET or EQUIPMENT</span>
+    <span class="n">resource_type_str</span> <span class="o">=</span> <span class="n">resource</span><span class="o">.</span><span class="n">resource_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">resource</span><span class="o">.</span><span class="n">resource_type</span> <span class="k">else</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="n">resource_type_str</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"ASSET"</span><span class="p">,</span> <span class="s2">"EQUIPMENT"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Resource type '</span><span class="si">{</span><span class="n">resource_type_str</span><span class="si">}</span><span class="s2">' cannot be relocated; only ASSET or EQUIPMENT types are supported"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 2. Validate the target location exists and is active</span>
+    <span class="n">target_location</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">target_location_id</span><span class="p">))</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">target_location</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Target location </span><span class="si">{</span><span class="n">target_location_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_location</span><span class="o">.</span><span class="n">is_active</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Target location </span><span class="si">{</span><span class="n">target_location_id</span><span class="si">}</span><span class="s2"> is not active"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 3. Validate the user exists</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"User </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 4. Clearance interlock: User vs Target Location</span>
+    <span class="c1">#    The moving user must have clearance &gt;= the target location's classification</span>
+    <span class="n">user_clearance</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span>
+        <span class="k">else</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span>
+    <span class="p">)</span>
+    <span class="n">location_clearance</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">target_location</span><span class="o">.</span><span class="n">security_classification</span>
+        <span class="k">if</span> <span class="n">target_location</span><span class="o">.</span><span class="n">security_classification</span>
+        <span class="k">else</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_sufficient_clearance</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">location_clearance</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"User clearance (</span><span class="si">{</span><span class="n">user_clearance</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">) is insufficient to move asset "</span>
+                <span class="sa">f</span><span class="s2">"into location classified </span><span class="si">{</span><span class="n">location_clearance</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="sa">f</span><span class="s2">"Required: </span><span class="si">{</span><span class="n">location_clearance</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> or higher."</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 5. Clearance interlock: Asset vs Target Location</span>
+    <span class="c1">#    The asset's classification must not exceed the location's rating</span>
+    <span class="n">asset_clearance</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">resource</span><span class="o">.</span><span class="n">security_classification</span>
+        <span class="k">if</span> <span class="n">resource</span><span class="o">.</span><span class="n">security_classification</span>
+        <span class="k">else</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Asset clearance must not exceed location rating</span>
+    <span class="n">asset_level</span> <span class="o">=</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">asset_clearance</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">location_level</span> <span class="o">=</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">location_clearance</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">asset_level</span> <span class="o">&gt;</span> <span class="n">location_level</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Asset classification (</span><span class="si">{</span><span class="n">asset_clearance</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">) exceeds target location "</span>
+                <span class="sa">f</span><span class="s2">"rating (</span><span class="si">{</span><span class="n">location_clearance</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">). "</span>
+                <span class="sa">f</span><span class="s2">"A </span><span class="si">{</span><span class="n">asset_clearance</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> asset cannot be placed in a </span><span class="si">{</span><span class="n">location_clearance</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> location."</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 6. Execute the move atomically</span>
+    <span class="c1"># Capture the previous location before updating</span>
+    <span class="n">previous_location_id</span> <span class="o">=</span> <span class="n">resource</span><span class="o">.</span><span class="n">current_location_id</span>
+
+    <span class="c1"># Update the resource's current location</span>
+    <span class="n">resource</span><span class="o">.</span><span class="n">current_location_id</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">target_location_id</span><span class="p">)</span>
+
+    <span class="c1"># Create the immutable ledger entry</span>
+    <span class="n">ledger_entry</span> <span class="o">=</span> <span class="n">AssetLocationLedger</span><span class="p">(</span>
+        <span class="n">resource_node_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">resource_id</span><span class="p">),</span>
+        <span class="n">from_location_id</span><span class="o">=</span><span class="n">previous_location_id</span><span class="p">,</span>
+        <span class="n">to_location_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">target_location_id</span><span class="p">),</span>
+        <span class="n">moved_by_user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="n">authorized_by_user_id</span><span class="o">=</span><span class="n">authorized_by_user_id</span><span class="p">,</span>
+        <span class="n">associated_task_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">task_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">movement_reason</span><span class="o">=</span><span class="n">reason</span><span class="p">,</span>
+        <span class="n">notes</span><span class="o">=</span><span class="n">notes</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ledger_entry</span><span class="p">)</span>
+
+    <span class="c1"># 7. Record in ForensicAuditLog</span>
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">username</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"user:</span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"ASSET_RELOCATE"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"ResourceNode"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">resource_id</span><span class="p">),</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"resource_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">resource_id</span><span class="p">),</span>
+            <span class="s2">"resource_name"</span><span class="p">:</span> <span class="n">resource</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"from_location_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">previous_location_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">previous_location_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"to_location_id"</span><span class="p">:</span> <span class="n">target_location_id</span><span class="p">,</span>
+            <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="n">asset_clearance</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">db_session</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">ledger_entry</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ledger_entry</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Location Inventory</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="get_contained_assets">
+<a class="viewcode-back" href="../../../modules.html#app.services.spatial.get_contained_assets">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_contained_assets</span><span class="p">(</span>
+    <span class="n">location_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Recursively find all assets within a location and its sub-locations.</span>
+
+<span class="sd">    Uses the PostgreSQL ltree subpath operator (``&lt;@``) to find all</span>
+<span class="sd">    LocationNodes that are descendants of the queried location, then</span>
+<span class="sd">    finds all ResourceNodes whose ``current_location_id`` points to</span>
+<span class="sd">    any of those locations.</span>
+
+<span class="sd">    For example, if the queried location is a FACILITY, this will return</span>
+<span class="sd">    all assets in the facility itself, plus all assets in every ZONE,</span>
+<span class="sd">    ROOM, CONTAINER, and SUB_CONTAINER within that facility.</span>
+
+<span class="sd">    Cross-Database Compatibility</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    On PostgreSQL, this uses the native ltree ``@&gt;`` containment operator.</span>
+<span class="sd">    On SQLite (for testing), it falls back to string-based prefix matching</span>
+<span class="sd">    on the ``path`` column.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    location_id : str</span>
+<span class="sd">        UUID of the LocationNode to query.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing:</span>
+
+<span class="sd">        - ``location_id`` (str): UUID of the queried location.</span>
+<span class="sd">        - ``location_name`` (str): Name of the queried location.</span>
+<span class="sd">        - ``tier`` (str): Location tier (SITE, FACILITY, ZONE, etc.).</span>
+<span class="sd">        - ``assets`` (list[dict]): List of asset dictionaries, each with</span>
+<span class="sd">          ``resource_id``, ``name``, ``code``, ``resource_type``,</span>
+<span class="sd">          ``security_classification``, ``standard_hourly_rate``,</span>
+<span class="sd">          and ``is_generic_placeholder``.</span>
+<span class="sd">        - ``total_assets`` (int): Total number of assets found.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException(404)</span>
+<span class="sd">        If the location is not found.</span>
+<span class="sd">    """</span>
+
+    <span class="c1"># 1. Validate the location exists</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">location_id</span><span class="p">))</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">location</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Location </span><span class="si">{</span><span class="n">location_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 2. Find all descendant locations (including the location itself)</span>
+    <span class="c1">#    Using string-based path prefix matching for cross-database compatibility</span>
+    <span class="n">location_path</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">path</span> <span class="ow">or</span> <span class="s2">""</span>
+    <span class="n">descendant_locations</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">LocationNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">location_path</span><span class="si">}</span><span class="s2">.%"</span><span class="p">)</span>
+            <span class="o">|</span> <span class="p">(</span><span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">location_id</span><span class="p">))</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Collect all location IDs (including the root)</span>
+    <span class="n">location_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">UUID</span><span class="p">(</span><span class="n">location_id</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">descendant_locations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">"__iter__"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">LocationNode</span><span class="p">):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">location_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="c1"># 3. Find all resources currently located in any of these locations</span>
+    <span class="n">assets</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">ResourceNode</span><span class="o">.</span><span class="n">current_location_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">location_ids</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Build the asset list</span>
+    <span class="n">asset_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">asset</span> <span class="ow">in</span> <span class="n">assets</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="s2">"__iter__"</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">asset</span><span class="p">,</span> <span class="n">ResourceNode</span><span class="p">):</span>
+            <span class="n">asset</span> <span class="o">=</span> <span class="n">asset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">asset_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"resource_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">asset</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"code"</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">code</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"resource_type"</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">resource_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">asset</span><span class="o">.</span><span class="n">resource_type</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"security_classification"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">asset</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">if</span> <span class="n">asset</span><span class="o">.</span><span class="n">security_classification</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="s2">"standard_hourly_rate"</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">standard_hourly_rate</span><span class="p">,</span>
+            <span class="s2">"is_generic_placeholder"</span><span class="p">:</span> <span class="n">asset</span><span class="o">.</span><span class="n">is_generic_placeholder</span><span class="p">,</span>
+        <span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"location_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">location</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"location_name"</span><span class="p">:</span> <span class="n">location</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"tier"</span><span class="p">:</span> <span class="n">location</span><span class="o">.</span><span class="n">tier</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">location</span><span class="o">.</span><span class="n">tier</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"assets"</span><span class="p">:</span> <span class="n">asset_list</span><span class="p">,</span>
+        <span class="s2">"total_assets"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">asset_list</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Asset Custody History</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="get_asset_custody_history">
+<a class="viewcode-back" href="../../../modules.html#app.services.spatial.get_asset_custody_history">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_asset_custody_history</span><span class="p">(</span>
+    <span class="n">resource_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the complete chronological custody history for an asset.</span>
+
+<span class="sd">    Retrieves all ``AssetLocationLedger`` entries for the specified asset,</span>
+<span class="sd">    ordered from oldest to newest.  This forms a complete chain of custody</span>
+<span class="sd">    trail showing where the asset has been at all times.</span>
+
+<span class="sd">    Each entry includes the source and destination location names for</span>
+<span class="sd">    human-readable display.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    resource_id : str</span>
+<span class="sd">        UUID of the ResourceNode whose custody history is requested.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing:</span>
+
+<span class="sd">        - ``resource_id`` (str): UUID of the asset.</span>
+<span class="sd">        - ``resource_name`` (str): Name of the asset.</span>
+<span class="sd">        - ``current_location_id`` (str or None): Current location UUID.</span>
+<span class="sd">        - ``current_location_name`` (str or None): Current location name.</span>
+<span class="sd">        - ``entries`` (list[dict]): Chronological list of custody entries,</span>
+<span class="sd">          each with ``id``, ``from_location_id``, ``to_location_id``,</span>
+<span class="sd">          ``from_location_name``, ``to_location_name``, ``moved_by_user_id``,</span>
+<span class="sd">          ``authorized_by_user_id``, ``associated_task_id``,</span>
+<span class="sd">          ``movement_timestamp``, ``movement_reason``, and ``notes``.</span>
+<span class="sd">        - ``total_moves`` (int): Total number of recorded moves.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException(404)</span>
+<span class="sd">        If the resource is not found.</span>
+<span class="sd">    """</span>
+
+    <span class="c1"># 1. Validate the resource exists</span>
+    <span class="n">resource</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">resource_id</span><span class="p">))</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">resource</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Resource </span><span class="si">{</span><span class="n">resource_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 2. Get current location name</span>
+    <span class="n">current_location_name</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">resource</span><span class="o">.</span><span class="n">current_location_id</span><span class="p">:</span>
+        <span class="n">current_location</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">select</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">resource</span><span class="o">.</span><span class="n">current_location_id</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">current_location</span><span class="p">:</span>
+            <span class="n">current_location_name</span> <span class="o">=</span> <span class="n">current_location</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="c1"># 3. Get all ledger entries ordered by timestamp</span>
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">AssetLocationLedger</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">AssetLocationLedger</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">resource_id</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">AssetLocationLedger</span><span class="o">.</span><span class="n">movement_timestamp</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Build the entry list with location names</span>
+    <span class="n">entry_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+        <span class="n">from_location_name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">to_location_name</span> <span class="o">=</span> <span class="s2">""</span>
+
+        <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">from_location_id</span><span class="p">:</span>
+            <span class="n">from_loc</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                <span class="n">select</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                    <span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">entry</span><span class="o">.</span><span class="n">from_location_id</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">from_loc</span><span class="p">:</span>
+                <span class="n">from_location_name</span> <span class="o">=</span> <span class="n">from_loc</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">to_location_id</span><span class="p">:</span>
+            <span class="n">to_loc</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                <span class="n">select</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                    <span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">entry</span><span class="o">.</span><span class="n">to_location_id</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">to_loc</span><span class="p">:</span>
+                <span class="n">to_location_name</span> <span class="o">=</span> <span class="n">to_loc</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span>
+
+        <span class="n">entry_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"from_location_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">from_location_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">from_location_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"to_location_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">to_location_id</span><span class="p">),</span>
+            <span class="s2">"from_location_name"</span><span class="p">:</span> <span class="n">from_location_name</span><span class="p">,</span>
+            <span class="s2">"to_location_name"</span><span class="p">:</span> <span class="n">to_location_name</span><span class="p">,</span>
+            <span class="s2">"moved_by_user_id"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">moved_by_user_id</span><span class="p">,</span>
+            <span class="s2">"authorized_by_user_id"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">authorized_by_user_id</span><span class="p">,</span>
+            <span class="s2">"associated_task_id"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">associated_task_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">associated_task_id</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="s2">"movement_timestamp"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">movement_timestamp</span><span class="p">,</span>
+            <span class="s2">"movement_reason"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">movement_reason</span><span class="p">,</span>
+            <span class="s2">"notes"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">notes</span><span class="p">,</span>
+        <span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"resource_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"resource_name"</span><span class="p">:</span> <span class="n">resource</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"current_location_id"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">current_location_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">resource</span><span class="o">.</span><span class="n">current_location_id</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+        <span class="s2">"current_location_name"</span><span class="p">:</span> <span class="n">current_location_name</span><span class="p">,</span>
+        <span class="s2">"entries"</span><span class="p">:</span> <span class="n">entry_list</span><span class="p">,</span>
+        <span class="s2">"total_moves"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry_list</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

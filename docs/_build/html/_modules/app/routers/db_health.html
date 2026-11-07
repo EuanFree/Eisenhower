@@ -1,0 +1,513 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.db_health &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.db_health</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.db_health</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Database health and maintenance API router.</span>
+
+<span class="sd">This module exposes the ``/api/v1/admin/db-health`` endpoint for querying</span>
+<span class="sd">database health metrics and triggering maintenance tasks. It provides</span>
+<span class="sd">administrators with visibility into replication lag, index fragmentation,</span>
+<span class="sd">table bloat, and WAL archiving status.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">~~~~~~~~~</span>
+
+<span class="sd">- **GET /api/v1/admin/db-health** — Returns current database health metrics</span>
+<span class="sd">  without running maintenance.</span>
+<span class="sd">- **POST /api/v1/admin/db-health/run-maintenance** — Triggers a full</span>
+<span class="sd">  maintenance run (VACUUM ANALYZE, re-index) and returns the results.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All endpoints require JWT authentication. In production, these endpoints</span>
+<span class="sd">should be accessible only to administrators with clearance ≥ SECRET.</span>
+
+<span class="sd">The maintenance tasks require superuser privileges on the PostgreSQL</span>
+<span class="sd">database. In a Patroni HA cluster, maintenance should be run only on</span>
+<span class="sd">the primary node.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.db_maintenance</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DatabaseHealthMetrics</span><span class="p">,</span>
+    <span class="n">IndexHealth</span><span class="p">,</span>
+    <span class="n">ReplicationStatus</span><span class="p">,</span>
+    <span class="n">TableHealth</span><span class="p">,</span>
+    <span class="n">get_health_metrics</span><span class="p">,</span>
+    <span class="n">run_maintenance</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Create router</span>
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Response Schemas</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="IndexHealthResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.db_health.IndexHealthResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IndexHealthResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response schema for index health metrics.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    index_name : str</span>
+<span class="sd">        Name of the index.</span>
+<span class="sd">    table_name : str</span>
+<span class="sd">        Name of the table the index belongs to.</span>
+<span class="sd">    index_size_bytes : int</span>
+<span class="sd">        Current size of the index on disk.</span>
+<span class="sd">    index_scans : int</span>
+<span class="sd">        Number of index scans since last statistics reset.</span>
+<span class="sd">    seq_scans : int</span>
+<span class="sd">        Number of sequential scans on the table.</span>
+<span class="sd">    idx_scan_ratio : float</span>
+<span class="sd">        Ratio of index scans to total scans.</span>
+<span class="sd">    bloat_estimate_percent : float</span>
+<span class="sd">        Estimated index bloat percentage.</span>
+<span class="sd">    """</span>
+
+    <span class="n">index_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">index_size_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">index_scans</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">seq_scans</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">idx_scan_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">bloat_estimate_percent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span></div>
+
+
+
+<div class="viewcode-block" id="ReplicationStatusResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.db_health.ReplicationStatusResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ReplicationStatusResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response schema for replication status.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    standby_name : str</span>
+<span class="sd">        Name of the standby node.</span>
+<span class="sd">    state : str</span>
+<span class="sd">        Current replication state.</span>
+<span class="sd">    lag_bytes : int</span>
+<span class="sd">        Replication lag in bytes.</span>
+<span class="sd">    replay_lag_seconds : float or None</span>
+<span class="sd">        Time difference between primary commit and standby replay.</span>
+<span class="sd">    is_synchronous : bool</span>
+<span class="sd">        True if this is a synchronous replica.</span>
+<span class="sd">    """</span>
+
+    <span class="n">standby_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">state</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"unknown"</span>
+    <span class="n">lag_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">replay_lag_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">is_synchronous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="TableHealthResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.db_health.TableHealthResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TableHealthResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response schema for table health metrics.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    table_name : str</span>
+<span class="sd">        Name of the table.</span>
+<span class="sd">    row_count : int</span>
+<span class="sd">        Estimated number of live rows.</span>
+<span class="sd">    dead_tuple_count : int</span>
+<span class="sd">        Number of dead tuples awaiting VACUUM.</span>
+<span class="sd">    dead_tuple_ratio : float</span>
+<span class="sd">        Ratio of dead tuples to live rows.</span>
+<span class="sd">    table_size_bytes : int</span>
+<span class="sd">        Size of the table on disk.</span>
+<span class="sd">    index_size_bytes : int</span>
+<span class="sd">        Total size of all indexes on the table.</span>
+<span class="sd">    """</span>
+
+    <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">row_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dead_tuple_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dead_tuple_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">table_size_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">index_size_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="DatabaseHealthResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.db_health.DatabaseHealthResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatabaseHealthResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response schema for comprehensive database health metrics.</span>
+
+<span class="sd">    This is the primary response returned by the ``GET /db-health``</span>
+<span class="sd">    endpoint. It provides a complete snapshot of database health</span>
+<span class="sd">    including replication status, table bloat, index fragmentation,</span>
+<span class="sd">    and WAL archiving status.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    is_primary : bool</span>
+<span class="sd">        True if this node is the primary (read/write) node.</span>
+<span class="sd">    uptime_seconds : float</span>
+<span class="sd">        How long the PostgreSQL instance has been running.</span>
+<span class="sd">    total_connections : int</span>
+<span class="sd">        Current number of active client connections.</span>
+<span class="sd">    max_connections : int</span>
+<span class="sd">        Maximum allowed connections.</span>
+<span class="sd">    replication_statuses : list of ReplicationStatusResponse</span>
+<span class="sd">        Replication status for each connected standby.</span>
+<span class="sd">    table_health : list of TableHealthResponse</span>
+<span class="sd">        Health metrics for high-churn tables.</span>
+<span class="sd">    index_health : list of IndexHealthResponse</span>
+<span class="sd">        Health metrics for critical indexes.</span>
+<span class="sd">    wal_archive_status : dict</span>
+<span class="sd">        WAL archiving configuration and status.</span>
+<span class="sd">    maintenance_errors : list of str</span>
+<span class="sd">        Errors from the last maintenance run.</span>
+<span class="sd">    """</span>
+
+    <span class="n">is_primary</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">uptime_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">total_connections</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_connections</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">replication_statuses</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReplicationStatusResponse</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">table_health</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TableHealthResponse</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">index_health</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">IndexHealthResponse</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">wal_archive_status</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">maintenance_errors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+
+<div class="viewcode-block" id="MaintenanceResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.db_health.MaintenanceResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MaintenanceResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response schema for maintenance run results.</span>
+
+<span class="sd">    Returned by the ``POST /db-health/run-maintenance`` endpoint after</span>
+<span class="sd">    completing VACUUM ANALYZE and re-index operations.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    success : bool</span>
+<span class="sd">        True if maintenance completed without critical errors.</span>
+<span class="sd">    health : DatabaseHealthResponse</span>
+<span class="sd">        Health metrics collected after maintenance.</span>
+<span class="sd">    message : str</span>
+<span class="sd">        Human-readable summary of the maintenance run.</span>
+<span class="sd">    """</span>
+
+    <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">health</span><span class="p">:</span> <span class="n">DatabaseHealthResponse</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_metrics_to_response</span><span class="p">(</span><span class="n">metrics</span><span class="p">:</span> <span class="n">DatabaseHealthMetrics</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DatabaseHealthResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert DatabaseHealthMetrics dataclass to Pydantic response.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    metrics : DatabaseHealthMetrics</span>
+<span class="sd">        The dataclass containing raw health metrics.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DatabaseHealthResponse</span>
+<span class="sd">        Pydantic model suitable for JSON serialisation.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">DatabaseHealthResponse</span><span class="p">(</span>
+        <span class="n">is_primary</span><span class="o">=</span><span class="n">metrics</span><span class="o">.</span><span class="n">is_primary</span><span class="p">,</span>
+        <span class="n">uptime_seconds</span><span class="o">=</span><span class="n">metrics</span><span class="o">.</span><span class="n">uptime_seconds</span><span class="p">,</span>
+        <span class="n">total_connections</span><span class="o">=</span><span class="n">metrics</span><span class="o">.</span><span class="n">total_connections</span><span class="p">,</span>
+        <span class="n">max_connections</span><span class="o">=</span><span class="n">metrics</span><span class="o">.</span><span class="n">max_connections</span><span class="p">,</span>
+        <span class="n">replication_statuses</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">ReplicationStatusResponse</span><span class="p">(</span>
+                <span class="n">standby_name</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">standby_name</span><span class="p">,</span>
+                <span class="n">state</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">state</span><span class="p">,</span>
+                <span class="n">lag_bytes</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">lag_bytes</span><span class="p">,</span>
+                <span class="n">replay_lag_seconds</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">replay_lag_seconds</span><span class="p">,</span>
+                <span class="n">is_synchronous</span><span class="o">=</span><span class="n">r</span><span class="o">.</span><span class="n">is_synchronous</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">replication_statuses</span>
+        <span class="p">],</span>
+        <span class="n">table_health</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">TableHealthResponse</span><span class="p">(</span>
+                <span class="n">table_name</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">table_name</span><span class="p">,</span>
+                <span class="n">row_count</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">row_count</span><span class="p">,</span>
+                <span class="n">dead_tuple_count</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">dead_tuple_count</span><span class="p">,</span>
+                <span class="n">dead_tuple_ratio</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">dead_tuple_ratio</span><span class="p">,</span>
+                <span class="n">table_size_bytes</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">table_size_bytes</span><span class="p">,</span>
+                <span class="n">index_size_bytes</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">index_size_bytes</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">table_health</span>
+        <span class="p">],</span>
+        <span class="n">index_health</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">IndexHealthResponse</span><span class="p">(</span>
+                <span class="n">index_name</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">index_name</span><span class="p">,</span>
+                <span class="n">table_name</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">table_name</span><span class="p">,</span>
+                <span class="n">index_size_bytes</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">index_size_bytes</span><span class="p">,</span>
+                <span class="n">index_scans</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">index_scans</span><span class="p">,</span>
+                <span class="n">seq_scans</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">seq_scans</span><span class="p">,</span>
+                <span class="n">idx_scan_ratio</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">idx_scan_ratio</span><span class="p">,</span>
+                <span class="n">bloat_estimate_percent</span><span class="o">=</span><span class="n">i</span><span class="o">.</span><span class="n">bloat_estimate_percent</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">index_health</span>
+        <span class="p">],</span>
+        <span class="n">wal_archive_status</span><span class="o">=</span><span class="n">metrics</span><span class="o">.</span><span class="n">wal_archive_status</span><span class="p">,</span>
+        <span class="n">maintenance_errors</span><span class="o">=</span><span class="n">metrics</span><span class="o">.</span><span class="n">maintenance_errors</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="get_db_health">
+<a class="viewcode-back" href="../../../modules.html#app.routers.db_health.get_db_health">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/db-health"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">DatabaseHealthResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Get database health metrics"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Returns comprehensive database health metrics including replication "</span>
+        <span class="s2">"lag, table bloat, index fragmentation, and WAL archiving status. "</span>
+        <span class="s2">"This endpoint queries system catalogs but does not run maintenance."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_db_health</span><span class="p">(</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DatabaseHealthResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get current database health metrics.</span>
+
+<span class="sd">    Returns a snapshot of database health without running any maintenance</span>
+<span class="sd">    tasks. This is a read-only operation that queries PostgreSQL system</span>
+<span class="sd">    catalogs (``pg_stat_activity``, ``pg_stat_replication``,</span>
+<span class="sd">    ``pg_stat_user_tables``, ``pg_stat_user_indexes``, ``pg_stat_archiver``).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user (required for access control).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DatabaseHealthResponse</span>
+<span class="sd">        Complete health metrics snapshot.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        500 if the database is unreachable or health collection fails.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">get_health_metrics</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">_metrics_to_response</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Failed to collect health metrics: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Failed to collect database health metrics: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="run_db_maintenance">
+<a class="viewcode-back" href="../../../modules.html#app.routers.db_health.run_db_maintenance">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/db-health/run-maintenance"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">MaintenanceResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Run database maintenance"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Triggers a full database maintenance run including VACUUM ANALYZE "</span>
+        <span class="s2">"on high-churn tables and re-indexing of the ltree GiST path index. "</span>
+        <span class="s2">"Returns health metrics collected after maintenance completes."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run_db_maintenance</span><span class="p">(</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaintenanceResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run database maintenance and return health metrics.</span>
+
+<span class="sd">    Executes the following maintenance tasks in order:</span>
+
+<span class="sd">    1. **VACUUM ANALYZE** on all high-churn tables (``universal_breakdown_nodes``,</span>
+<span class="sd">       ``forensic_audit_logs``, ``node_blockers``, etc.).</span>
+<span class="sd">    2. **Re-index** the ltree GiST path index (``ix_ubn_path_gist``) using</span>
+<span class="sd">       ``REINDEX CONCURRENTLY`` to avoid locking the table.</span>
+<span class="sd">    3. **Collect** comprehensive health metrics after maintenance.</span>
+
+<span class="sd">    This operation requires superuser privileges on the PostgreSQL database.</span>
+<span class="sd">    In a Patroni HA cluster, maintenance should be run only on the primary node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user (required for access control).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MaintenanceResponse</span>
+<span class="sd">        Maintenance results with post-maintenance health metrics.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        500 if maintenance fails critically.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">run_maintenance</span><span class="p">()</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">_metrics_to_response</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+
+        <span class="n">success</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">maintenance_errors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="s2">"Database maintenance completed successfully."</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Database maintenance completed with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">maintenance_errors</span><span class="p">)</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="sa">f</span><span class="s2">"error(s). Check maintenance_errors for details."</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MaintenanceResponse</span><span class="p">(</span>
+            <span class="n">success</span><span class="o">=</span><span class="n">success</span><span class="p">,</span>
+            <span class="n">health</span><span class="o">=</span><span class="n">response</span><span class="p">,</span>
+            <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Database maintenance failed: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Database maintenance failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

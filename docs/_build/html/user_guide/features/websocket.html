@@ -1,0 +1,167 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-Time Collaboration &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Real-Time Collaboration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/websocket.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="real-time-collaboration">
+<h1>Real-Time Collaboration<a class="headerlink" href="#real-time-collaboration" title="Link to this heading"></a></h1>
+<p>See live updates from other users working on the same project data.</p>
+<section id="websocket">
+<h2>WebSocket<a class="headerlink" href="#websocket" title="Link to this heading"></a></h2>
+<p>WebSocket endpoint for real-time project collaboration.</p>
+<p>This module provides the WebSocket endpoint that clients connect to for
+real-time presence tracking and cache invalidation.</p>
+</section>
+<section id="endpoint">
+<h2>Endpoint<a class="headerlink" href="#endpoint" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/ws/projects/{project_id}</span></code></p>
+<p>The client connects using a WebSocket URL with a JWT token in the query
+string:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>ws://localhost:8000/ws/projects/{project_id}?token={jwt_token}
+</pre></div>
+</div>
+</section>
+<section id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Link to this heading"></a></h2>
+<p>The JWT token is extracted from the <code class="docutils literal notranslate"><span class="pre">token</span></code> query parameter and validated
+using the same <code class="docutils literal notranslate"><span class="pre">decode_access_token</span></code> function used by HTTP endpoints.
+If the token is invalid or expired, the connection is closed with code
+1008 (Policy Violation).</p>
+</section>
+<section id="message-protocol">
+<h2>Message Protocol<a class="headerlink" href="#message-protocol" title="Link to this heading"></a></h2>
+<p>Once connected, the client subscribes to the project channel by sending
+a <code class="docutils literal notranslate"><span class="pre">SUBSCRIBE</span></code> message.  The server then sends a <code class="docutils literal notranslate"><span class="pre">WELCOME</span></code> message
+containing the current presence state of all other users in the project.</p>
+<p>The client should send <code class="docutils literal notranslate"><span class="pre">HEARTBEAT</span></code> messages every 15 seconds to maintain
+the connection and update its focus state.  If no heartbeat is received
+within 30 seconds, the connection is considered stale.</p>
+</section>
+<section id="example-client-flow">
+<h2>Example Client Flow<a class="headerlink" href="#example-client-flow" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Connect: <code class="docutils literal notranslate"><span class="pre">new</span> <span class="pre">WebSocket('/ws/projects/{id}?token={token}')</span></code></p></li>
+<li><p>Subscribe: <code class="docutils literal notranslate"><span class="pre">ws.send(JSON.stringify({type:</span> <span class="pre">'SUBSCRIBE',</span> <span class="pre">project_id:</span> <span class="pre">id}))</span></code></p></li>
+<li><p>Receive <code class="docutils literal notranslate"><span class="pre">WELCOME</span></code> with current presence state.</p></li>
+<li><p>Send <code class="docutils literal notranslate"><span class="pre">HEARTBEAT</span></code> every 15 seconds with current focus state.</p></li>
+<li><p>Handle incoming events (<code class="docutils literal notranslate"><span class="pre">NODE_MUTATED</span></code>, <code class="docutils literal notranslate"><span class="pre">USER_FOCUS_CHANGED</span></code>, etc.).</p></li>
+<li><p>On disconnect, send <code class="docutils literal notranslate"><span class="pre">UNSUBSCRIBE</span></code> or let the server detect stale state.</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

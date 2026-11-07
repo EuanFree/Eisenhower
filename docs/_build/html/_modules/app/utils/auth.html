@@ -1,0 +1,529 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.utils.auth &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.utils.auth</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.utils.auth</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Authentication dependencies for FastAPI endpoints.</span>
+
+<span class="sd">This module provides FastAPI dependency functions that enforce</span>
+<span class="sd">authentication and authorization on API endpoints.</span>
+
+<span class="sd">How It Works</span>
+<span class="sd">~~~~~~~~~~~~</span>
+
+<span class="sd">1. **HTTPBearer** — Extracts the JWT token from the ``Authorization``</span>
+<span class="sd">   header (``Bearer &lt;token&gt;``).</span>
+<span class="sd">2. **get_current_user** — Decodes and validates the JWT token, then</span>
+<span class="sd">   looks up the user in the database.  Used as a dependency on any</span>
+<span class="sd">   endpoint that requires authentication.</span>
+<span class="sd">3. **get_pki_authenticated_user** — Extracts client certificate headers</span>
+<span class="sd">   forwarded by the hardened Nginx reverse proxy for PKI/mTLS</span>
+<span class="sd">   authentication (UK MOD JSP 440 / JSP 604 compliant).</span>
+<span class="sd">4. **require_admin** / **require_manager** — Wraps ``get_current_user``</span>
+<span class="sd">   and additionally checks the user's role.  Used on endpoints that</span>
+<span class="sd">   require elevated privileges.</span>
+
+<span class="sd">PKI / mTLS Authentication</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">In classified operational environments, users authenticate via smartcard</span>
+<span class="sd">(PKI) rather than username/password.  The hardened Nginx reverse proxy</span>
+<span class="sd">handles the TLS handshake and forwards the client certificate details</span>
+<span class="sd">as HTTP headers:</span>
+
+<span class="sd">- **X-SSL-Client-Cert-Subject-DN** — Distinguished Name of the client</span>
+<span class="sd">  certificate (contains UPN, EDIPI, or national identity number).</span>
+<span class="sd">- **X-SSL-Client-Cert-Verify** — Must equal ``'SUCCESS'`` for a valid</span>
+<span class="sd">  certificate chain.</span>
+<span class="sd">- **X-SSL-Client-Cert-Serial** — Certificate serial number for CRL/OCSP</span>
+<span class="sd">  revocation checking.</span>
+
+<span class="sd">The ``get_pki_authenticated_user`` dependency parses these headers,</span>
+<span class="sd">validates the certificate, and binds the session to the user's</span>
+<span class="sd">clearance level and caveats.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    @router.get("/admin-only")</span>
+<span class="sd">    def admin_endpoint(current_user: User = Depends(require_admin)):</span>
+<span class="sd">        return {"message": "Admin access granted"}</span>
+
+<span class="sd">Error Responses</span>
+<span class="sd">~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- **401 Unauthorized** — Token is missing, invalid, expired, or the</span>
+<span class="sd">  user does not exist / is inactive.</span>
+<span class="sd">- **403 Forbidden** — User is authenticated but lacks the required role.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPBearer</span><span class="p">,</span> <span class="n">HTTPAuthorizationCredentials</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">decode_access_token</span>
+
+<span class="n">security</span> <span class="o">=</span> <span class="n">HTTPBearer</span><span class="p">()</span>
+<span class="sd">"""HTTP Bearer scheme for extracting JWT tokens from request headers.</span>
+
+<span class="sd">This extracts the token from the ``Authorization: Bearer &lt;token&gt;``</span>
+<span class="sd">header.  If the header is missing or malformed, FastAPI automatically</span>
+<span class="sd">returns a 401 error.</span>
+<span class="sd">"""</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># CRL / OCSP Revocation Cache</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="c1"># In production, this would be populated from offline CRL/OCSP data</span>
+<span class="c1"># stored on the air-gapped server.  For now, it is an empty set.</span>
+<span class="n">_revoked_serials</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="sd">"""Set of revoked certificate serial numbers loaded from offline CRL cache.</span>
+
+<span class="sd">In a classified environment, CRL data is imported via optical media or</span>
+<span class="sd">USB diode and loaded into this cache at server startup.</span>
+<span class="sd">"""</span>
+
+
+<div class="viewcode-block" id="load_crl_cache">
+<a class="viewcode-back" href="../../../modules.html#app.utils.auth.load_crl_cache">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_crl_cache</span><span class="p">(</span><span class="n">serials</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Load revoked certificate serial numbers into the CRL cache.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    serials : list of str</span>
+<span class="sd">        Certificate serial numbers that have been revoked.</span>
+<span class="sd">    """</span>
+    <span class="n">_revoked_serials</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">serials</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_certificate_revoked">
+<a class="viewcode-back" href="../../../modules.html#app.utils.auth.is_certificate_revoked">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_certificate_revoked</span><span class="p">(</span><span class="n">serial</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check whether a certificate serial number is revoked.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    serial : str</span>
+<span class="sd">        Certificate serial number to check.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        ``True`` if the certificate is revoked; ``False`` otherwise.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">serial</span> <span class="ow">in</span> <span class="n">_revoked_serials</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># DN Parsing Helpers</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_dn_upn</span><span class="p">(</span><span class="n">dn</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract the User Principal Name from an X.509 Subject DN.</span>
+
+<span class="sd">    Parses common DN formats:</span>
+
+<span class="sd">    - ``CN=user@defence.local,OU=...``</span>
+<span class="sd">    - ``CN=EDIPI-1234567890,OU=...``</span>
+<span class="sd">    - ``CN=Smith\\, John (UPN=user@defence.local),OU=...``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dn : str</span>
+<span class="sd">        The X.509 Subject Distinguished Name string.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        The extracted UPN or ``None`` if no UPN could be parsed.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Try UPN attribute first</span>
+    <span class="n">upn_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"UPN=(([^,]+))"</span><span class="p">,</span> <span class="n">dn</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">upn_match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">upn_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c1"># Try CN= pattern for email-style UPN</span>
+    <span class="n">cn_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"CN=([^,]+)"</span><span class="p">,</span> <span class="n">dn</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cn_match</span><span class="p">:</span>
+        <span class="n">cn_value</span> <span class="o">=</span> <span class="n">cn_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="c1"># Check if CN looks like an email address</span>
+        <span class="k">if</span> <span class="s2">"@"</span> <span class="ow">in</span> <span class="n">cn_value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cn_value</span>
+        <span class="c1"># Check if CN is an EDIPI</span>
+        <span class="k">if</span> <span class="n">cn_value</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"EDIPI"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">cn_value</span>
+
+    <span class="c1"># Try UPN attribute in parentheses</span>
+    <span class="n">paren_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\(UPN=([^)]+)\)"</span><span class="p">,</span> <span class="n">dn</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">paren_match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">paren_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_dn_serial</span><span class="p">(</span><span class="n">dn</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract a national identity number or serial from a DN.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dn : str</span>
+<span class="sd">        The X.509 Subject Distinguished Name string.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        The extracted serial or ``None``.</span>
+<span class="sd">    """</span>
+    <span class="n">serial_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"SERIALNUMBER=(([^,]+))"</span><span class="p">,</span> <span class="n">dn</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">serial_match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">serial_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># PKI / mTLS Authentication</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="get_pki_authenticated_user">
+<a class="viewcode-back" href="../../../modules.html#app.utils.auth.get_pki_authenticated_user">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_pki_authenticated_user</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">User</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""FastAPI dependency for PKI/mTLS smartcard authentication.</span>
+
+<span class="sd">    Extracts client certificate headers forwarded by the hardened Nginx</span>
+<span class="sd">    reverse proxy, validates the certificate chain, checks CRL revocation,</span>
+<span class="sd">    and binds the authenticated session to the user's clearance level</span>
+<span class="sd">    and caveats.</span>
+
+<span class="sd">    This dependency is used in classified environments where users</span>
+<span class="sd">    authenticate via smartcard (PKI) rather than username/password,</span>
+<span class="sd">    as required by UK MOD JSP 440 / JSP 604 and US DoD IL5/IL6.</span>
+
+<span class="sd">    Expected Headers</span>
+<span class="sd">    ----------------</span>
+
+<span class="sd">    - **X-SSL-Client-Cert-Subject-DN** — Distinguished Name containing</span>
+<span class="sd">      the user's UPN, EDIPI, or national identity number.</span>
+<span class="sd">    - **X-SSL-Client-Cert-Verify** — Must equal ``'SUCCESS'`` for a</span>
+<span class="sd">      valid certificate chain.</span>
+<span class="sd">    - **X-SSL-Client-Cert-Serial** — Certificate serial number for</span>
+<span class="sd">      CRL/OCSP revocation checking.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : Request</span>
+<span class="sd">        The incoming FastAPI request with certificate headers.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session provided by the ``get_db`` dependency.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    User</span>
+<span class="sd">        The authenticated user's database record with clearance level</span>
+<span class="sd">        and caveats.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        401 if the certificate is missing, invalid, revoked, or the</span>
+<span class="sd">        user cannot be identified from the certificate DN.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Step 1: Verify certificate chain validation</span>
+    <span class="n">cert_verify</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"x-ssl-client-cert-verify"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cert_verify</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">"SUCCESS"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Client certificate verification failed"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-PKI-Status"</span><span class="p">:</span> <span class="s2">"CERT_VERIFY_FAILED"</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 2: Extract Subject DN</span>
+    <span class="n">subject_dn</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"x-ssl-client-cert-subject-dn"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">subject_dn</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Client certificate Subject DN not provided"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-PKI-Status"</span><span class="p">:</span> <span class="s2">"NO_SUBJECT_DN"</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 3: Check CRL revocation</span>
+    <span class="n">cert_serial</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"x-ssl-client-cert-serial"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cert_serial</span> <span class="ow">and</span> <span class="n">is_certificate_revoked</span><span class="p">(</span><span class="n">cert_serial</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Client certificate has been revoked"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-PKI-Status"</span><span class="p">:</span> <span class="s2">"CERT_REVOKED"</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 4: Parse UPN from DN</span>
+    <span class="n">upn</span> <span class="o">=</span> <span class="n">_parse_dn_upn</span><span class="p">(</span><span class="n">subject_dn</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">upn</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Could not extract UPN from certificate DN"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-PKI-Status"</span><span class="p">:</span> <span class="s2">"UPN_PARSE_FAILED"</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 5: Look up user by email (UPN) in the database</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">upn</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">username</span> <span class="o">==</span> <span class="n">upn</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">is_active</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"User not found or inactive for certificate UPN"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-PKI-Status"</span><span class="p">:</span> <span class="s2">"USER_NOT_FOUND"</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">user</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># JWT Authentication</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="get_current_user">
+<a class="viewcode-back" href="../../../modules.html#app.utils.auth.get_current_user">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_current_user</span><span class="p">(</span>
+    <span class="n">credentials</span><span class="p">:</span> <span class="n">HTTPAuthorizationCredentials</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">security</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">)</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">User</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""FastAPI dependency that returns the current authenticated user.</span>
+
+<span class="sd">    Extracts the JWT token from the request's ``Authorization`` header,</span>
+<span class="sd">    decodes and validates it, then looks up the user in the database.</span>
+
+<span class="sd">    This is the primary authentication dependency used across all</span>
+<span class="sd">    protected endpoints.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    credentials : HTTPAuthorizationCredentials</span>
+<span class="sd">        The Bearer token extracted from the request header.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session provided by the ``get_db`` dependency.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    User</span>
+<span class="sd">        The authenticated user's database record.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        401 if the token is invalid, expired, or the user is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">credentials</span><span class="o">.</span><span class="n">credentials</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">decode_access_token</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">payload</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid or expired token"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"WWW-Authenticate"</span><span class="p">:</span> <span class="s2">"Bearer"</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sub"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid token payload"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">user_id</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">is_active</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"User not found or inactive"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">user</span></div>
+
+
+
+<div class="viewcode-block" id="require_admin">
+<a class="viewcode-back" href="../../../modules.html#app.utils.auth.require_admin">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">require_admin</span><span class="p">(</span><span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">User</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""FastAPI dependency that requires the user to be an admin.</span>
+
+<span class="sd">    Wraps :func:`get_current_user` and additionally checks that the</span>
+<span class="sd">    user's role is ``ADMIN``.  Use this on endpoints that perform</span>
+<span class="sd">    system-wide administrative actions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user from :func:`get_current_user`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    User</span>
+<span class="sd">        The authenticated admin user.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        403 if the user is not an admin.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">role</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="s2">"admin"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Admin access required"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">current_user</span></div>
+
+
+
+<div class="viewcode-block" id="require_manager">
+<a class="viewcode-back" href="../../../modules.html#app.utils.auth.require_manager">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">require_manager</span><span class="p">(</span><span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">User</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""FastAPI dependency that requires the user to be an admin or manager.</span>
+
+<span class="sd">    Wraps :func:`get_current_user` and additionally checks that the</span>
+<span class="sd">    user's role is either ``ADMIN`` or ``MANAGER``.  Use this on</span>
+<span class="sd">    endpoints that require management-level permissions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user from :func:`get_current_user`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    User</span>
+<span class="sd">        The authenticated manager or admin user.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        403 if the user is not an admin or manager.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">role</span><span class="o">.</span><span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"admin"</span><span class="p">,</span> <span class="s2">"manager"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Manager or Admin access required"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">current_user</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

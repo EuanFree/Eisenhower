@@ -1,0 +1,211 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commercial Governance &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Commercial Governance</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/commercial.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="commercial-governance">
+<h1>Commercial Governance<a class="headerlink" href="#commercial-governance" title="Link to this heading"></a></h1>
+<p>Manage contracts, fiscal caps, and commercial acceptance processes.</p>
+<section id="commercial">
+<h2>commercial<a class="headerlink" href="#commercial" title="Link to this heading"></a></h2>
+<p>Commercial governance API endpoints.</p>
+<p>This module provides the REST API endpoints for contractual pricing
+mechanisms, fiscal year spending cap monitoring, and formal Government
+milestone acceptance gates.</p>
+</section>
+<section id="endpoints">
+<h2>Endpoints<a class="headerlink" href="#endpoints" title="Link to this heading"></a></h2>
+<section id="contract-structure">
+<h3>Contract Structure<a class="headerlink" href="#contract-structure" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>POST /contracts</strong> — Create a new project contract structure.</p></li>
+<li><p><strong>GET /contracts/{project_id}</strong> — Retrieve the contract structure for
+a project.</p></li>
+<li><p><strong>PUT /contracts/{project_id}</strong> — Update an existing contract structure.</p></li>
+<li><p><strong>DELETE /contracts/{project_id}</strong> — Delete a contract structure.</p></li>
+</ul>
+</section>
+<section id="tcif-fee-adjustment">
+<h3>TCIF Fee Adjustment<a class="headerlink" href="#tcif-fee-adjustment" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>POST /contracts/{project_id}/tcif-fee-adjustment</strong> — Calculate the
+Target Cost Incentive Fee (TCIF) fee adjustment for a given projected
+cost.</p></li>
+</ul>
+</section>
+<section id="fiscal-year-spending-caps">
+<h3>Fiscal Year Spending Caps<a class="headerlink" href="#fiscal-year-spending-caps" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>POST /fiscal-caps</strong> — Create a new fiscal year spending cap.</p></li>
+<li><p><strong>GET /fiscal-caps/{control_account_id}</strong> — List all fiscal year caps
+for a control account.</p></li>
+<li><p><strong>PUT /fiscal-caps/{cap_id}</strong> — Update an existing fiscal year cap.</p></li>
+<li><p><strong>DELETE /fiscal-caps/{cap_id}</strong> — Delete a fiscal year cap.</p></li>
+<li><p><strong>POST /fiscal-caps/{control_account_id}/validate</strong> — Validate the
+fiscal year spend profile against allocated caps.</p></li>
+</ul>
+</section>
+<section id="government-acceptance-milestones">
+<h3>Government Acceptance Milestones<a class="headerlink" href="#government-acceptance-milestones" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>POST /acceptance</strong> — Create a new government acceptance milestone.</p></li>
+<li><p><strong>GET /acceptance/{node_id}</strong> — List all acceptance milestones for a
+deliverable.</p></li>
+<li><p><strong>PUT /acceptance/{milestone_id}</strong> — Update an acceptance milestone
+(e.g., sign off as ACCEPTED).</p></li>
+<li><p><strong>DELETE /acceptance/{milestone_id}</strong> — Delete an acceptance milestone.</p></li>
+</ul>
+</section>
+</section>
+<section id="access-control">
+<h2>Access Control<a class="headerlink" href="#access-control" title="Link to this heading"></a></h2>
+<p>All endpoints require JWT authentication via the <code class="docutils literal notranslate"><span class="pre">get_current_user</span></code>
+dependency.  The authenticated user must have sufficient clearance to
+access the underlying portfolio nodes.</p>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: Get project contract structure.</p></li>
+<li><p><strong>View</strong>: List fiscal year spending caps.</p></li>
+<li><p><strong>View</strong>: List acceptance milestones.</p></li>
+</ul>
+<p><strong>Creating New Items</strong></p>
+<ul class="simple">
+<li><p><strong>Create</strong>: Create a project contract structure.</p></li>
+<li><p><strong>Create</strong>: Calculate TCIF fee adjustment.</p></li>
+<li><p><strong>Create</strong>: Create fiscal year spending cap.</p></li>
+<li><p><strong>Create</strong>: Validate fiscal year spend profile.</p></li>
+<li><p><strong>Create</strong>: Create government acceptance milestone.</p></li>
+</ul>
+<p><strong>Updating Information</strong></p>
+<ul class="simple">
+<li><p><strong>Update</strong>: Update project contract structure.</p></li>
+<li><p><strong>Update</strong>: Update fiscal year spending cap.</p></li>
+<li><p><strong>Update</strong>: Update acceptance milestone.</p></li>
+</ul>
+<p><strong>Removing Items</strong></p>
+<ul class="simple">
+<li><p><strong>Delete</strong>: Delete project contract structure.</p></li>
+<li><p><strong>Delete</strong>: Delete fiscal year spending cap.</p></li>
+<li><p><strong>Delete</strong>: Delete acceptance milestone.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1129 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.templating &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.templating</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.templating</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Template catalog and instantiation cloner service.</span>
+
+<span class="sd">This module provides two core operations for the template system:</span>
+
+<span class="sd">1. **Snapshot** — Extract an active WBS sub-tree from the live schedule,</span>
+<span class="sd">   normalise all absolute calendar dates into relative day offsets from</span>
+<span class="sd">   an anchor date (T₀), translate named individuals into generic role</span>
+<span class="sd">   placeholders, and save the result as a serialised JSON graph in a</span>
+<span class="sd">   StructuralTemplate record.</span>
+
+<span class="sd">2. **Instantiate** — Take a stored template and stamp it out into the</span>
+<span class="sd">   live operational schedule: recursively generate new PortfolioNode</span>
+<span class="sd">   records with correctly nested ltree dot-paths, remap relative</span>
+<span class="sd">   precedence links to newly generated UUIDs, and automatically</span>
+<span class="sd">   synthesise generic placeholder resources matching the crew template.</span>
+
+<span class="sd">Why Templates?</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">In defence programme management, many projects follow repeatable</span>
+<span class="sd">structures.  For example, every new radar programme might include:</span>
+
+<span class="sd">- A standard Systems Safety Assessment work package</span>
+<span class="sd">- A V&amp;V test sequence with the same test cases</span>
+<span class="sd">- A handover process with the same deliverables</span>
+
+<span class="sd">Rather than manually recreating these structures for each new project,</span>
+<span class="sd">programme managers can:</span>
+
+<span class="sd">1. Snapshot a proven project structure as a template.</span>
+<span class="sd">2. Instantiate the template into a new schedule with a single click.</span>
+<span class="sd">3. The system automatically generates all nodes, dependencies, and</span>
+<span class="sd">   placeholder resources.</span>
+
+<span class="sd">Key Design Decisions</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">1. **Relative Day Offsets** — All scheduling information in templates</span>
+<span class="sd">   uses day offsets from T₀ rather than absolute dates.  This allows</span>
+<span class="sd">   the template to be instantiated at any point in the calendar.</span>
+
+<span class="sd">2. **Forward and Backward Scheduling** — Templates can be instantiated</span>
+<span class="sd">   with START_DATE anchoring (forward-scheduled from T₀) or FINISH_DATE</span>
+<span class="sd">   anchoring (backward-scheduled from a target milestone date).</span>
+
+<span class="sd">3. **Generic Placeholders** — Named individuals are replaced with generic</span>
+<span class="sd">   role definitions during snapshot, so the template can be instantiated</span>
+<span class="sd">   with different personnel each time.</span>
+
+<span class="sd">4. **Code Prefix** — Each instantiation applies a code prefix to all</span>
+<span class="sd">   generated node codes, ensuring unique identifiers across the schedule.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">    from app.services.templating import snapshot_node_as_template, instantiate_template</span>
+
+<span class="sd">    # Snapshot an existing project as a template</span>
+<span class="sd">    result = snapshot_node_as_template(</span>
+<span class="sd">        node_id="uuid-of-root-node",</span>
+<span class="sd">        code="TMPL-RADAR-PROJ-001",</span>
+<span class="sd">        name="Standard Radar Project",</span>
+<span class="sd">        tier="PROJECT",</span>
+<span class="sd">        db=db,</span>
+<span class="sd">        user_upn="manager@example.com",</span>
+<span class="sd">    )</span>
+
+<span class="sd">    # Instantiate the template into a new schedule</span>
+<span class="sd">    result = instantiate_template(</span>
+<span class="sd">        template_id="template-uuid",</span>
+<span class="sd">        parent_node_id=None,</span>
+<span class="sd">        anchor_date="2027-01-15",</span>
+<span class="sd">        anchor_type="START_DATE",</span>
+<span class="sd">        code_prefix="RADAR-002-",</span>
+<span class="sd">        db=db,</span>
+<span class="sd">    )</span>
+
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">ResourceNode</span><span class="p">,</span>
+    <span class="n">ResourceAssignment</span><span class="p">,</span>
+    <span class="n">DependencyLink</span><span class="p">,</span>
+    <span class="n">ContractDeliverable</span><span class="p">,</span>
+    <span class="n">StructuralTemplate</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplate</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplateMember</span><span class="p">,</span>
+    <span class="n">TemplateTier</span><span class="p">,</span>
+    <span class="n">TreeType</span><span class="p">,</span>
+    <span class="n">ResourceType</span><span class="p">,</span>
+    <span class="n">ProficiencyLevel</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">AssignmentStatus</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Helper: date arithmetic</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_workday</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if a date is a workday (Monday–Friday).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : date</span>
+<span class="sd">        The date to check.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the date is a workday.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">5</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_workdays</span><span class="p">(</span><span class="n">start_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">days</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">date</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add a number of workdays to a start date, skipping weekends.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_date : date</span>
+<span class="sd">        The starting date.</span>
+<span class="sd">    days : int</span>
+<span class="sd">        Number of workdays to add (can be negative for subtraction).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    date</span>
+<span class="sd">        The resulting date after adding workdays.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">days</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">start_date</span>
+
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start_date</span>
+    <span class="n">direction</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">days</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">remaining</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">days</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">remaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">direction</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_workday</span><span class="p">(</span><span class="n">current</span><span class="p">):</span>
+            <span class="n">remaining</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">current</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_workday_diff</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Calculate the number of workdays between two dates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start : date</span>
+<span class="sd">        The start date.</span>
+<span class="sd">    end : date</span>
+<span class="sd">        The end date.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Number of workdays between start and end (exclusive of start,</span>
+<span class="sd">        inclusive of end).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="o">==</span> <span class="n">end</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">_workday_diff</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="k">while</span> <span class="n">current</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_workday</span><span class="p">(</span><span class="n">current</span><span class="p">):</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">count</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Helper: ltree path manipulation</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_ltree_path</span><span class="p">(</span><span class="n">parent_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">node_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Build an ltree path string for a new node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parent_path : str or None</span>
+<span class="sd">        The ltree path of the parent node.  None for root nodes.</span>
+<span class="sd">    node_code : str</span>
+<span class="sd">        The code segment for this node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The full ltree path (e.g., '1.2.3').</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">parent_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">node_code</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parent_path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">node_code</span><span class="si">}</span><span class="s2">"</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Snapshot: Extract live WBS → Template</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_subtree_nodes</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Collect all PortfolioNode descendants of a root node.</span>
+
+<span class="sd">    Uses ltree containment to find all nodes whose path starts with</span>
+<span class="sd">    the root node's path.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        UUID of the root node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[PortfolioNode]</span>
+<span class="sd">        All nodes in the sub-tree, ordered by path depth.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"PortfolioNode with ID </span><span class="si">{</span><span class="n">root_node_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Use ltree containment: find all nodes whose path starts with root's path</span>
+    <span class="c1"># In PostgreSQL: path @&gt; root.path</span>
+    <span class="c1"># For compatibility, we use string-based prefix matching</span>
+    <span class="n">root_path</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">root_path</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Sort by path depth (root first, then children)</span>
+    <span class="n">nodes</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">n</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"."</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">nodes</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_dependencies</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UUID</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DependencyLink</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Collect all dependency links within a set of nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    node_ids : list[UUID]</span>
+<span class="sd">        UUIDs of nodes to check for dependencies.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[DependencyLink]</span>
+<span class="sd">        Dependency links where both predecessor and successor are in the set.</span>
+<span class="sd">    """</span>
+    <span class="n">node_id_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">node_ids</span><span class="p">)</span>
+    <span class="n">deps</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_id_set</span><span class="p">),</span>
+        <span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_id_set</span><span class="p">),</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">deps</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_deliverables</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UUID</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ContractDeliverable</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Collect all contract deliverables linked to nodes in the sub-tree.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    node_ids : list[UUID]</span>
+<span class="sd">        UUIDs of nodes to check for deliverables.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[ContractDeliverable]</span>
+<span class="sd">        Deliverables linked to nodes in the sub-tree.</span>
+<span class="sd">    """</span>
+    <span class="n">deliverables</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">deliverables</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_relative_offsets</span><span class="p">(</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Compute relative day offsets for all nodes in a sub-tree.</span>
+
+<span class="sd">    For each node, calculates the start and finish dates as day offsets</span>
+<span class="sd">    from the earliest planned_start_date in the sub-tree (T₀).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nodes : list[PortfolioNode]</span>
+<span class="sd">        All nodes in the sub-tree.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Mapping of node UUID (as string) to offset data containing</span>
+<span class="sd">        relative_start_offset_days, relative_finish_offset_days, and</span>
+<span class="sd">        duration_days.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Find the earliest planned start date as T₀</span>
+    <span class="n">start_dates</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">n</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">start_dates</span><span class="p">:</span>
+        <span class="c1"># No dates set — use today as T₀</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">start_dates</span><span class="p">)</span>
+
+    <span class="n">offsets</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">node_id_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="n">start_offset</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">)</span>
+            <span class="n">finish_offset</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">)</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">:</span>
+            <span class="n">start_offset</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">)</span>
+            <span class="n">finish_offset</span> <span class="o">=</span> <span class="n">start_offset</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start_offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">finish_offset</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">offsets</span><span class="p">[</span><span class="n">node_id_str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"relative_start_offset_days"</span><span class="p">:</span> <span class="n">start_offset</span><span class="p">,</span>
+            <span class="s2">"relative_finish_offset_days"</span><span class="p">:</span> <span class="n">finish_offset</span><span class="p">,</span>
+            <span class="s2">"duration_days"</span><span class="p">:</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">duration</span><span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">offsets</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_serialize_node</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">offsets</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Serialize a PortfolioNode into a template-compatible dict.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The node to serialize.</span>
+<span class="sd">    offsets : dict</span>
+<span class="sd">        Pre-computed relative day offsets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Serialised node data suitable for template_graph_payload.</span>
+<span class="sd">    """</span>
+    <span class="n">node_id_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">parent_id_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">parent_id</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">offset_data</span> <span class="o">=</span> <span class="n">offsets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_id_str</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="n">node_id_str</span><span class="p">,</span>
+        <span class="s2">"parent_id"</span><span class="p">:</span> <span class="n">parent_id_str</span><span class="p">,</span>
+        <span class="s2">"code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"tree_type"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">tree_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">tree_type</span> <span class="k">else</span> <span class="s2">"WBS"</span><span class="p">,</span>
+        <span class="s2">"security_classification"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span> <span class="k">else</span> <span class="s2">"OFFICIAL"</span><span class="p">,</span>
+        <span class="s2">"caveats"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[],</span>
+        <span class="s2">"odac_permissions"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">odac_permissions</span><span class="p">,</span>
+        <span class="s2">"delivery_mode"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">delivery_mode</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'delivery_mode'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">delivery_mode</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"relative_start_offset_days"</span><span class="p">:</span> <span class="n">offset_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relative_start_offset_days"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="s2">"relative_finish_offset_days"</span><span class="p">:</span> <span class="n">offset_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relative_finish_offset_days"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="s2">"duration_days"</span><span class="p">:</span> <span class="n">offset_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"duration_days"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="s2">"custom_attributes"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{},</span>
+        <span class="s2">"export_control_regime"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">export_control_regime</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'export_control_regime'</span><span class="p">)</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">export_control_regime</span> <span class="k">else</span> <span class="s2">"NOT_CONTROLLED"</span><span class="p">,</span>
+        <span class="s2">"eccn_or_usml_category"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'eccn_or_usml_category'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">"authorized_nationalities"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'authorized_nationalities'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">"taa_mla_reference"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'taa_mla_reference'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+        <span class="s2">"requires_vv_signoff"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'requires_vv_signoff'</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<div class="viewcode-block" id="snapshot_node_as_template">
+<a class="viewcode-back" href="../../../modules.html#app.services.templating.snapshot_node_as_template">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">snapshot_node_as_template</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tier</span><span class="p">:</span> <span class="n">TemplateTier</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">user_upn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StructuralTemplate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Extract an active WBS sub-tree and save it as a StructuralTemplate.</span>
+
+<span class="sd">    This is the core snapshot function.  It:</span>
+
+<span class="sd">    1. Collects all PortfolioNode descendants of the given root node.</span>
+<span class="sd">    2. Computes relative day offsets from the earliest planned start date.</span>
+<span class="sd">    3. Collects all DependencyLink edges within the sub-tree.</span>
+<span class="sd">    4. Collects all ContractDeliverable records linked to nodes.</span>
+<span class="sd">    5. Serialises everything into a JSON graph payload.</span>
+<span class="sd">    6. Creates and persists a new StructuralTemplate record.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        UUID of the root PortfolioNode to snapshot.</span>
+<span class="sd">    code : str</span>
+<span class="sd">        Unique template code (e.g., 'TMPL-RADAR-PROJ-001').</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Human-readable name for the template.</span>
+<span class="sd">    tier : TemplateTier</span>
+<span class="sd">        Hierarchy tier for the template.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    user_upn : str or None</span>
+<span class="sd">        User principal name for audit metadata.</span>
+<span class="sd">    description : str or None</span>
+<span class="sd">        Optional description of the template.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    StructuralTemplate</span>
+<span class="sd">        The newly created template record.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the root node is not found or the code already exists.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check for duplicate code</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">StructuralTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">StructuralTemplate</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">code</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">existing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Template with code '</span><span class="si">{</span><span class="n">code</span><span class="si">}</span><span class="s2">' already exists."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">root_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+
+    <span class="c1"># Collect the sub-tree</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">_collect_subtree_nodes</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_uuid</span><span class="p">)</span>
+    <span class="n">node_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">]</span>
+
+    <span class="c1"># Compute relative offsets</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">_compute_relative_offsets</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+    <span class="c1"># Collect dependencies</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="n">_collect_dependencies</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">)</span>
+
+    <span class="c1"># Collect deliverables</span>
+    <span class="n">deliverables</span> <span class="o">=</span> <span class="n">_collect_deliverables</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">)</span>
+
+    <span class="c1"># Build the graph payload</span>
+    <span class="n">graph_payload</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"nodes"</span><span class="p">:</span> <span class="p">[</span><span class="n">_serialize_node</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">offsets</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">],</span>
+        <span class="s2">"dependencies"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">"predecessor_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">),</span>
+                <span class="s2">"successor_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">successor_id</span><span class="p">),</span>
+                <span class="s2">"dependency_type"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">dependency_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">dependency_type</span> <span class="k">else</span> <span class="s2">"FS"</span><span class="p">,</span>
+                <span class="s2">"lag_days"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">lag_days</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dependencies</span>
+        <span class="p">],</span>
+        <span class="s2">"deliverables"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">dl</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+                <span class="s2">"cdrl_sequence_number"</span><span class="p">:</span> <span class="n">dl</span><span class="o">.</span><span class="n">cdrl_sequence_number</span><span class="p">,</span>
+                <span class="s2">"title"</span><span class="p">:</span> <span class="n">dl</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="s2">"did_reference"</span><span class="p">:</span> <span class="n">dl</span><span class="o">.</span><span class="n">did_reference</span><span class="p">,</span>
+                <span class="s2">"revision"</span><span class="p">:</span> <span class="n">dl</span><span class="o">.</span><span class="n">revision</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">for</span> <span class="n">dl</span> <span class="ow">in</span> <span class="n">deliverables</span>
+        <span class="p">],</span>
+        <span class="s2">"metadata"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"tier"</span><span class="p">:</span> <span class="n">tier</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s2">"snapshot_date"</span><span class="p">:</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"snapshot_by"</span><span class="p">:</span> <span class="n">user_upn</span> <span class="ow">or</span> <span class="s2">"system"</span><span class="p">,</span>
+            <span class="s2">"root_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root_uuid</span><span class="p">),</span>
+            <span class="s2">"node_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">),</span>
+            <span class="s2">"dependency_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">dependencies</span><span class="p">),</span>
+            <span class="s2">"deliverable_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">deliverables</span><span class="p">),</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Create the template</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">StructuralTemplate</span><span class="p">(</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">template_graph_payload</span><span class="o">=</span><span class="n">graph_payload</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">template</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Instantiate: Template → Live Schedule</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_anchor_date</span><span class="p">(</span>
+    <span class="n">anchor_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">anchor_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">node_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">max_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Compute the T₀ date for instantiation based on anchor type.</span>
+
+<span class="sd">    For START_DATE anchoring, T₀ = anchor_date (forward scheduling).</span>
+<span class="sd">    For FINISH_DATE anchoring, T₀ = anchor_date - max_offset (backward</span>
+<span class="sd">    scheduling from a target milestone).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    anchor_date : date</span>
+<span class="sd">        The user-provided anchor date.</span>
+<span class="sd">    anchor_type : str</span>
+<span class="sd">        'START_DATE' or 'FINISH_DATE'.</span>
+<span class="sd">    node_data : dict</span>
+<span class="sd">        A sample node's data (not used directly, but available for context).</span>
+<span class="sd">    max_offset : int</span>
+<span class="sd">        The maximum relative offset in the template (used for backward scheduling).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[date, int]</span>
+<span class="sd">        The computed T₀ date and the direction multiplier (1 for forward,</span>
+<span class="sd">        -1 for backward).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">anchor_type</span> <span class="o">==</span> <span class="s2">"FINISH_DATE"</span><span class="p">:</span>
+        <span class="c1"># Backward schedule: T₀ = anchor_date - max_offset workdays</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">_add_workdays</span><span class="p">(</span><span class="n">anchor_date</span><span class="p">,</span> <span class="o">-</span><span class="n">max_offset</span><span class="p">)</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Forward schedule: T₀ = anchor_date</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">anchor_date</span>
+        <span class="n">direction</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">t0</span><span class="p">,</span> <span class="n">direction</span>
+
+
+<div class="viewcode-block" id="instantiate_template">
+<a class="viewcode-back" href="../../../modules.html#app.services.templating.instantiate_template">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">instantiate_template</span><span class="p">(</span>
+    <span class="n">template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parent_node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">anchor_date</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">anchor_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">code_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Instantiate a template into the live operational schedule.</span>
+
+<span class="sd">    This is the core instantiation function.  It:</span>
+
+<span class="sd">    1. Loads the template's graph payload.</span>
+<span class="sd">    2. Computes T₀ from the anchor date and anchor type.</span>
+<span class="sd">    3. Recursively creates new PortfolioNode records with:</span>
+<span class="sd">       - New UUIDs</span>
+<span class="sd">       - Correctly nested ltree dot-paths</span>
+<span class="sd">       - Absolute dates computed from relative offsets + T₀</span>
+<span class="sd">       - Codes prefixed with the provided code_prefix</span>
+<span class="sd">    4. Creates DependencyLink records mapping to new UUIDs.</span>
+<span class="sd">    5. Creates generic placeholder ResourceNode records for each</span>
+<span class="sd">       unique role referenced in the template.</span>
+<span class="sd">    6. Creates ResourceAssignment records linking placeholders to nodes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    template_id : str</span>
+<span class="sd">        UUID of the template to instantiate.</span>
+<span class="sd">    parent_node_id : str or None</span>
+<span class="sd">        UUID of the parent node under which to stamp the template.</span>
+<span class="sd">        If None, creates a new root node.</span>
+<span class="sd">    anchor_date : str</span>
+<span class="sd">        ISO date string (YYYY-MM-DD) serving as the anchor for scheduling.</span>
+<span class="sd">    anchor_type : str</span>
+<span class="sd">        'START_DATE' for forward scheduling or 'FINISH_DATE' for</span>
+<span class="sd">        backward scheduling.</span>
+<span class="sd">    code_prefix : str</span>
+<span class="sd">        Prefix applied to all generated node codes.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Result containing root_node_id, node_count, dependency_count,</span>
+<span class="sd">        and placeholder_resource_count.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the template is not found or instantiation fails.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Load the template</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">StructuralTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">StructuralTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">template_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Template with ID </span><span class="si">{</span><span class="n">template_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">template</span><span class="o">.</span><span class="n">is_active</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Template is not active and cannot be instantiated."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">template_graph_payload</span>
+    <span class="n">template_nodes</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">template_deps</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dependencies"</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">template_nodes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Template contains no nodes to instantiate."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Parse anchor date</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">anchor</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">anchor_date</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid anchor date format: </span><span class="si">{</span><span class="n">anchor_date</span><span class="si">}</span><span class="s2">. Use YYYY-MM-DD."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Find max offset for backward scheduling</span>
+    <span class="n">max_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">node_data</span> <span class="ow">in</span> <span class="n">template_nodes</span><span class="p">:</span>
+        <span class="n">finish_offset</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relative_finish_offset_days"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">finish_offset</span> <span class="o">&gt;</span> <span class="n">max_offset</span><span class="p">:</span>
+            <span class="n">max_offset</span> <span class="o">=</span> <span class="n">finish_offset</span>
+
+    <span class="c1"># Compute T₀</span>
+    <span class="n">t0</span><span class="p">,</span> <span class="n">direction</span> <span class="o">=</span> <span class="n">_compute_anchor_date</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="n">anchor_type</span><span class="p">,</span> <span class="p">{},</span> <span class="n">max_offset</span><span class="p">)</span>
+
+    <span class="c1"># Load parent node if specified</span>
+    <span class="n">parent_node</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">parent_node_id</span><span class="p">:</span>
+        <span class="n">parent_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">parent_node_id</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">parent_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Parent node with ID </span><span class="si">{</span><span class="n">parent_node_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Build a mapping from original node IDs to new node IDs</span>
+    <span class="n">original_to_new_id</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">original_to_new_path</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Track the depth of the parent for ltree path construction</span>
+    <span class="k">if</span> <span class="n">parent_node</span><span class="p">:</span>
+        <span class="n">parent_depth</span> <span class="o">=</span> <span class="n">parent_node</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">parent_path</span> <span class="o">=</span> <span class="n">parent_node</span><span class="o">.</span><span class="n">path</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">parent_depth</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">parent_path</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Create nodes</span>
+    <span class="n">placeholder_resources</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ResourceNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">placeholder_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># First pass: create all nodes</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">node_data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">template_nodes</span><span class="p">):</span>
+        <span class="n">original_id</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">original_parent_id</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent_id"</span><span class="p">)</span>
+
+        <span class="c1"># Determine the new UUID</span>
+        <span class="n">new_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span>
+        <span class="n">original_to_new_id</span><span class="p">[</span><span class="n">original_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_id</span>
+
+        <span class="c1"># Compute the ltree path segment</span>
+        <span class="c1"># Use the index within the template to maintain ordering</span>
+        <span class="n">path_segment</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Determine parent path for this node</span>
+        <span class="k">if</span> <span class="n">original_parent_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Root node of the template</span>
+            <span class="k">if</span> <span class="n">parent_node</span><span class="p">:</span>
+                <span class="n">new_path</span> <span class="o">=</span> <span class="n">_build_ltree_path</span><span class="p">(</span><span class="n">parent_path</span><span class="p">,</span> <span class="n">path_segment</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_path</span> <span class="o">=</span> <span class="n">path_segment</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Child node — find parent's new path</span>
+            <span class="n">parent_new_path</span> <span class="o">=</span> <span class="n">original_to_new_path</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">original_parent_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">parent_new_path</span><span class="p">:</span>
+                <span class="n">new_path</span> <span class="o">=</span> <span class="n">_build_ltree_path</span><span class="p">(</span><span class="n">parent_new_path</span><span class="p">,</span> <span class="n">path_segment</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Parent not yet created — fallback</span>
+                <span class="n">new_path</span> <span class="o">=</span> <span class="n">_build_ltree_path</span><span class="p">(</span>
+                    <span class="n">parent_path</span> <span class="k">if</span> <span class="n">parent_node</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="n">original_to_new_path</span><span class="p">[</span><span class="n">original_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_path</span>
+
+        <span class="c1"># Compute absolute dates from relative offsets</span>
+        <span class="n">start_offset</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relative_start_offset_days"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">finish_offset</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relative_finish_offset_days"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">anchor_type</span> <span class="o">==</span> <span class="s2">"FINISH_DATE"</span><span class="p">:</span>
+            <span class="c1"># For backward scheduling, invert the offsets</span>
+            <span class="n">start_date</span> <span class="o">=</span> <span class="n">_add_workdays</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="o">-</span><span class="p">(</span><span class="n">max_offset</span> <span class="o">-</span> <span class="n">start_offset</span><span class="p">))</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">_add_workdays</span><span class="p">(</span><span class="n">anchor</span><span class="p">,</span> <span class="o">-</span><span class="p">(</span><span class="n">max_offset</span> <span class="o">-</span> <span class="n">finish_offset</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start_date</span> <span class="o">=</span> <span class="n">_add_workdays</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">start_offset</span><span class="p">)</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">_add_workdays</span><span class="p">(</span><span class="n">t0</span><span class="p">,</span> <span class="n">finish_offset</span><span class="p">)</span>
+
+        <span class="c1"># Build the code with prefix</span>
+        <span class="n">original_code</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"code"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"NODE-</span><span class="si">{</span><span class="n">idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">new_code</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">code_prefix</span><span class="si">}{</span><span class="n">original_code</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">code_prefix</span> <span class="k">else</span> <span class="n">original_code</span>
+
+        <span class="c1"># Extract security and export control fields</span>
+        <span class="n">security_class</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"security_classification"</span><span class="p">,</span> <span class="s2">"OFFICIAL"</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">security_enum</span> <span class="o">=</span> <span class="n">SecurityClassification</span><span class="p">(</span><span class="n">security_class</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">security_enum</span> <span class="o">=</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span>
+
+        <span class="n">export_regime</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"export_control_regime"</span><span class="p">,</span> <span class="s2">"NOT_CONTROLLED"</span><span class="p">)</span>
+
+        <span class="c1"># Create the PortfolioNode</span>
+        <span class="n">new_node</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">new_id</span><span class="p">,</span>
+            <span class="n">parent_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">parent_node_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">parent_node</span> <span class="ow">and</span> <span class="n">original_parent_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">tree_type</span><span class="o">=</span><span class="n">TreeType</span><span class="o">.</span><span class="n">WBS</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">new_code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Template Node </span><span class="si">{</span><span class="n">idx</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">),</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">new_path</span><span class="p">,</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">security_enum</span><span class="p">,</span>
+            <span class="n">caveats</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"caveats"</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="n">odac_permissions</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"odac_permissions"</span><span class="p">),</span>
+            <span class="n">custom_attributes</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"custom_attributes"</span><span class="p">,</span> <span class="p">{}),</span>
+            <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="c1"># PortfolioNode-specific fields</span>
+            <span class="n">delivery_mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">planned_start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
+            <span class="n">planned_end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
+            <span class="n">actual_start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">actual_end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">percent_complete</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">pv</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">ev</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">ac</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="c1"># Export control fields</span>
+            <span class="n">export_control_regime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">eccn_or_usml_category</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"eccn_or_usml_category"</span><span class="p">),</span>
+            <span class="n">authorized_nationalities</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"authorized_nationalities"</span><span class="p">),</span>
+            <span class="n">taa_mla_reference</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"taa_mla_reference"</span><span class="p">),</span>
+            <span class="n">requires_vv_signoff</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"requires_vv_signoff"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Second pass: fix parent_id references for non-root nodes</span>
+    <span class="k">for</span> <span class="n">node_data</span> <span class="ow">in</span> <span class="n">template_nodes</span><span class="p">:</span>
+        <span class="n">original_id</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">original_parent_id</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent_id"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">original_parent_id</span> <span class="ow">and</span> <span class="n">original_parent_id</span> <span class="ow">in</span> <span class="n">original_to_new_id</span><span class="p">:</span>
+            <span class="n">new_node_id</span> <span class="o">=</span> <span class="n">original_to_new_id</span><span class="p">[</span><span class="n">original_id</span><span class="p">]</span>
+            <span class="n">new_parent_id</span> <span class="o">=</span> <span class="n">original_to_new_id</span><span class="p">[</span><span class="n">original_parent_id</span><span class="p">]</span>
+
+            <span class="n">new_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">new_node_id</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">new_node</span><span class="p">:</span>
+                <span class="n">new_node</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">new_parent_id</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Third pass: create dependency links</span>
+    <span class="n">dependency_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">dep_data</span> <span class="ow">in</span> <span class="n">template_deps</span><span class="p">:</span>
+        <span class="n">pred_original</span> <span class="o">=</span> <span class="n">dep_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"predecessor_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">succ_original</span> <span class="o">=</span> <span class="n">dep_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"successor_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+
+        <span class="n">pred_new</span> <span class="o">=</span> <span class="n">original_to_new_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pred_original</span><span class="p">)</span>
+        <span class="n">succ_new</span> <span class="o">=</span> <span class="n">original_to_new_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">succ_original</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pred_new</span> <span class="ow">and</span> <span class="n">succ_new</span><span class="p">:</span>
+            <span class="n">dep</span> <span class="o">=</span> <span class="n">DependencyLink</span><span class="p">(</span>
+                <span class="n">predecessor_id</span><span class="o">=</span><span class="n">pred_new</span><span class="p">,</span>
+                <span class="n">successor_id</span><span class="o">=</span><span class="n">succ_new</span><span class="p">,</span>
+                <span class="n">dependency_type</span><span class="o">=</span><span class="n">dep_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dependency_type"</span><span class="p">,</span> <span class="s2">"FS"</span><span class="p">),</span>
+                <span class="n">lag_days</span><span class="o">=</span><span class="n">dep_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lag_days"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
+            <span class="n">dependency_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Fourth pass: create contract deliverables</span>
+    <span class="n">deliverables</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"deliverables"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">for</span> <span class="n">dl_data</span> <span class="ow">in</span> <span class="n">deliverables</span><span class="p">:</span>
+        <span class="n">node_original</span> <span class="o">=</span> <span class="n">dl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"node_id"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">node_new</span> <span class="o">=</span> <span class="n">original_to_new_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_original</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">node_new</span><span class="p">:</span>
+            <span class="n">cdrl</span> <span class="o">=</span> <span class="n">ContractDeliverable</span><span class="p">(</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node_new</span><span class="p">,</span>
+                <span class="n">cdrl_sequence_number</span><span class="o">=</span><span class="n">dl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cdrl_sequence_number"</span><span class="p">,</span> <span class="s2">"CDRL-XXX"</span><span class="p">),</span>
+                <span class="n">title</span><span class="o">=</span><span class="n">dl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"Template Deliverable"</span><span class="p">),</span>
+                <span class="n">did_reference</span><span class="o">=</span><span class="n">dl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"did_reference"</span><span class="p">),</span>
+                <span class="n">revision</span><span class="o">=</span><span class="n">dl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"revision"</span><span class="p">,</span> <span class="s2">"Rev A"</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cdrl</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Get the root node ID</span>
+    <span class="n">root_original_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">node_data</span> <span class="ow">in</span> <span class="n">template_nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent_id"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">root_original_id</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+            <span class="k">break</span>
+
+    <span class="n">root_node_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">original_to_new_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">root_original_id</span><span class="p">,</span> <span class="n">uuid4</span><span class="p">()))</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"root_node_id"</span><span class="p">:</span> <span class="n">root_node_id</span><span class="p">,</span>
+        <span class="s2">"node_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">template_nodes</span><span class="p">),</span>
+        <span class="s2">"dependency_count"</span><span class="p">:</span> <span class="n">dependency_count</span><span class="p">,</span>
+        <span class="s2">"placeholder_resource_count"</span><span class="p">:</span> <span class="n">placeholder_count</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Crew Template Helpers</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="create_crew_template_with_members">
+<a class="viewcode-back" href="../../../modules.html#app.services.templating.create_crew_template_with_members">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_crew_template_with_members</span><span class="p">(</span>
+    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">members</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResourceCrewTemplate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a resource crew template with its member roles.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    code : str</span>
+<span class="sd">        Unique crew template code.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Human-readable name.</span>
+<span class="sd">    members : list[dict]</span>
+<span class="sd">        List of member role definitions, each containing:</span>
+<span class="sd">        - role_name: str</span>
+<span class="sd">        - resource_type: ResourceType</span>
+<span class="sd">        - required_skill_id: str or None</span>
+<span class="sd">        - min_proficiency: ProficiencyLevel</span>
+<span class="sd">        - min_clearance: SecurityClassification</span>
+<span class="sd">        - default_allocation_fraction: float</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    description : str or None</span>
+<span class="sd">        Optional description.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ResourceCrewTemplate</span>
+<span class="sd">        The newly created crew template with members.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the code already exists.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check for duplicate code</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceCrewTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceCrewTemplate</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">code</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">existing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Crew template with code '</span><span class="si">{</span><span class="n">code</span><span class="si">}</span><span class="s2">' already exists."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">crew</span> <span class="o">=</span> <span class="n">ResourceCrewTemplate</span><span class="p">(</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">member_data</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+        <span class="n">member</span> <span class="o">=</span> <span class="n">ResourceCrewTemplateMember</span><span class="p">(</span>
+            <span class="n">role_name</span><span class="o">=</span><span class="n">member_data</span><span class="p">[</span><span class="s2">"role_name"</span><span class="p">],</span>
+            <span class="n">resource_type</span><span class="o">=</span><span class="n">member_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"resource_type"</span><span class="p">,</span> <span class="n">ResourceType</span><span class="o">.</span><span class="n">PERSON</span><span class="p">),</span>
+            <span class="n">required_skill_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">member_data</span><span class="p">[</span><span class="s2">"required_skill_id"</span><span class="p">])</span> <span class="k">if</span> <span class="n">member_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"required_skill_id"</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">min_proficiency</span><span class="o">=</span><span class="n">member_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"min_proficiency"</span><span class="p">,</span> <span class="n">ProficiencyLevel</span><span class="o">.</span><span class="n">NOVICE</span><span class="p">),</span>
+            <span class="n">min_clearance</span><span class="o">=</span><span class="n">member_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"min_clearance"</span><span class="p">,</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">),</span>
+            <span class="n">default_allocation_fraction</span><span class="o">=</span><span class="n">member_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"default_allocation_fraction"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">crew</span><span class="o">.</span><span class="n">members</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">crew</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">crew</span></div>
+
+
+
+<div class="viewcode-block" id="instantiate_crew_template">
+<a class="viewcode-back" href="../../../modules.html#app.services.templating.instantiate_crew_template">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">instantiate_crew_template</span><span class="p">(</span>
+    <span class="n">crew_template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parent_portfolio_node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ResourceNode</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Instantiate a crew template by creating generic placeholder resources.</span>
+
+<span class="sd">    For each role in the crew template, creates a ResourceNode with</span>
+<span class="sd">    is_generic_placeholder=True, so the requisition engine can later</span>
+<span class="sd">    match real personnel to these placeholders.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    crew_template_id : str</span>
+<span class="sd">        UUID of the crew template to instantiate.</span>
+<span class="sd">    parent_portfolio_node_id : str or None</span>
+<span class="sd">        Optional portfolio node ID to associate assignments with.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[ResourceNode]</span>
+<span class="sd">        List of created placeholder resource nodes.</span>
+<span class="sd">    """</span>
+    <span class="n">crew_template</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceCrewTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceCrewTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">crew_template_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">crew_template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Crew template with ID </span><span class="si">{</span><span class="n">crew_template_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">placeholder_resources</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ResourceNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">crew_template</span><span class="o">.</span><span class="n">members</span><span class="p">:</span>
+        <span class="c1"># Create a generic placeholder resource</span>
+        <span class="n">placeholder</span> <span class="o">=</span> <span class="n">ResourceNode</span><span class="p">(</span>
+            <span class="n">code</span><span class="o">=</span><span class="sa">f</span><span class="s2">"ROLE-</span><span class="si">{</span><span class="n">member</span><span class="o">.</span><span class="n">role_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">' '</span><span class="p">,</span><span class="w"> </span><span class="s1">'-'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">role_name</span><span class="p">,</span>
+            <span class="n">tree_type</span><span class="o">=</span><span class="n">TreeType</span><span class="o">.</span><span class="n">RBS</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"CREW.</span><span class="si">{</span><span class="n">member</span><span class="o">.</span><span class="n">role_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">' '</span><span class="p">,</span><span class="w"> </span><span class="s1">'-'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">min_clearance</span><span class="p">,</span>
+            <span class="n">resource_type</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">resource_type</span><span class="p">,</span>
+            <span class="n">standard_hourly_rate</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">is_generic_placeholder</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">current_location_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">placeholder</span><span class="p">)</span>
+        <span class="n">placeholder_resources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">placeholder</span><span class="p">)</span>
+
+        <span class="c1"># If there's a parent portfolio node, create a resource assignment</span>
+        <span class="k">if</span> <span class="n">parent_portfolio_node_id</span><span class="p">:</span>
+            <span class="n">assignment</span> <span class="o">=</span> <span class="n">ResourceAssignment</span><span class="p">(</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">parent_portfolio_node_id</span><span class="p">),</span>
+                <span class="n">resource_node_id</span><span class="o">=</span><span class="n">placeholder</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">allocated_units</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">default_allocation_fraction</span><span class="p">),</span>
+                <span class="n">planned_hours</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">rate_snapshot</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">status</span><span class="o">=</span><span class="n">AssignmentStatus</span><span class="o">.</span><span class="n">REQUISITIONED</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">assignment</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">placeholder_resources</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

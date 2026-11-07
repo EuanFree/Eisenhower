@@ -1,0 +1,174 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPMR Reports &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">IPMR Reports</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/ipmr.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ipmr-reports">
+<h1>IPMR Reports<a class="headerlink" href="#ipmr-reports" title="Link to this heading"></a></h1>
+<p>Generate Integrated Program Management Report (IPMR) documents for programme oversight.</p>
+<section id="id1">
+<h2>ipmr_reports<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>IPMR/CPR EVM Report Export Router.</p>
+<p>This module provides the API endpoints for generating and exporting
+statutory Earned Value Management (EVM) reports compliant with the
+Integrated Program Management Report (IPMR) / Cost Performance Report
+(CPR) Formats 1 through 5.</p>
+</section>
+<section id="endpoints">
+<h2>Endpoints<a class="headerlink" href="#endpoints" title="Link to this heading"></a></h2>
+<p>All endpoints are JWT-authenticated and require the caller to have
+sufficient clearance to access the programme data.</p>
+<ul class="simple">
+<li><p><strong>GET /ipmr/format1</strong>: Emits Format 1 WBS spreadsheet for the selected
+reporting month.  Returns BCWS (PV), BCWP (EV), and ACWP (AC) data
+for each WBS element with derived variances and indices.</p></li>
+<li><p><strong>GET /ipmr/format5</strong>: Emits variance narrative report pre-populated
+with active blocker logs.  Auto-extracts tasks exceeding predefined
+variance thresholds and generates Problem/Cause, Impact, and
+Corrective Action Plan narratives.</p></li>
+</ul>
+</section>
+<section id="export-formats">
+<h2>Export Formats<a class="headerlink" href="#export-formats" title="Link to this heading"></a></h2>
+<p>Reports can be exported in two formats:</p>
+<ul class="simple">
+<li><p><strong>XLSX</strong> (default): OpenPyXL-formatted spreadsheet with defence table
+styling, locked header bands, and formula integrity.</p></li>
+<li><p><strong>PDF</strong>: Hardened PDF export with embedded vector styles for
+executive submission.</p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p># Generate Format 1 report as Excel
+GET /api/v1/reports/evm/ipmr/format1?project_id={uuid}&amp;reporting_period=2026-10&amp;status_date=2026-10-24</p>
+<p># Generate Format 5 report as PDF
+GET /api/v1/reports/evm/ipmr/format5?project_id={uuid}&amp;reporting_period=2026-10&amp;status_date=2026-10-24&amp;export_format=pdf</p>
+</div></blockquote>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: Generate and export IPMR Format 1 WBS time-phased matrix report.</p></li>
+<li><p><strong>View</strong>: Generate and export IPMR Format 5 Variance Analysis Narrative report.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

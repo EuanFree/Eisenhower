@@ -1,0 +1,813 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.core.export_control &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.core.export_control</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.core.export_control</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Export control compliance middleware for automated foreign disclosure gating.</span>
+
+<span class="sd">This module enforces export control regulations by verifying user authorisation</span>
+<span class="sd">before allowing access to controlled work packages or committing procurement</span>
+<span class="sd">transactions.  It implements three core checks:</span>
+
+<span class="sd">1. **Export Control Compliance** — Verifies a user's nationality and employer</span>
+<span class="sd">   CAGE code against active licences attached to a work package.</span>
+
+<span class="sd">2. **Foreign Disclosure Gate** — Blocks foreign nationals from accessing</span>
+<span class="sd">   sovereign-controlled nodes unless an active, non-expired licence explicitly</span>
+<span class="sd">   authorises their nationality.</span>
+
+<span class="sd">3. **Monetary Drawdown Interlock** — Prevents procurement orders from exceeding</span>
+<span class="sd">   the authorised monetary ceiling on a licence.</span>
+
+<span class="sd">Workflow</span>
+<span class="sd">--------</span>
+
+<span class="sd">Before any action on an export-controlled node:</span>
+
+<span class="sd">1. Read the node's ``export_control_regime`` (ITAR, EAR_ECCN, UK_MILITARY_LIST,</span>
+<span class="sd">   etc.).</span>
+<span class="sd">2. If the regime is ``NOT_CONTROLLED`` or ``OPEN_GENERAL``, access is granted.</span>
+<span class="sd">3. Otherwise, look up active ``ExportControlLicense`` records for the node.</span>
+<span class="sd">4. Verify the caller's nationality and employer CAGE against licence authorisations.</span>
+<span class="sd">5. If unauthorised, abort with HTTP 403 and log an</span>
+<span class="sd">   ``EXPORT_CONTROL_BREACH_ATTEMPT`` audit event.</span>
+
+<span class="sd">Monetary Drawdown</span>
+<span class="sd">-----------------</span>
+
+<span class="sd">When committing a procurement purchase order or supplier milestone:</span>
+
+<span class="sd">1. Look up the active licence for the work package.</span>
+<span class="sd">2. Check if ``current_drawn_value + transaction_value &lt;= monetary_ceiling``.</span>
+<span class="sd">3. If the ceiling would be exceeded, reject the transaction.</span>
+<span class="sd">4. On success, increment ``current_drawn_value`` atomically.</span>
+
+<span class="sd">Functions</span>
+<span class="sd">---------</span>
+
+<span class="sd">- :func:`verify_export_control_compliance` — Gate access to controlled nodes.</span>
+<span class="sd">- :func:`check_monetary_drawdown` — Validate procurement against licence ceiling.</span>
+<span class="sd">- :func:`draw_down_license` — Atomically increment the drawn value.</span>
+<span class="sd">- :func:`_log_breach_attempt` — Record unauthorised access attempts.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span><span class="p">,</span> <span class="n">and_</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">ExportControlLicense</span><span class="p">,</span>
+    <span class="n">ExportControlLicenseType</span><span class="p">,</span>
+    <span class="n">IssuingAuthority</span><span class="p">,</span>
+    <span class="n">ExportControlRegime</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span>
+    <span class="n">AuditActionType</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="ExportControlViolationException">
+<a class="viewcode-back" href="../../../modules.html#app.core.export_control.ExportControlViolationException">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExportControlViolationException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raised when a user attempts to access export-controlled data without authorisation.</span>
+
+<span class="sd">    This exception signals an immediate access denial.  The caller should</span>
+<span class="sd">    return HTTP 403 with the violation details.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        ID of the user who triggered the violation.</span>
+<span class="sd">    node_id : UUID</span>
+<span class="sd">        ID of the controlled node that was accessed.</span>
+<span class="sd">    reason : str</span>
+<span class="sd">        Human-readable explanation of the violation.</span>
+<span class="sd">    status_code : int</span>
+<span class="sd">        HTTP status code (403).</span>
+<span class="sd">    headers : dict</span>
+<span class="sd">        HTTP headers including violation flag.</span>
+<span class="sd">    detail : str</span>
+<span class="sd">        Detail message for the violation.</span>
+<span class="sd">    """</span>
+
+    <span class="n">status_code</span> <span class="o">=</span> <span class="mi">403</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"X-Export-Control-Violation"</span><span class="p">:</span> <span class="s2">"true"</span><span class="p">}</span>
+
+<div class="viewcode-block" id="ExportControlViolationException.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.core.export_control.ExportControlViolationException.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="n">reason</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">detail</span> <span class="o">=</span> <span class="n">reason</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">reason</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_user_nationalities</span><span class="p">(</span><span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract all nationality codes for a user.</span>
+
+<span class="sd">    Combines primary citizenship and any dual citizenships into a single</span>
+<span class="sd">    list of ISO 3166-1 alpha-2 country codes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The user whose nationalities are being extracted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of str</span>
+<span class="sd">        List of country codes, e.g., ``['US', 'GB']``.</span>
+<span class="sd">    """</span>
+    <span class="n">nationalities</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">primary_citizenship</span><span class="p">:</span>
+        <span class="n">nationalities</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">primary_citizenship</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">dual_citizenships</span><span class="p">:</span>
+        <span class="n">nationalities</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">dual_citizenships</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">nationalities</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_active_licenses_for_node</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">as_of_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ExportControlLicense</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Retrieve all active, non-expired licences for a given node.</span>
+
+<span class="sd">    A licence is considered active if:</span>
+
+<span class="sd">    1. Its ``effective_date`` is on or before the check date.</span>
+<span class="sd">    2. Its ``expiration_date`` is on or after the check date.</span>
+<span class="sd">    3. It is linked to the specified ``portfolio_node_id``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    node_id : UUID</span>
+<span class="sd">        ID of the portfolio node.</span>
+<span class="sd">    as_of_date : date or None</span>
+<span class="sd">        Date to check against.  Defaults to today.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of ExportControlLicense</span>
+<span class="sd">        Active licences covering the node.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">as_of_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">as_of_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+
+    <span class="n">stmt</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ExportControlLicense</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">and_</span><span class="p">(</span>
+                <span class="n">ExportControlLicense</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">node_id</span><span class="p">,</span>
+                <span class="n">ExportControlLicense</span><span class="o">.</span><span class="n">effective_date</span> <span class="o">&lt;=</span> <span class="n">as_of_date</span><span class="p">,</span>
+                <span class="n">ExportControlLicense</span><span class="o">.</span><span class="n">expiration_date</span> <span class="o">&gt;=</span> <span class="n">as_of_date</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_log_breach_attempt</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">action_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Record an export control breach attempt in the forensic audit log.</span>
+
+<span class="sd">    Creates a new audit entry with action type ``EXPORT_CONTROL_BREACH_ATTEMPT``</span>
+<span class="sd">    containing details about the unauthorised access attempt.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    user : User</span>
+<span class="sd">        User who attempted the unauthorised access.</span>
+<span class="sd">    node_id : UUID</span>
+<span class="sd">        ID of the controlled node.</span>
+<span class="sd">    action_type : str</span>
+<span class="sd">        Description of the action attempted (e.g., "VIEW", "CREATE_ORDER").</span>
+<span class="sd">    reason : str</span>
+<span class="sd">        Why the access was denied.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
+
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"user:</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="n">AuditActionType</span><span class="o">.</span><span class="n">EXPORT_CONTROL_BREACH_ATTEMPT</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"PortfolioNode"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"attempted_action"</span><span class="p">:</span> <span class="n">action_type</span><span class="p">,</span>
+            <span class="s2">"reason"</span><span class="p">:</span> <span class="n">reason</span><span class="p">,</span>
+            <span class="s2">"user_nationalities"</span><span class="p">:</span> <span class="n">_get_user_nationalities</span><span class="p">(</span><span class="n">user</span><span class="p">),</span>
+            <span class="s2">"user_cage"</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">assigned_vendor_cage</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="s2">"OFFICIAL"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="verify_export_control_compliance">
+<a class="viewcode-back" href="../../../modules.html#app.core.export_control.verify_export_control_compliance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">verify_export_control_compliance</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">action_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"VIEW"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Verify export control compliance before allowing access to a controlled node.</span>
+
+<span class="sd">    This is the primary gate function called before any action on an</span>
+<span class="sd">    export-controlled work package.  It performs the following checks:</span>
+
+<span class="sd">    1. **Regime Check** — Reads the node's ``export_control_regime``.</span>
+<span class="sd">       If ``NOT_CONTROLLED`` or ``OPEN_GENERAL``, access is immediately granted.</span>
+
+<span class="sd">    2. **Nationality Check** — For controlled regimes (ITAR, EAR_ECCN,</span>
+<span class="sd">       UK_MILITARY_LIST), verifies the user's nationality against the node's</span>
+<span class="sd">       ``authorized_nationalities`` and any active licences.</span>
+
+<span class="sd">    3. **CAGE Code Check** — If the user has an ``assigned_vendor_cage``,</span>
+<span class="sd">       verifies it against the authorised contractor CAGEs on active licences.</span>
+
+<span class="sd">    4. **Foreign Disclosure Gate** — If the user's nationality is outside</span>
+<span class="sd">       the home territory (e.g., a US citizen accessing a UK sovereign node),</span>
+<span class="sd">       asserts that an active, non-expired licence explicitly authorises that</span>
+<span class="sd">       nationality.</span>
+
+<span class="sd">    If any check fails, an ``ExportControlViolationException`` is raised</span>
+<span class="sd">    and an ``EXPORT_CONTROL_BREACH_ATTEMPT`` audit event is logged.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    node_id : UUID</span>
+<span class="sd">        ID of the target portfolio node.</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The user attempting the action.</span>
+<span class="sd">    action_type : str</span>
+<span class="sd">        Description of the action being attempted (e.g., "VIEW", "EDIT",</span>
+<span class="sd">        "CREATE_ORDER").  Used in audit logging.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        ``True`` if the user is authorised to access the node.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ExportControlViolationException</span>
+<span class="sd">        If the user is not authorised.  The exception contains the reason</span>
+<span class="sd">        for denial and triggers an audit log entry.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Load the target node</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_id</span><span class="p">))</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExportControlViolationException</span><span class="p">(</span><span class="s2">"Target node not found"</span><span class="p">)</span>
+
+    <span class="c1"># NOT_CONTROLLED and OPEN_GENERAL regimes do not require licensing</span>
+    <span class="n">regime</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">export_control_regime</span>
+    <span class="k">if</span> <span class="n">regime</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ExportControlRegime</span><span class="o">.</span><span class="n">NOT_CONTROLLED</span><span class="p">,</span> <span class="n">ExportControlRegime</span><span class="o">.</span><span class="n">OPEN_GENERAL</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">user_nationalities</span> <span class="o">=</span> <span class="n">_get_user_nationalities</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+    <span class="n">user_cage</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">assigned_vendor_cage</span>
+
+    <span class="c1"># Check node-level authorized_nationalities if set</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">authorized_nationalities</span><span class="p">:</span>
+        <span class="c1"># User must have at least one matching nationality</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">authorized_nationalities</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">user_nationalities</span><span class="p">):</span>
+            <span class="n">_log_breach_attempt</span><span class="p">(</span>
+                <span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">action_type</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"Nationality </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2"> not in node authorized_nationalities </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">authorized_nationalities</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="n">ExportControlViolationException</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Nationality </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2"> not authorised for regime </span><span class="si">{</span><span class="n">regime</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="sa">f</span><span class="s2">"Authorised nationalities: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">authorized_nationalities</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+    <span class="c1"># For ITAR, only US persons can access without a specific licence</span>
+    <span class="k">if</span> <span class="n">regime</span> <span class="o">==</span> <span class="n">ExportControlRegime</span><span class="o">.</span><span class="n">ITAR</span><span class="p">:</span>
+        <span class="n">us_nationalities</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"US"</span><span class="p">,</span> <span class="s2">"USA"</span><span class="p">}</span>
+        <span class="n">has_us_nationality</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">us_nationalities</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">user_nationalities</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_us_nationality</span><span class="p">:</span>
+            <span class="c1"># Foreign national accessing ITAR data — must have an active licence</span>
+            <span class="n">active_licenses</span> <span class="o">=</span> <span class="n">_get_active_licenses_for_node</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node_id</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">active_licenses</span><span class="p">:</span>
+                <span class="n">_log_breach_attempt</span><span class="p">(</span>
+                    <span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">action_type</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Foreign national </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2"> accessing ITAR node without active licence"</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ExportControlViolationException</span><span class="p">(</span>
+                    <span class="s2">"ITAR-controlled data requires US person status or active export licence. "</span>
+                    <span class="sa">f</span><span class="s2">"User nationalities: </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Check if any active licence authorises the user's nationality</span>
+            <span class="n">authorised</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">license</span> <span class="ow">in</span> <span class="n">active_licenses</span><span class="p">:</span>
+                <span class="n">lic_nations</span> <span class="o">=</span> <span class="n">license</span><span class="o">.</span><span class="n">authorized_foreign_nations</span> <span class="ow">or</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">lic_nations</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">user_nationalities</span><span class="p">):</span>
+                    <span class="c1"># If user has a CAGE, it must also be authorised</span>
+                    <span class="k">if</span> <span class="n">user_cage</span> <span class="ow">and</span> <span class="n">license</span><span class="o">.</span><span class="n">authorized_contractor_cages</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">user_cage</span> <span class="ow">in</span> <span class="n">license</span><span class="o">.</span><span class="n">authorized_contractor_cages</span><span class="p">:</span>
+                            <span class="n">authorised</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">authorised</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">authorised</span><span class="p">:</span>
+                <span class="n">_log_breach_attempt</span><span class="p">(</span>
+                    <span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">action_type</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Foreign national </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2"> accessing ITAR node — no licence authorises this nationality"</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ExportControlViolationException</span><span class="p">(</span>
+                    <span class="s2">"No active export licence authorises your nationality for this ITAR-controlled node"</span>
+                <span class="p">)</span>
+
+    <span class="c1"># For UK_MILITARY_LIST, check UK nationality or active licence</span>
+    <span class="k">if</span> <span class="n">regime</span> <span class="o">==</span> <span class="n">ExportControlRegime</span><span class="o">.</span><span class="n">UK_MILITARY_LIST</span><span class="p">:</span>
+        <span class="n">uk_nationalities</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"GB"</span><span class="p">,</span> <span class="s2">"GBR"</span><span class="p">,</span> <span class="s2">"UK"</span><span class="p">}</span>
+        <span class="n">has_uk_nationality</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">uk_nationalities</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">user_nationalities</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">has_uk_nationality</span><span class="p">:</span>
+            <span class="n">active_licenses</span> <span class="o">=</span> <span class="n">_get_active_licenses_for_node</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node_id</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">active_licenses</span><span class="p">:</span>
+                <span class="n">_log_breach_attempt</span><span class="p">(</span>
+                    <span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">action_type</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Non-UK national </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2"> accessing UK military list node without licence"</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ExportControlViolationException</span><span class="p">(</span>
+                    <span class="s2">"UK military-list data requires UK nationality or active export licence. "</span>
+                    <span class="sa">f</span><span class="s2">"User nationalities: </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span>
+
+            <span class="n">authorised</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">license</span> <span class="ow">in</span> <span class="n">active_licenses</span><span class="p">:</span>
+                <span class="n">lic_nations</span> <span class="o">=</span> <span class="n">license</span><span class="o">.</span><span class="n">authorized_foreign_nations</span> <span class="ow">or</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">lic_nations</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">user_nationalities</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">user_cage</span> <span class="ow">and</span> <span class="n">license</span><span class="o">.</span><span class="n">authorized_contractor_cages</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">user_cage</span> <span class="ow">in</span> <span class="n">license</span><span class="o">.</span><span class="n">authorized_contractor_cages</span><span class="p">:</span>
+                            <span class="n">authorised</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">authorised</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">authorised</span><span class="p">:</span>
+                <span class="n">_log_breach_attempt</span><span class="p">(</span>
+                    <span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">action_type</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">"Non-UK national </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2"> — no licence authorises access"</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">ExportControlViolationException</span><span class="p">(</span>
+                    <span class="s2">"No active export licence authorises your nationality for this UK military-list node"</span>
+                <span class="p">)</span>
+
+    <span class="c1"># For EAR_ECCN, check authorised nationalities or active licence</span>
+    <span class="k">if</span> <span class="n">regime</span> <span class="o">==</span> <span class="n">ExportControlRegime</span><span class="o">.</span><span class="n">EAR_ECCN</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">authorized_nationalities</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># No explicit nationality list on node — check for active licence</span>
+            <span class="n">active_licenses</span> <span class="o">=</span> <span class="n">_get_active_licenses_for_node</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">active_licenses</span><span class="p">:</span>
+                <span class="n">authorised</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">license</span> <span class="ow">in</span> <span class="n">active_licenses</span><span class="p">:</span>
+                    <span class="n">lic_nations</span> <span class="o">=</span> <span class="n">license</span><span class="o">.</span><span class="n">authorized_foreign_nations</span> <span class="ow">or</span> <span class="p">[]</span>
+                    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">lic_nations</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">user_nationalities</span><span class="p">):</span>
+                        <span class="n">authorised</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">authorised</span> <span class="ow">and</span> <span class="n">user_nationalities</span><span class="p">:</span>
+                    <span class="n">_log_breach_attempt</span><span class="p">(</span>
+                        <span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">action_type</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">"Nationality </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2"> not authorised by any active EAR licence"</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">ExportControlViolationException</span><span class="p">(</span>
+                        <span class="s2">"No active EAR licence authorises your nationality for this node"</span>
+                    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="check_monetary_drawdown">
+<a class="viewcode-back" href="../../../modules.html#app.core.export_control.check_monetary_drawdown">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_monetary_drawdown</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">license_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">transaction_value</span><span class="p">:</span> <span class="n">Decimal</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if a procurement transaction would exceed the licence monetary ceiling.</span>
+
+<span class="sd">    Before committing a purchase order or supplier milestone, this function</span>
+<span class="sd">    verifies that adding the transaction value to the current drawn amount</span>
+<span class="sd">    would not exceed the authorised monetary ceiling.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    license_id : UUID</span>
+<span class="sd">        ID of the export control licence.</span>
+<span class="sd">    transaction_value : Decimal</span>
+<span class="sd">        Value of the proposed transaction.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        ``True`` if the transaction is within the ceiling.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the transaction would exceed the monetary ceiling.</span>
+<span class="sd">        The error message includes the remaining available amount.</span>
+<span class="sd">    """</span>
+    <span class="n">license</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ExportControlLicense</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ExportControlLicense</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">license_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">license</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Export control licence </span><span class="si">{</span><span class="n">license_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># If no monetary ceiling is set, the licence has no monetary restriction</span>
+    <span class="k">if</span> <span class="n">license</span><span class="o">.</span><span class="n">monetary_ceiling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="n">ceiling</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">license</span><span class="o">.</span><span class="n">monetary_ceiling</span><span class="p">))</span>
+    <span class="n">current_drawn</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">license</span><span class="o">.</span><span class="n">current_drawn_value</span><span class="p">))</span>
+    <span class="n">remaining</span> <span class="o">=</span> <span class="n">ceiling</span> <span class="o">-</span> <span class="n">current_drawn</span>
+
+    <span class="k">if</span> <span class="n">transaction_value</span> <span class="o">&gt;</span> <span class="n">remaining</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Transaction value </span><span class="si">{</span><span class="n">transaction_value</span><span class="si">}</span><span class="s2"> exceeds remaining licence ceiling. "</span>
+            <span class="sa">f</span><span class="s2">"Ceiling: </span><span class="si">{</span><span class="n">ceiling</span><span class="si">}</span><span class="s2">, Drawn: </span><span class="si">{</span><span class="n">current_drawn</span><span class="si">}</span><span class="s2">, Remaining: </span><span class="si">{</span><span class="n">remaining</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<div class="viewcode-block" id="draw_down_license">
+<a class="viewcode-back" href="../../../modules.html#app.core.export_control.draw_down_license">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">draw_down_license</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">license_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">transaction_value</span><span class="p">:</span> <span class="n">Decimal</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Decimal</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Atomically increment the drawn value on a licence after a procurement commit.</span>
+
+<span class="sd">    This function first validates the drawdown via ``check_monetary_drawdown``,</span>
+<span class="sd">    then increments ``current_drawn_value`` by the transaction amount.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    license_id : UUID</span>
+<span class="sd">        ID of the export control licence.</span>
+<span class="sd">    transaction_value : Decimal</span>
+<span class="sd">        Value to draw down from the licence ceiling.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Decimal</span>
+<span class="sd">        The new ``current_drawn_value`` after the drawdown.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the transaction would exceed the monetary ceiling.</span>
+<span class="sd">    """</span>
+    <span class="n">check_monetary_drawdown</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">license_id</span><span class="p">,</span> <span class="n">transaction_value</span><span class="p">)</span>
+
+    <span class="n">license</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ExportControlLicense</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ExportControlLicense</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">license_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">license</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Export control licence </span><span class="si">{</span><span class="n">license_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="n">current_drawn</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">license</span><span class="o">.</span><span class="n">current_drawn_value</span><span class="p">))</span>
+    <span class="n">new_value</span> <span class="o">=</span> <span class="n">current_drawn</span> <span class="o">+</span> <span class="n">transaction_value</span>
+    <span class="n">license</span><span class="o">.</span><span class="n">current_drawn_value</span> <span class="o">=</span> <span class="n">new_value</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">new_value</span></div>
+
+
+
+<div class="viewcode-block" id="get_license_remaining">
+<a class="viewcode-back" href="../../../modules.html#app.core.export_control.get_license_remaining">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_license_remaining</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">license_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Decimal</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Calculate the remaining monetary ceiling for a licence.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    license_id : UUID</span>
+<span class="sd">        ID of the export control licence.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Decimal or None</span>
+<span class="sd">        Remaining amount available under the licence, or ``None`` if the</span>
+<span class="sd">        licence has no monetary ceiling or is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">license</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ExportControlLicense</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ExportControlLicense</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">license_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">license</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">license</span><span class="o">.</span><span class="n">monetary_ceiling</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">ceiling</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">license</span><span class="o">.</span><span class="n">monetary_ceiling</span><span class="p">))</span>
+    <span class="n">current_drawn</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">license</span><span class="o">.</span><span class="n">current_drawn_value</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ceiling</span> <span class="o">-</span> <span class="n">current_drawn</span></div>
+
+
+
+<div class="viewcode-block" id="verify_nationality_compliance">
+<a class="viewcode-back" href="../../../modules.html#app.core.export_control.verify_nationality_compliance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">verify_nationality_compliance</span><span class="p">(</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Check whether a user's nationality is authorised for a controlled node.</span>
+
+<span class="sd">    Returns ``None`` when the user is authorised, or a denial reason string</span>
+<span class="sd">    when the user's citizenship does not match the node's authorised nationalities.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The user whose nationality is being checked.</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The target portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        ``None`` if authorised, otherwise a human-readable denial reason.</span>
+<span class="sd">    """</span>
+    <span class="n">regime</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">export_control_regime</span>
+    <span class="k">if</span> <span class="n">regime</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ExportControlRegime</span><span class="o">.</span><span class="n">NOT_CONTROLLED</span><span class="p">,</span> <span class="n">ExportControlRegime</span><span class="o">.</span><span class="n">OPEN_GENERAL</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">user_nationalities</span> <span class="o">=</span> <span class="n">_get_user_nationalities</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user_nationalities</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"User has no citizenship recorded"</span>
+
+    <span class="n">authorized</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">authorized_nationalities</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">authorized</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">n</span> <span class="ow">in</span> <span class="n">authorized</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">user_nationalities</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Nationality </span><span class="si">{</span><span class="n">user_nationalities</span><span class="si">}</span><span class="s2"> not authorised for regime </span><span class="si">{</span><span class="n">regime</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"Authorised nationalities: </span><span class="si">{</span><span class="n">authorized</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="verify_employer_licence">
+<a class="viewcode-back" href="../../../modules.html#app.core.export_control.verify_employer_licence">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">verify_employer_licence</span><span class="p">(</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Check whether a user's employer holds an active licence for a controlled node.</span>
+
+<span class="sd">    Returns ``None`` when the employer is authorised, or a denial reason string</span>
+<span class="sd">    when the employer is not listed in the node's TAA/MLA reference.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The user whose employer is being checked.</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The target portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        ``None`` if authorised, otherwise a human-readable denial reason.</span>
+<span class="sd">    """</span>
+    <span class="n">regime</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">export_control_regime</span>
+    <span class="k">if</span> <span class="n">regime</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ExportControlRegime</span><span class="o">.</span><span class="n">NOT_CONTROLLED</span><span class="p">,</span> <span class="n">ExportControlRegime</span><span class="o">.</span><span class="n">OPEN_GENERAL</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">taa_ref</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">taa_mla_reference</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">taa_ref</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"No TAA/MLA licence reference set for regime </span><span class="si">{</span><span class="n">regime</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="n">employer</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">employer_legal_entity</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">employer</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"User has no employer legal entity recorded"</span>
+
+    <span class="k">if</span> <span class="n">employer</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">taa_ref</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Employer '</span><span class="si">{</span><span class="n">employer</span><span class="si">}</span><span class="s2">' is not an authorised licensee under "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">taa_ref</span><span class="si">}</span><span class="s2"> for regime </span><span class="si">{</span><span class="n">regime</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="verify_foreign_disclosure_compliance">
+<a class="viewcode-back" href="../../../modules.html#app.core.export_control.verify_foreign_disclosure_compliance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">verify_foreign_disclosure_compliance</span><span class="p">(</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Session</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">action_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"VIEW"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Verify foreign disclosure compliance before allowing access to a controlled node.</span>
+
+<span class="sd">    This is a convenience wrapper around :func:`verify_export_control_compliance`</span>
+<span class="sd">    that accepts a ``PortfolioNode`` instance instead of a node ID, matching the</span>
+<span class="sd">    signature expected by the cockpit router.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The user attempting the action.</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The target portfolio node.</span>
+<span class="sd">    db : Session or None</span>
+<span class="sd">        Active database session (optional for lightweight checks).</span>
+<span class="sd">    action_type : str</span>
+<span class="sd">        Description of the action being attempted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        ``True`` if the user is authorised to access the node.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ExportControlViolationException</span>
+<span class="sd">        If the user is not authorised.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Run nationality check</span>
+    <span class="n">nationality_reason</span> <span class="o">=</span> <span class="n">verify_nationality_compliance</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nationality_reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExportControlViolationException</span><span class="p">(</span><span class="n">nationality_reason</span><span class="p">)</span>
+
+    <span class="c1"># Run employer licence check</span>
+    <span class="n">employer_reason</span> <span class="o">=</span> <span class="n">verify_employer_licence</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">employer_reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ExportControlViolationException</span><span class="p">(</span><span class="n">employer_reason</span><span class="p">)</span>
+
+    <span class="c1"># If db is available, run full compliance check</span>
+    <span class="k">if</span> <span class="n">db</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">verify_export_control_compliance</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">action_type</span><span class="o">=</span><span class="n">action_type</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

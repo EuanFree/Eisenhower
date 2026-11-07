@@ -1,0 +1,643 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Other Features &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Other Features</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/other.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="other-features">
+<h1>Other Features<a class="headerlink" href="#other-features" title="Link to this heading"></a></h1>
+<p>Additional features and utilities.</p>
+<section id="cdrl">
+<h2>cdrl<a class="headerlink" href="#cdrl" title="Link to this heading"></a></h2>
+<p>Contract Deliverables (CDRL/SDRL) and Verification &amp; Validation (V&amp;V) API router.</p>
+<p>This module provides the API endpoints for managing contract deliverables
+and V&amp;V test cases within the Eisenhower Portfolio Manager.</p>
+<section id="contract-deliverables">
+<h3>Contract Deliverables<a class="headerlink" href="#contract-deliverables" title="Link to this heading"></a></h3>
+<p>In defence contracting, every contract specifies a set of formal deliverables
+(CDRLs — Contract Data Requirements List, or SDRLs — Supplier Data Requirements
+List) that must be produced, submitted, reviewed, and accepted.  Each deliverable
+follows a lifecycle from DRAFTING through SUBMITTED, UNDER_REVIEW, and finally
+ACCEPTED (or REJECTED).</p>
+<p>The review window is a critical tracking metric: once a deliverable is submitted,
+the contracting authority has a defined number of days to review it.  These
+endpoints expose countdown queries so programme managers can see which reviews
+are approaching their deadline.</p>
+</section>
+<section id="verification-validation">
+<h3>Verification &amp; Validation<a class="headerlink" href="#verification-validation" title="Link to this heading"></a></h3>
+<p>V&amp;V test cases provide objective, physical completion gates.  Before a work
+package can be marked as 100% complete, all mandatory test cases must be in
+either PASSED or WAIVED status.  The V&amp;V gate check endpoint is used by the
+progress update flow to enforce this interlock.</p>
+</section>
+<section id="billing-milestone-interlock">
+<h3>Billing Milestone Interlock<a class="headerlink" href="#billing-milestone-interlock" title="Link to this heading"></a></h3>
+<p>Billing milestones linked to CDRLs cannot transition to complete while the
+CDRL status is REJECTED or UNDER_REVIEW.  This check is performed in the
+V&amp;V gate check endpoint.</p>
+</section>
+</section>
+<section id="endpoints">
+<h2>Endpoints<a class="headerlink" href="#endpoints" title="Link to this heading"></a></h2>
+<dl class="simple">
+<dt>CDRL Operations:</dt><dd><p>GET    /api/v1/cdrl/ — List all deliverables with optional filtering.
+POST   /api/v1/cdrl/ — Create a new deliverable.
+GET    /api/v1/cdrl/{id} — Get a single deliverable.
+PUT    /api/v1/cdrl/{id} — Update a deliverable (status transitions, submission).
+DELETE /api/v1/cdrl/{id} — Delete a deliverable.
+GET    /api/v1/cdrl/countdown — List deliverables with review deadlines approaching.</p>
+</dd>
+<dt>V&amp;V Test Case Operations:</dt><dd><p>GET    /api/v1/cdrl/node/{node_id}/vv-tests — List V&amp;V test cases for a node.
+POST   /api/v1/cdrl/node/{node_id}/vv-tests — Create a V&amp;V test case.
+PUT    /api/v1/cdrl/vv-tests/{id} — Update a V&amp;V test case status.
+DELETE /api/v1/cdrl/vv-tests/{id} — Delete a V&amp;V test case.</p>
+</dd>
+<dt>V&amp;V Gate Check:</dt><dd><p>GET    /api/v1/cdrl/node/{node_id}/vv-gate-check — Check if a node can complete.</p>
+</dd>
+</dl>
+</section>
+<section id="comments">
+<h2>Comments<a class="headerlink" href="#comments" title="Link to this heading"></a></h2>
+<p>Comments router for task-level discussion threads.</p>
+<p>This module provides REST endpoints for creating, reading, updating, and
+deleting comments attached to tasks within the portfolio management system.
+Comments allow team members to discuss task details, share updates, and
+maintain an audit trail of decisions.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This router uses the legacy relational data model (Task, Project, Portfolio)
+and is <strong>not imported</strong> by the main FastAPI application.  It is retained for
+reference only.  The current system uses the unified
+<a class="reference internal" href="../../modules.html#app.models.models.UniversalBreakdownNode" title="app.models.models.UniversalBreakdownNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniversalBreakdownNode</span></code></a> tree structure with the
+WBS router (<a class="reference internal" href="../../modules.html#module-app.routers.wbs" title="app.routers.wbs"><code class="xref py py-mod docutils literal notranslate"><span class="pre">app.routers.wbs</span></code></a>).</p>
+</div>
+<section id="id1">
+<h3>Endpoints<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+</section>
+</section>
+<section id="access-control">
+<h2>Access Control<a class="headerlink" href="#access-control" title="Link to this heading"></a></h2>
+<p>Comments are accessible only to users who have membership in the portfolio
+that contains the task’s project.  Only the comment author may edit or
+delete their own comments; administrators may delete any comment.</p>
+</section>
+<section id="db-health">
+<h2>db_health<a class="headerlink" href="#db-health" title="Link to this heading"></a></h2>
+<p>Database health and maintenance API router.</p>
+<p>This module exposes the <code class="docutils literal notranslate"><span class="pre">/api/v1/admin/db-health</span></code> endpoint for querying
+database health metrics and triggering maintenance tasks. It provides
+administrators with visibility into replication lag, index fragmentation,
+table bloat, and WAL archiving status.</p>
+</section>
+<section id="id2">
+<h2>Endpoints<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>GET /api/v1/admin/db-health</strong> — Returns current database health metrics
+without running maintenance.</p></li>
+<li><p><strong>POST /api/v1/admin/db-health/run-maintenance</strong> — Triggers a full
+maintenance run (VACUUM ANALYZE, re-index) and returns the results.</p></li>
+</ul>
+</section>
+<section id="security">
+<h2>Security<a class="headerlink" href="#security" title="Link to this heading"></a></h2>
+<p>All endpoints require JWT authentication. In production, these endpoints
+should be accessible only to administrators with clearance ≥ SECRET.</p>
+<p>The maintenance tasks require superuser privileges on the PostgreSQL
+database. In a Patroni HA cluster, maintenance should be run only on
+the primary node.</p>
+</section>
+<section id="facilities">
+<h2>facilities<a class="headerlink" href="#facilities" title="Link to this heading"></a></h2>
+<p>Facility reservation and timeline API endpoints.</p>
+<p>This router provides endpoints for managing chamber reservations and
+viewing facility timelines.  It is the primary interface for booking
+high-demand physical resources (EMC Anechoic Chambers, Thermal Vacuum
+Chambers, HIL rigs) and checking their availability.</p>
+</section>
+<section id="id3">
+<h2>Endpoints<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>POST /reservations</strong> — Create a new chamber reservation with full
+validation (capability gate, calibration gate, buffer enforcement).</p></li>
+<li><p><strong>GET /locations/{id}/timeline</strong> — Retrieve the time-phased reservation
+timeline for a facility, including buffer/cooldown slots.</p></li>
+</ul>
+</section>
+<section id="id4">
+<h2>Security<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<p>All endpoints require JWT authentication via <a class="reference internal" href="../../modules.html#app.utils.auth.get_current_user" title="app.utils.auth.get_current_user"><code class="xref py py-func docutils literal notranslate"><span class="pre">app.utils.auth.get_current_user()</span></code></a>.
+The authenticated user’s clearance level is checked against the facility’s
+security classification before returning reservation data.</p>
+</section>
+<section id="line-management">
+<h2>Line Management<a class="headerlink" href="#line-management" title="Link to this heading"></a></h2>
+<p>Line management, leave booking, and resource downtime API router.</p>
+<p>This module exposes REST endpoints for:</p>
+<ol class="arabic simple">
+<li><p><strong>Line Management</strong> — Setting and querying reporting relationships.</p></li>
+<li><p><strong>Leave Requests</strong> — Submitting, approving, rejecting, and cancelling leave.</p></li>
+<li><p><strong>Leave Impact Assessment</strong> — Checking team overlap and delivery risk.</p></li>
+<li><p><strong>Resource Downtime</strong> — Scheduling and managing physical resource offline periods.</p></li>
+<li><p><strong>Skills Management</strong> — Querying and managing user skill profiles.</p></li>
+</ol>
+<section id="id5">
+<h3>Endpoints<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+</section>
+</section>
+<section id="id6">
+<h2>Line Management<a class="headerlink" href="#id6" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/line-management/my-manager</span></code> — Get current user’s line manager.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/line-management/my-reports</span></code> — Get direct reports of current user.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/line-management/all-reports</span></code> — Get all direct and indirect reports.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/line-management/chain-of-command</span></code> — Get full chain of command.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/line-management/hierarchy</span></code> — Get nested team hierarchy tree.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/api/v1/line-management/set-manager/{user_id}</span></code> — Set a user’s line manager (admin).</p></li>
+</ul>
+</section>
+<section id="leave-requests">
+<h2>Leave Requests<a class="headerlink" href="#leave-requests" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/leave/requests</span></code> — Submit a new leave request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/leave/my-requests</span></code> — Get current user’s leave requests.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/leave/pending</span></code> — Get pending requests for current user’s reports.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/leave/{id}/approve</span></code> — Approve a pending leave request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/leave/{id}/reject</span></code> — Reject a pending leave request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/leave/{id}/cancel</span></code> — Cancel own pending leave request.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/leave/overlap-assessment</span></code> — Assess team leave overlap risk.</p></li>
+</ul>
+</section>
+<section id="resource-downtime">
+<h2>Resource Downtime<a class="headerlink" href="#resource-downtime" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/downtime</span></code> — Schedule resource offline period.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/downtime</span></code> — List upcoming downtime records.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/downtime/{resource_id}</span></code> — Get downtime for a specific resource.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">/api/v1/downtime/{id}</span></code> — Cancel a scheduled downtime.</p></li>
+</ul>
+</section>
+<section id="skills">
+<h2>Skills<a class="headerlink" href="#skills" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/skills</span></code> — List all skill definitions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/skills/categories</span></code> — List all skill categories.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/skills/my-skills</span></code> — Get current user’s skill profiles.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/skills/add</span></code> — Add or update a skill for current user.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">/api/v1/skills/{skill_id}</span></code> — Remove a skill from current user.</p></li>
+</ul>
+</section>
+<section id="milestones">
+<h2>Milestones<a class="headerlink" href="#milestones" title="Link to this heading"></a></h2>
+<p>Milestones router for project milestone tracking.</p>
+<p>This module provides REST endpoints for creating, reading, updating, and
+deleting milestones associated with projects.  Milestones represent key
+date-driven checkpoints in a project schedule, such as design reviews,
+contractual delivery dates, or phase gate approvals.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This router uses the legacy relational data model (Milestone, Project,
+Portfolio) and is <strong>not imported</strong> by the main FastAPI application.  It is
+retained for reference only.  The current system uses the unified
+<a class="reference internal" href="../../modules.html#app.models.models.UniversalBreakdownNode" title="app.models.models.UniversalBreakdownNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniversalBreakdownNode</span></code></a> tree structure with
+milestone weight steps managed by the EVM router
+(<a class="reference internal" href="../../modules.html#module-app.routers.evm" title="app.routers.evm"><code class="xref py py-mod docutils literal notranslate"><span class="pre">app.routers.evm</span></code></a>).</p>
+</div>
+<section id="id7">
+<h3>Endpoints<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/milestones/</span></code></p></td>
+<td><p>List milestones with optional filters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/milestones/</span></code></p></td>
+<td><p>Create a new milestone.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/milestones/{id}</span></code></p></td>
+<td><p>Get a single milestone by ID.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/milestones/{id}</span></code></p></td>
+<td><p>Update a milestone.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">/milestones/{id}</span></code></p></td>
+<td><p>Delete a milestone.</p></td>
+</tr>
+<tr class="row-odd"><td colspan="2"><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/milestones/project/{id}</span></code> | Get all milestones for a project.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="id8">
+<h2>Access Control<a class="headerlink" href="#id8" title="Link to this heading"></a></h2>
+<p>Milestones are accessible only to users who have membership in the portfolio
+that contains the milestone’s project.  Viewers cannot create, update, or
+delete milestones.</p>
+</section>
+<section id="dev-mock-fixtures">
+<h2>dev: mock fixtures<a class="headerlink" href="#dev-mock-fixtures" title="Link to this heading"></a></h2>
+<p>Developer mock fixtures — reproducible test scenarios for UI integration.</p>
+<p>This module provides seed data scenarios that populate the database with
+realistic, defence-domain test data for rapid frontend development and
+integration testing.  Each scenario is a self-contained programme with
+50+ nodes, PDM dependency links, 3-point Monte Carlo estimates, resource
+assignments, simulated clashes, and baseline snapshots.</p>
+<p>Scenarios are designed to exercise every UI component in the HMI catalog:</p>
+<ul class="simple">
+<li><p><strong>Gantt chart</strong>: Multi-level WBS with planned/actual dates, progress,
+blockers, cross-hatch shading, and baseline comparisons.</p></li>
+<li><p><strong>Jagged drop line</strong>: Mix of ahead, on-track, behind, and complete tasks.</p></li>
+<li><p><strong>Daily cockpit</strong>: Active sprint load, blocked items, urgent tasks,
+focus queue, and claimable placeholder tasks.</p></li>
+<li><p><strong>Clash triage</strong>: Resource double-bookings, clearance lapses, and
+facility collisions with proposed leveling shifts.</p></li>
+<li><p><strong>Display settings</strong>: Server-side profile hydration on login.</p></li>
+</ul>
+</section>
+<section id="available-scenarios">
+<h2>Available Scenarios<a class="headerlink" href="#available-scenarios" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>avionics-radar</strong> — Avionics radar development programme with 50 nodes
+spanning requirements, design, development, integration, and test phases.
+Includes PDM links (FS/SS/FF/SF), 3-point estimates, resource assignments,
+and simulated clashes.</p></li>
+<li><p><strong>minimal</strong> — Small 10-node scenario for quick smoke testing of the
+Gantt chart and basic cockpit views.</p></li>
+</ol>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<p>In development environments, call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">dev</span><span class="o">/</span><span class="n">fixtures</span><span class="o">/</span><span class="n">avionics</span><span class="o">-</span><span class="n">radar</span>
+</pre></div>
+</div>
+<p>This clears and repopulates the database with the scenario data, returning
+a summary of what was seeded.  The endpoint is <strong>only available when
+``ENVIRONMENT != ‘production’``</strong> to prevent accidental data loss.</p>
+</section>
+<section id="security-warning">
+<h2>Security Warning<a class="headerlink" href="#security-warning" title="Link to this heading"></a></h2>
+<p>This endpoint is <strong>DANGEROUS</strong> — it clears existing data.  It is gated
+behind the <code class="docutils literal notranslate"><span class="pre">ENVIRONMENT</span></code> setting and will <strong>not load</strong> in production.
+Never expose this endpoint in a production deployment.</p>
+</section>
+<section id="portfolios">
+<h2>Portfolios<a class="headerlink" href="#portfolios" title="Link to this heading"></a></h2>
+<p>Portfolios router for top-level programme container management.</p>
+<p>This module provides REST endpoints for creating, reading, updating, and
+deleting portfolios, as well as managing portfolio membership.  Portfolios
+are the highest-level containers in the legacy data model, grouping related
+projects under a common governance structure.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This router uses the legacy relational data model (Portfolio, PortfolioMember)
+and is <strong>not imported</strong> by the main FastAPI application.  It is retained for
+reference only.  The current system uses the unified
+<a class="reference internal" href="../../modules.html#app.models.models.UniversalBreakdownNode" title="app.models.models.UniversalBreakdownNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniversalBreakdownNode</span></code></a> tree structure with the
+WBS router (<a class="reference internal" href="../../modules.html#module-app.routers.wbs" title="app.routers.wbs"><code class="xref py py-mod docutils literal notranslate"><span class="pre">app.routers.wbs</span></code></a>).</p>
+</div>
+<section id="id9">
+<h3>Endpoints<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+</section>
+</section>
+<section id="id10">
+<h2>Access Control<a class="headerlink" href="#id10" title="Link to this heading"></a></h2>
+<p>Portfolios are accessible to their owner and all members.  Only the owner
+or members with edit roles can modify portfolio settings or manage membership.</p>
+</section>
+<section id="projects">
+<h2>Projects<a class="headerlink" href="#projects" title="Link to this heading"></a></h2>
+<p>Projects router for mid-level project container management.</p>
+<p>This module provides REST endpoints for creating, reading, updating, and
+deleting projects within portfolios.  Projects sit between portfolios and
+tasks in the legacy hierarchy, representing discrete work efforts with their
+own managers, statuses, and priorities.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This router uses the legacy relational data model (Project, Portfolio)
+and is <strong>not imported</strong> by the main FastAPI application.  It is retained
+for reference only.  The current system uses the unified
+<a class="reference internal" href="../../modules.html#app.models.models.UniversalBreakdownNode" title="app.models.models.UniversalBreakdownNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniversalBreakdownNode</span></code></a> tree structure with the
+WBS router (<a class="reference internal" href="../../modules.html#module-app.routers.wbs" title="app.routers.wbs"><code class="xref py py-mod docutils literal notranslate"><span class="pre">app.routers.wbs</span></code></a>).</p>
+</div>
+<section id="id11">
+<h3>Endpoints<a class="headerlink" href="#id11" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/projects/</span></code></p></td>
+<td><p>List accessible projects.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/projects/</span></code></p></td>
+<td><p>Create a new project.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/projects/{id}</span></code></p></td>
+<td><p>Get a single project by ID.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/projects/{id}</span></code></p></td>
+<td><p>Update a project.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">/projects/{id}</span></code></p></td>
+<td><p>Delete a project.</p></td>
+</tr>
+<tr class="row-odd"><td colspan="2"><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/projects/{id}/stats</span></code> | Get project statistics (task counts).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="id12">
+<h2>Access Control<a class="headerlink" href="#id12" title="Link to this heading"></a></h2>
+<p>Projects are accessible to users who have membership in the containing
+portfolio.  Only the portfolio owner, project manager, or non-viewer members
+can edit projects.</p>
+</section>
+<section id="tasks">
+<h2>Tasks<a class="headerlink" href="#tasks" title="Link to this heading"></a></h2>
+<p>Tasks router for work item management within projects.</p>
+<p>This module provides REST endpoints for creating, reading, updating, and
+deleting tasks within projects.  Tasks are the lowest-level work items in
+the legacy data model, representing individual units of work with assignees,
+priorities, statuses, and due dates.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This router uses the legacy relational data model (Task, Project, Portfolio)
+and is <strong>not imported</strong> by the main FastAPI application.  It is retained for
+reference only.  The current system uses the unified
+<a class="reference internal" href="../../modules.html#app.models.models.UniversalBreakdownNode" title="app.models.models.UniversalBreakdownNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniversalBreakdownNode</span></code></a> tree structure with the
+WBS router (<a class="reference internal" href="../../modules.html#module-app.routers.wbs" title="app.routers.wbs"><code class="xref py py-mod docutils literal notranslate"><span class="pre">app.routers.wbs</span></code></a>).</p>
+</div>
+<section id="id13">
+<h3>Endpoints<a class="headerlink" href="#id13" title="Link to this heading"></a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/tasks/</span></code></p></td>
+<td><p>List tasks with various filters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/tasks/</span></code></p></td>
+<td><p>Create a new task.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/tasks/{id}</span></code></p></td>
+<td><p>Get a single task by ID.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/tasks/{id}</span></code></p></td>
+<td><p>Update a task.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">/tasks/{id}</span></code></p></td>
+<td><p>Delete a task.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="id14">
+<h2>Access Control<a class="headerlink" href="#id14" title="Link to this heading"></a></h2>
+<p>Tasks are accessible to users who have membership in the portfolio containing
+the task’s project, or to the task’s direct assignee.  Only the portfolio
+owner, project manager, or non-viewer members can create, update, or delete
+tasks.</p>
+</section>
+<section id="custom-fields">
+<h2>custom_fields<a class="headerlink" href="#custom-fields" title="Link to this heading"></a></h2>
+<p>Admin router for Custom Field Definition CRUD operations.</p>
+<p>This module provides the API endpoints for managing custom field definitions
+in the portfolio management system.  Only users with PMO_DIRECTOR or
+SYSTEM_ADMIN roles can create, update, or delete field definitions.</p>
+</section>
+<section id="id15">
+<h2>Endpoints<a class="headerlink" href="#id15" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>GET /custom-fields</strong> — List definitions (filterable by target_entity).</p></li>
+<li><p><strong>POST /custom-fields</strong> — Create a new definition.</p></li>
+<li><p><strong>GET /custom-fields/{id}</strong> — Get a single definition.</p></li>
+<li><p><strong>PUT /custom-fields/{id}</strong> — Update an existing definition.</p></li>
+<li><p><strong>DELETE /custom-fields/{id}</strong> — Soft-deactivate a definition.</p></li>
+</ul>
+</section>
+<section id="id16">
+<h2>Access Control<a class="headerlink" href="#id16" title="Link to this heading"></a></h2>
+<p>All endpoints require JWT authentication.  Create, update, and delete
+operations require the SYSTEM_ADMIN role.  List and get operations are
+available to all authenticated users.</p>
+</section>
+<section id="id17">
+<h2>Usage<a class="headerlink" href="#id17" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">app.routers.admin.custom_fields</span><span class="w"> </span><span class="kn">import</span> <span class="n">router</span>
+
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/admin"</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="see-also">
+<h3>See Also<a class="headerlink" href="#see-also" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">app.models.custom_fields</span></code> — CustomFieldDefinition model.</p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">app.schemas.custom_fields</span></code> — Pydantic schemas.</p></li>
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">app.services.custom_field_engine</span></code> — Validation engine.</p></li>
+</ul>
+</section>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: List all contract deliverables with optional filtering.</p></li>
+<li><p><strong>View</strong>: Get a single contract deliverable by ID.</p></li>
+<li><p><strong>View</strong>: List deliverables with review deadlines approaching or overdue.</p></li>
+<li><p><strong>View</strong>: List all V&amp;V test cases for a portfolio node.</p></li>
+<li><p><strong>View</strong>: Check whether a portfolio node can be marked as 100% complete.</p></li>
+<li><p><strong>View</strong>: List comments with optional filters.</p></li>
+<li><p><strong>View</strong>: Get a comment by ID.</p></li>
+<li><p><strong>View</strong>: Get all comments for a specific task.</p></li>
+<li><p><strong>View</strong>: Get the current user’s direct line manager.</p></li>
+<li><p><strong>View</strong>: Get all users who report directly to the current user.</p></li>
+<li><p><strong>View</strong>: Get all direct and indirect reports of the current user.</p></li>
+<li><p><strong>View</strong>: Get the full chain of command from the current user upward.</p></li>
+<li><p><strong>View</strong>: Get the nested team hierarchy tree rooted at the current user.</p></li>
+<li><p><strong>View</strong>: List milestones with optional filters.</p></li>
+<li><p><strong>View</strong>: Get a milestone by ID.</p></li>
+<li><p><strong>View</strong>: Get all milestones for a specific project.</p></li>
+<li><p><strong>View</strong>: Load a reproducible test scenario into the database.</p></li>
+<li><p><strong>View</strong>: List available test scenarios.</p></li>
+<li><p><strong>View</strong>: Return a mock Gantt chart payload for UI testing.</p></li>
+<li><p><strong>View</strong>: Return a mock jagged drop line payload for UI testing.</p></li>
+<li><p><strong>View</strong>: Return a mock Daily Cockpit summary payload for UI testing.</p></li>
+<li><p><strong>View</strong>: Return a mock clash triage payload for UI testing.</p></li>
+<li><p><strong>View</strong>: Return a mock display settings payload for UI testing.</p></li>
+<li><p><strong>View</strong>: Return the HMI Component Catalog JSON Schema manifest.</p></li>
+<li><p><strong>View</strong>: List portfolios accessible to the current user.</p></li>
+<li><p><strong>View</strong>: Get a portfolio by ID.</p></li>
+<li><p><strong>View</strong>: List all members of a portfolio.</p></li>
+<li><p><strong>View</strong>: Get statistics for a portfolio.</p></li>
+<li><p><strong>View</strong>: List projects accessible to the current user, optionally filtered by portfolio.</p></li>
+<li><p><strong>View</strong>: Get a project by ID.</p></li>
+<li><p><strong>View</strong>: Get statistics for a project.</p></li>
+<li><p><strong>View</strong>: List tasks with various filters.</p></li>
+<li><p><strong>View</strong>: Get a task by ID.</p></li>
+<li><p><strong>View</strong>: Get all subtasks of a task.</p></li>
+<li><p><strong>View</strong>: Get task update history (basic - returns key timestamps).</p></li>
+</ul>
+<p><strong>Creating New Items</strong></p>
+<ul class="simple">
+<li><p><strong>Create</strong>: Create a new Contract Deliverable.</p></li>
+<li><p><strong>Create</strong>: Create a new V&amp;V test case for a portfolio node.</p></li>
+<li><p><strong>Create</strong>: Create a new comment on a task.</p></li>
+<li><p><strong>Create</strong>: Create a new milestone.</p></li>
+<li><p><strong>Create</strong>: Create a new portfolio.</p></li>
+<li><p><strong>Create</strong>: Add a member to a portfolio.</p></li>
+<li><p><strong>Create</strong>: Create a new project within a portfolio.</p></li>
+<li><p><strong>Create</strong>: Create a new task.</p></li>
+</ul>
+<p><strong>Updating Information</strong></p>
+<ul class="simple">
+<li><p><strong>Update</strong>: Update an existing contract deliverable.</p></li>
+<li><p><strong>Update</strong>: Update an existing V&amp;V test case.</p></li>
+<li><p><strong>Update</strong>: Update a comment (only the author can edit).</p></li>
+<li><p><strong>Update</strong>: Set or change a user’s direct line manager (admin only).</p></li>
+<li><p><strong>Update</strong>: Update a milestone.</p></li>
+<li><p><strong>Update</strong>: Update a portfolio.</p></li>
+<li><p><strong>Update</strong>: Update a portfolio member’s role.</p></li>
+<li><p><strong>Update</strong>: Update a project.</p></li>
+<li><p><strong>Update</strong>: Update a task.</p></li>
+</ul>
+<p><strong>Removing Items</strong></p>
+<ul class="simple">
+<li><p><strong>Delete</strong>: Delete a contract deliverable.</p></li>
+<li><p><strong>Delete</strong>: Delete a V&amp;V test case.</p></li>
+<li><p><strong>Delete</strong>: Delete a comment (author or admin).</p></li>
+<li><p><strong>Delete</strong>: Delete a milestone.</p></li>
+<li><p><strong>Delete</strong>: Delete a portfolio (owner only).</p></li>
+<li><p><strong>Delete</strong>: Remove a member from a portfolio.</p></li>
+<li><p><strong>Delete</strong>: Delete a project.</p></li>
+<li><p><strong>Delete</strong>: Delete a task and its subtasks.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

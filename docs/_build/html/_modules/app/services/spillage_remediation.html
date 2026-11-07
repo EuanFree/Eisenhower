@@ -1,0 +1,919 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.spillage_remediation &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.spillage_remediation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.spillage_remediation</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Classified spillage remediation engine for emergency data purges.</span>
+
+<span class="sd">This module implements the emergency spillage purge mechanism required</span>
+<span class="sd">by UK MOD JSP 440 / JSP 604 and US DoD IL5/IL6 guidelines.  When</span>
+<span class="sd">classified data is accidentally disclosed to an unauthorized system</span>
+<span class="sd">or personnel (a "spillage" event), the contaminated content must be</span>
+<span class="sd">surgically redacted while preserving the integrity of the forensic</span>
+<span class="sd">audit trail.</span>
+
+<span class="sd">Multi-Signature Authorization</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Any spillage purge requires authorization from at least two Superusers</span>
+<span class="sd">with clearance at or above SECRET.  The workflow is:</span>
+
+<span class="sd">1. An incident ticket is created referencing the spillage event.</span>
+<span class="sd">2. The first Superuser signs the purge request, creating a</span>
+<span class="sd">   :class:`SpillagePurgeSignature` record.</span>
+<span class="sd">3. A second Superuser signs the same request.</span>
+<span class="sd">4. Once two valid signatures exist, the purge engine executes the</span>
+<span class="sd">   emergency scrub.</span>
+
+<span class="sd">Surgical Redaction</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Rather than deleting records (which would break the SHA-256 audit</span>
+<span class="sd">chain), the purge engine:</span>
+
+<span class="sd">1. **Redacts** — Replaces contaminated content (task names, descriptions,</span>
+<span class="sd">   custom attributes) with the marker:</span>
+<span class="sd">   ``[PURGED UNDER CLASSIFIED SPILLAGE PROTOCOL - REF: &lt;TICKET&gt;]``</span>
+
+<span class="sd">2. **Tombstones** — In the immutable :class:`ForensicAuditLog`, sets</span>
+<span class="sd">   ``is_purged = True`` and replaces ``json_diff`` with a cryptographically</span>
+<span class="sd">   hashed redaction marker.</span>
+
+<span class="sd">3. **Certifies** — Records an unalterable</span>
+<span class="sd">   ``SPILLAGE_REDACTION_CERTIFICATE`` entry in the audit log, signed</span>
+<span class="sd">   by both purging officers.</span>
+
+<span class="sd">Security Considerations</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- The purge never deletes rows from ForensicAuditLog — chain continuity</span>
+<span class="sd">  is preserved by tombstoning rather than deletion.</span>
+<span class="sd">- Each redaction is cryptographically linked to the incident ticket</span>
+<span class="sd">  reference for external security accreditation boards.</span>
+<span class="sd">- The purge operation itself is recorded in the audit log with SHA-256</span>
+<span class="sd">  chained hashing.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    from app.services.spillage_remediation import execute_emergency_spillage_purge</span>
+
+<span class="sd">    result = await execute_emergency_spillage_purge(</span>
+<span class="sd">        db=db,</span>
+<span class="sd">        incident_ticket_ref="INC-2026-0042",</span>
+<span class="sd">        search_terms=["CLASSIFIED_PROGRAM_NAME"],</span>
+<span class="sd">        entity_ids=[node_id_1, node_id_2],</span>
+<span class="sd">        purging_user_ids=[admin_1_id, admin_2_id],</span>
+<span class="sd">    )</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span><span class="p">,</span> <span class="n">String</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.ext.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span>
+    <span class="n">SpillagePurgeSignature</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Constants</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">PURGE_MARKER_TEMPLATE</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"[PURGED UNDER CLASSIFIED SPILLAGE PROTOCOL - REF: </span><span class="si">{ticket}</span><span class="s2">]"</span>
+<span class="p">)</span>
+<span class="sd">"""Template for the redaction marker text.</span>
+
+<span class="sd">The ``{ticket}`` placeholder is replaced with the incident ticket</span>
+<span class="sd">reference (e.g., ``INC-2026-0042``).</span>
+<span class="sd">"""</span>
+
+<span class="n">MIN_SIGNATURES_REQUIRED</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="sd">"""Minimum number of Superuser signatures required to execute a purge."""</span>
+
+<span class="n">MIN_CLEARANCE_FOR_PURGE</span> <span class="o">=</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span>
+<span class="sd">"""Minimum clearance level required to sign a spillage purge."""</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Helper Functions</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_sha256</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute SHA-256 hash of a string.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : str</span>
+<span class="sd">        The string to hash.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Hex-encoded SHA-256 digest.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_json_sha256</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute SHA-256 hash of a JSON-serializable dictionary.</span>
+
+<span class="sd">    Uses canonical JSON encoding (sorted keys, no extra whitespace) to</span>
+<span class="sd">    ensure deterministic hashing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">        The dictionary to hash.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Hex-encoded SHA-256 digest.</span>
+<span class="sd">    """</span>
+    <span class="n">canonical</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_compute_sha256</span><span class="p">(</span><span class="n">canonical</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_purge_marker</span><span class="p">(</span><span class="n">ticket_ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate the redaction marker text for a given incident ticket.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ticket_ref : str</span>
+<span class="sd">        The incident ticket reference (e.g., ``INC-2026-0042``).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The redaction marker string.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">PURGE_MARKER_TEMPLATE</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ticket</span><span class="o">=</span><span class="n">ticket_ref</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_redaction_hash_marker</span><span class="p">(</span><span class="n">ticket_ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Generate a cryptographically hashed redaction marker for audit log.</span>
+
+<span class="sd">    Instead of deleting the json_diff, we replace it with a marker that</span>
+<span class="sd">    contains a SHA-256 hash of the original data, proving that data once</span>
+<span class="sd">    existed here without exposing its content.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ticket_ref : str</span>
+<span class="sd">        The incident ticket reference.</span>
+<span class="sd">    entity_id : str</span>
+<span class="sd">        The entity ID that was redacted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary suitable for storing in json_diff that proves</span>
+<span class="sd">        redaction occurred without exposing the original content.</span>
+<span class="sd">    """</span>
+    <span class="n">marker</span> <span class="o">=</span> <span class="n">_purge_marker</span><span class="p">(</span><span class="n">ticket_ref</span><span class="p">)</span>
+    <span class="n">content_hash</span> <span class="o">=</span> <span class="n">_compute_sha256</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ticket_ref</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">entity_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"redacted"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"redaction_type"</span><span class="p">:</span> <span class="s2">"CLASSIFIED_SPILLAGE_REMEDIATION"</span><span class="p">,</span>
+        <span class="s2">"incident_ticket_ref"</span><span class="p">:</span> <span class="n">ticket_ref</span><span class="p">,</span>
+        <span class="s2">"entity_id"</span><span class="p">:</span> <span class="n">entity_id</span><span class="p">,</span>
+        <span class="s2">"original_content_hash"</span><span class="p">:</span> <span class="n">content_hash</span><span class="p">,</span>
+        <span class="s2">"redacted_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="s2">"marker"</span><span class="p">:</span> <span class="n">marker</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Multi-Signature Verification</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="verify_purge_authorization">
+<a class="viewcode-back" href="../../../modules.html#app.services.spillage_remediation.verify_purge_authorization">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">verify_purge_authorization</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">incident_ticket_ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">purging_user_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Verify that a spillage purge has sufficient multi-sig authorization.</span>
+
+<span class="sd">    Checks that:</span>
+
+<span class="sd">    1. At least ``MIN_SIGNATURES_REQUIRED`` (2) unique Superusers have</span>
+<span class="sd">       signed the purge request.</span>
+<span class="sd">    2. Each signing user has clearance at or above SECRET.</span>
+<span class="sd">    3. Each signing user has the ADMIN role.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    incident_ticket_ref : str</span>
+<span class="sd">        The incident ticket reference.</span>
+<span class="sd">    purging_user_ids : list of int</span>
+<span class="sd">        User IDs of the signing Superusers.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Verification result with keys:</span>
+<span class="sd">        - ``authorized`` (bool): Whether the purge is authorized.</span>
+<span class="sd">        - ``signature_count`` (int): Number of valid signatures.</span>
+<span class="sd">        - ``signatures`` (list): List of signature records.</span>
+<span class="sd">        - ``errors`` (list): List of authorization errors.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If authorization requirements are not met.</span>
+<span class="sd">    """</span>
+    <span class="n">errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">signatures</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">clearance_levels</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"OFFICIAL"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"OFFICIAL_SENSITIVE"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">"SECRET"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">"TOP_SECRET"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">min_clearance_rank</span> <span class="o">=</span> <span class="n">clearance_levels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">MIN_CLEARANCE_FOR_PURGE</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">2</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">purging_user_ids</span><span class="p">:</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"User </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">role</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="s2">"admin"</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"User </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="si">}</span><span class="s2">) does not have ADMIN role"</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">user_clearance_rank</span> <span class="o">=</span> <span class="n">clearance_levels</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">user_clearance_rank</span> <span class="o">&lt;</span> <span class="n">min_clearance_rank</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"User </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="si">}</span><span class="s2">) clearance "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> is below minimum "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">MIN_CLEARANCE_FOR_PURGE</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">signatures</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"user_id"</span><span class="p">:</span> <span class="n">user_id</span><span class="p">,</span>
+            <span class="s2">"user_upn"</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+            <span class="s2">"clearance_level"</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="p">})</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">signatures</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">MIN_SIGNATURES_REQUIRED</span><span class="p">:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Insufficient signatures: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">signatures</span><span class="p">)</span><span class="si">}</span><span class="s2"> provided, "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">MIN_SIGNATURES_REQUIRED</span><span class="si">}</span><span class="s2"> required"</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"authorized"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">"signature_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">signatures</span><span class="p">),</span>
+            <span class="s2">"signatures"</span><span class="p">:</span> <span class="n">signatures</span><span class="p">,</span>
+            <span class="s2">"errors"</span><span class="p">:</span> <span class="n">errors</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"authorized"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"signature_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">signatures</span><span class="p">),</span>
+        <span class="s2">"signatures"</span><span class="p">:</span> <span class="n">signatures</span><span class="p">,</span>
+        <span class="s2">"errors"</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="record_purge_signatures">
+<a class="viewcode-back" href="../../../modules.html#app.services.spillage_remediation.record_purge_signatures">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">record_purge_signatures</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">incident_ticket_ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">purging_user_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">purge_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">certificate_serials</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">SpillagePurgeSignature</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Record multi-signature authorization for a spillage purge.</span>
+
+<span class="sd">    Creates a :class:`SpillagePurgeSignature` record for each signing</span>
+<span class="sd">    Superuser, linking the signature to the incident ticket reference.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    incident_ticket_ref : str</span>
+<span class="sd">        The incident ticket reference.</span>
+<span class="sd">    purging_user_ids : list of int</span>
+<span class="sd">        User IDs of the signing Superusers.</span>
+<span class="sd">    purge_params : dict</span>
+<span class="sd">        The purge request parameters (hashed for the signature).</span>
+<span class="sd">    certificate_serials : list of str, optional</span>
+<span class="sd">        Smartcard certificate serial numbers for each signer.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of SpillagePurgeSignature</span>
+<span class="sd">        The created signature records.</span>
+<span class="sd">    """</span>
+    <span class="n">signature_hash</span> <span class="o">=</span> <span class="n">_compute_json_sha256</span><span class="p">(</span><span class="n">purge_params</span><span class="p">)</span>
+    <span class="n">created_signatures</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SpillagePurgeSignature</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">purging_user_ids</span><span class="p">):</span>
+        <span class="n">cert_serial</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">certificate_serials</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">certificate_serials</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">SpillagePurgeSignature</span><span class="p">(</span>
+            <span class="n">incident_ticket_ref</span><span class="o">=</span><span class="n">incident_ticket_ref</span><span class="p">,</span>
+            <span class="n">purging_user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="n">signed_at</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">),</span>
+            <span class="n">signature_hash</span><span class="o">=</span><span class="n">signature_hash</span><span class="p">,</span>
+            <span class="n">certificate_serial</span><span class="o">=</span><span class="n">cert_serial</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+        <span class="n">created_signatures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sig</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">created_signatures</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Surgical Redaction</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="redact_node_content">
+<a class="viewcode-back" href="../../../modules.html#app.services.spillage_remediation.redact_node_content">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">redact_node_content</span><span class="p">(</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">ticket_ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Surgically redact classified content from a node.</span>
+
+<span class="sd">    Replaces the node's name, code, and custom_attributes with the</span>
+<span class="sd">    purge marker while preserving the node's structural integrity</span>
+<span class="sd">    (path, parent_id, etc.) so the tree hierarchy remains intact.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : UniversalBreakdownNode</span>
+<span class="sd">        The node to redact.</span>
+<span class="sd">    ticket_ref : str</span>
+<span class="sd">        The incident ticket reference.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary of the fields that were redacted, for audit logging.</span>
+<span class="sd">    """</span>
+    <span class="n">marker</span> <span class="o">=</span> <span class="n">_purge_marker</span><span class="p">(</span><span class="n">ticket_ref</span><span class="p">)</span>
+
+    <span class="n">old_values</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="s2">"custom_attributes"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Redact text fields</span>
+    <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">marker</span>
+    <span class="n">node</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">marker</span>
+
+    <span class="c1"># Redact custom attributes — preserve structure but replace values</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">:</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"redacted"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"redaction_marker"</span><span class="p">:</span> <span class="n">marker</span><span class="p">,</span>
+            <span class="s2">"incident_ticket_ref"</span><span class="p">:</span> <span class="n">ticket_ref</span><span class="p">,</span>
+            <span class="s2">"redacted_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">old_values</span></div>
+
+
+
+<div class="viewcode-block" id="redact_audit_log_entries">
+<a class="viewcode-back" href="../../../modules.html#app.services.spillage_remediation.redact_audit_log_entries">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">redact_audit_log_entries</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">entity_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UUID</span><span class="p">],</span>
+    <span class="n">ticket_ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Tombstone audit log entries for the affected entities.</span>
+
+<span class="sd">    Rather than deleting rows (which breaks chain continuity), this</span>
+<span class="sd">    function sets ``is_purged = True`` and replaces ``json_diff`` with</span>
+<span class="sd">    a cryptographically hashed redaction marker.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    entity_ids : list of UUID</span>
+<span class="sd">        Entity IDs whose audit entries should be tombstoned.</span>
+<span class="sd">    ticket_ref : str</span>
+<span class="sd">        The incident ticket reference.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Number of audit entries that were tombstoned.</span>
+<span class="sd">    """</span>
+    <span class="n">entity_id_strs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">eid</span><span class="p">)</span> <span class="k">for</span> <span class="n">eid</span> <span class="ow">in</span> <span class="n">entity_ids</span><span class="p">]</span>
+
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">entity_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">entity_id_strs</span><span class="p">),</span>
+        <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">is_purged</span> <span class="o">==</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># noqa: E712</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+        <span class="c1"># Compute the redaction marker</span>
+        <span class="n">redaction_marker</span> <span class="o">=</span> <span class="n">_redaction_hash_marker</span><span class="p">(</span>
+            <span class="n">ticket_ref</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">entity_id</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Preserve the original hash for the tombstone record</span>
+        <span class="n">redaction_marker</span><span class="p">[</span><span class="s2">"original_current_hash"</span><span class="p">]</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">current_hash</span>
+        <span class="n">redaction_marker</span><span class="p">[</span><span class="s2">"original_prev_hash"</span><span class="p">]</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">prev_hash</span>
+
+        <span class="c1"># Tombstone the entry</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">is_purged</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">json_diff</span> <span class="o">=</span> <span class="n">redaction_marker</span>
+
+        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">count</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Certificate Generation</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="create_spillage_redaction_certificate">
+<a class="viewcode-back" href="../../../modules.html#app.services.spillage_remediation.create_spillage_redaction_certificate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_spillage_redaction_certificate</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">incident_ticket_ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">purging_user_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">entity_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UUID</span><span class="p">],</span>
+    <span class="n">redacted_node_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">tombstoned_audit_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ForensicAuditLog</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a SPILLAGE_REDACTION_CERTIFICATE audit log entry.</span>
+
+<span class="sd">    This entry serves as an unalterable certificate of the purge</span>
+<span class="sd">    operation, signed by both purging officers.  It is recorded in</span>
+<span class="sd">    the ForensicAuditLog with SHA-256 chained hashing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    incident_ticket_ref : str</span>
+<span class="sd">        The incident ticket reference.</span>
+<span class="sd">    purging_user_ids : list of int</span>
+<span class="sd">        User IDs of the purging officers.</span>
+<span class="sd">    entity_ids : list of UUID</span>
+<span class="sd">        Entity IDs that were redacted.</span>
+<span class="sd">    redacted_node_count : int</span>
+<span class="sd">        Number of nodes that were redacted.</span>
+<span class="sd">    tombstoned_audit_count : int</span>
+<span class="sd">        Number of audit entries that were tombstoned.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ForensicAuditLog</span>
+<span class="sd">        The created certificate audit entry.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Fetch the latest chain hash</span>
+    <span class="n">latest</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span>
+        <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">()</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="n">prev_hash</span> <span class="o">=</span> <span class="n">latest</span><span class="o">.</span><span class="n">current_hash</span> <span class="k">if</span> <span class="n">latest</span> <span class="k">else</span> <span class="s2">""</span>
+
+    <span class="c1"># Build the certificate data</span>
+    <span class="n">purging_users</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">uid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">uid</span> <span class="ow">in</span> <span class="n">purging_user_ids</span>
+    <span class="p">]</span>
+    <span class="n">purging_upns</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">u</span><span class="o">.</span><span class="n">email</span> <span class="k">if</span> <span class="n">u</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"unknown-</span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s2">"</span>
+        <span class="k">for</span> <span class="n">uid</span><span class="p">,</span> <span class="n">u</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">purging_user_ids</span><span class="p">,</span> <span class="n">purging_users</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="n">certificate_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"certificate_type"</span><span class="p">:</span> <span class="s2">"SPILLAGE_REDACTION_CERTIFICATE"</span><span class="p">,</span>
+        <span class="s2">"incident_ticket_ref"</span><span class="p">:</span> <span class="n">incident_ticket_ref</span><span class="p">,</span>
+        <span class="s2">"purging_officers"</span><span class="p">:</span> <span class="n">purging_upns</span><span class="p">,</span>
+        <span class="s2">"entity_ids"</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">eid</span><span class="p">)</span> <span class="k">for</span> <span class="n">eid</span> <span class="ow">in</span> <span class="n">entity_ids</span><span class="p">],</span>
+        <span class="s2">"redacted_node_count"</span><span class="p">:</span> <span class="n">redacted_node_count</span><span class="p">,</span>
+        <span class="s2">"tombstoned_audit_count"</span><span class="p">:</span> <span class="n">tombstoned_audit_count</span><span class="p">,</span>
+        <span class="s2">"certificate_hash"</span><span class="p">:</span> <span class="n">_compute_sha256</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">incident_ticket_ref</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">redacted_node_count</span><span class="si">}</span><span class="s2">:"</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tombstoned_audit_count</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">),</span>
+        <span class="s2">"signed_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Create the certificate audit entry</span>
+    <span class="n">transaction_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span>
+    <span class="n">security_marking</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"SPILLAGE_REDACTION - </span><span class="si">{</span><span class="n">incident_ticket_ref</span><span class="si">}</span><span class="s2"> - "</span>
+        <span class="sa">f</span><span class="s2">"OFFICERS: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">purging_upns</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span>
+
+    <span class="n">cert_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">transaction_id</span><span class="p">,</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">purging_upns</span><span class="p">),</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"SPILLAGE_REDACTION_CERTIFICATE"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"SpillageRemediation"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">transaction_id</span><span class="p">,</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="n">certificate_data</span><span class="p">,</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="n">security_marking</span><span class="p">,</span>
+        <span class="n">prev_hash</span><span class="o">=</span><span class="n">prev_hash</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cert_entry</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">cert_entry</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Main Purge Orchestrator</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="execute_emergency_spillage_purge">
+<a class="viewcode-back" href="../../../modules.html#app.services.spillage_remediation.execute_emergency_spillage_purge">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">execute_emergency_spillage_purge</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">incident_ticket_ref</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">search_terms</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">entity_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">UUID</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">purging_user_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">certificate_serials</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Execute an emergency classified spillage purge.</span>
+
+<span class="sd">    This is the main orchestrator function that performs the complete</span>
+<span class="sd">    spillage remediation workflow:</span>
+
+<span class="sd">    1. **Verify** — Checks multi-signature authorization from two</span>
+<span class="sd">       Superusers with clearance ≥ SECRET.</span>
+<span class="sd">    2. **Record** — Creates SpillagePurgeSignature records for each</span>
+<span class="sd">       signing officer.</span>
+<span class="sd">    3. **Identify** — Finds all nodes matching the search terms or</span>
+<span class="sd">       entity IDs.</span>
+<span class="sd">    4. **Redact** — Surgically replaces contaminated content with</span>
+<span class="sd">       the purge marker.</span>
+<span class="sd">    5. **Tombstone** — Marks affected audit log entries as purged</span>
+<span class="sd">       with cryptographic redaction markers.</span>
+<span class="sd">    6. **Certify** — Creates a SPILLAGE_REDACTION_CERTIFICATE entry</span>
+<span class="sd">       in the immutable audit log.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    incident_ticket_ref : str</span>
+<span class="sd">        The security incident ticket reference authorizing the purge.</span>
+<span class="sd">    search_terms : list of str, optional</span>
+<span class="sd">        Text patterns to search for in node names, codes, and</span>
+<span class="sd">        custom attributes.  Nodes containing any search term will</span>
+<span class="sd">        be redacted.</span>
+<span class="sd">    entity_ids : list of UUID, optional</span>
+<span class="sd">        Specific entity IDs to redact.  If provided, search_terms</span>
+<span class="sd">        is ignored.</span>
+<span class="sd">    purging_user_ids : list of int, optional</span>
+<span class="sd">        User IDs of the signing Superusers.  If not provided, the</span>
+<span class="sd">        caller is expected to have already recorded signatures.</span>
+<span class="sd">    certificate_serials : list of str, optional</span>
+<span class="sd">        Smartcard certificate serial numbers for each signer.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Purge result with keys:</span>
+<span class="sd">        - ``incident_ticket_ref`` (str): The ticket reference.</span>
+<span class="sd">        - ``redacted_nodes`` (list): List of redacted node IDs.</span>
+<span class="sd">        - ``redacted_node_count`` (int): Number of nodes redacted.</span>
+<span class="sd">        - ``tombstoned_audit_count`` (int): Number of audit entries</span>
+<span class="sd">          tombstoned.</span>
+<span class="sd">        - ``certificate_id`` (str): UUID of the certificate audit entry.</span>
+<span class="sd">        - ``purging_officers`` (list): List of purging officer UPNs.</span>
+<span class="sd">        - ``timestamp`` (str): ISO timestamp of the purge.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If multi-signature authorization is not met.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Step 1: Verify multi-signature authorization</span>
+    <span class="k">if</span> <span class="n">purging_user_ids</span><span class="p">:</span>
+        <span class="n">auth_result</span> <span class="o">=</span> <span class="n">verify_purge_authorization</span><span class="p">(</span>
+            <span class="n">db</span><span class="p">,</span> <span class="n">incident_ticket_ref</span><span class="p">,</span> <span class="n">purging_user_ids</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">auth_result</span><span class="p">[</span><span class="s2">"authorized"</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Purge authorization failed: "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">auth_result</span><span class="p">[</span><span class="s1">'errors'</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Record the signatures</span>
+        <span class="n">purge_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"incident_ticket_ref"</span><span class="p">:</span> <span class="n">incident_ticket_ref</span><span class="p">,</span>
+            <span class="s2">"search_terms"</span><span class="p">:</span> <span class="n">search_terms</span> <span class="ow">or</span> <span class="p">[],</span>
+            <span class="s2">"entity_ids"</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">eid</span><span class="p">)</span> <span class="k">for</span> <span class="n">eid</span> <span class="ow">in</span> <span class="p">(</span><span class="n">entity_ids</span> <span class="ow">or</span> <span class="p">[])],</span>
+        <span class="p">}</span>
+        <span class="n">record_purge_signatures</span><span class="p">(</span>
+            <span class="n">db</span><span class="p">,</span>
+            <span class="n">incident_ticket_ref</span><span class="p">,</span>
+            <span class="n">purging_user_ids</span><span class="p">,</span>
+            <span class="n">purge_params</span><span class="p">,</span>
+            <span class="n">certificate_serials</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 2: Identify nodes to redact</span>
+    <span class="n">nodes_to_redact</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">entity_ids</span><span class="p">:</span>
+        <span class="c1"># Direct entity ID lookup</span>
+        <span class="n">nodes_to_redact</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">entity_ids</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">search_terms</span><span class="p">:</span>
+        <span class="c1"># Search-based identification</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">search_terms</span><span class="p">:</span>
+            <span class="n">term_lower</span> <span class="o">=</span> <span class="n">term</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">ilike</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%</span><span class="si">{</span><span class="n">term</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+                    <span class="o">|</span> <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">code</span><span class="o">.</span><span class="n">ilike</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%</span><span class="si">{</span><span class="n">term</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+            <span class="n">nodes_to_redact</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+        <span class="c1"># Deduplicate</span>
+        <span class="n">seen_ids</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">unique_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_to_redact</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen_ids</span><span class="p">:</span>
+                <span class="n">seen_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="n">unique_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">nodes_to_redact</span> <span class="o">=</span> <span class="n">unique_nodes</span>
+
+    <span class="c1"># Step 3: Redact node content</span>
+    <span class="n">redacted_node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes_to_redact</span><span class="p">:</span>
+        <span class="n">redact_node_content</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">incident_ticket_ref</span><span class="p">)</span>
+        <span class="n">redacted_node_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+
+    <span class="c1"># Step 4: Tombstone audit log entries</span>
+    <span class="n">entity_uuids</span> <span class="o">=</span> <span class="p">[</span><span class="n">UUID</span><span class="p">(</span><span class="n">eid</span><span class="p">)</span> <span class="k">for</span> <span class="n">eid</span> <span class="ow">in</span> <span class="n">redacted_node_ids</span><span class="p">]</span>
+    <span class="n">tombstoned_count</span> <span class="o">=</span> <span class="n">redact_audit_log_entries</span><span class="p">(</span>
+        <span class="n">db</span><span class="p">,</span> <span class="n">entity_uuids</span><span class="p">,</span> <span class="n">incident_ticket_ref</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 5: Create the redaction certificate</span>
+    <span class="n">purging_upns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">purging_user_ids</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">uid</span> <span class="ow">in</span> <span class="n">purging_user_ids</span><span class="p">:</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">uid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
+                <span class="n">purging_upns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
+
+    <span class="n">cert_entry</span> <span class="o">=</span> <span class="n">create_spillage_redaction_certificate</span><span class="p">(</span>
+        <span class="n">db</span><span class="p">,</span>
+        <span class="n">incident_ticket_ref</span><span class="p">,</span>
+        <span class="n">purging_user_ids</span> <span class="ow">or</span> <span class="p">[],</span>
+        <span class="n">entity_uuids</span><span class="p">,</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">redacted_node_ids</span><span class="p">),</span>
+        <span class="n">tombstoned_count</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Commit all changes</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"incident_ticket_ref"</span><span class="p">:</span> <span class="n">incident_ticket_ref</span><span class="p">,</span>
+        <span class="s2">"redacted_nodes"</span><span class="p">:</span> <span class="n">redacted_node_ids</span><span class="p">,</span>
+        <span class="s2">"redacted_node_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">redacted_node_ids</span><span class="p">),</span>
+        <span class="s2">"tombstoned_audit_count"</span><span class="p">:</span> <span class="n">tombstoned_count</span><span class="p">,</span>
+        <span class="s2">"certificate_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">cert_entry</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"purging_officers"</span><span class="p">:</span> <span class="n">purging_upns</span><span class="p">,</span>
+        <span class="s2">"timestamp"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="get_spillage_audit_certificates">
+<a class="viewcode-back" href="../../../modules.html#app.services.spillage_remediation.get_spillage_audit_certificates">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_spillage_audit_certificates</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">incident_ticket_ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Retrieve historic spillage redaction certificates.</span>
+
+<span class="sd">    Returns all SPILLAGE_REDACTION_CERTIFICATE entries from the</span>
+<span class="sd">    ForensicAuditLog, optionally filtered by incident ticket reference.</span>
+
+<span class="sd">    These certificates are used by external security accreditation</span>
+<span class="sd">    boards to verify that spillage remediation was properly authorized</span>
+<span class="sd">    and executed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    incident_ticket_ref : str, optional</span>
+<span class="sd">        Filter certificates by incident ticket reference.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of dict</span>
+<span class="sd">        List of certificate records with keys:</span>
+<span class="sd">        - ``id`` (str): Certificate audit entry ID.</span>
+<span class="sd">        - ``incident_ticket_ref`` (str): Incident ticket reference.</span>
+<span class="sd">        - ``purging_officers`` (list): UPNs of purging officers.</span>
+<span class="sd">        - ``redacted_node_count`` (int): Nodes redacted.</span>
+<span class="sd">        - ``tombstoned_audit_count`` (int): Audit entries tombstoned.</span>
+<span class="sd">        - ``signed_at`` (str): ISO timestamp of the certificate.</span>
+<span class="sd">        - ``certificate_hash`` (str): SHA-256 hash of the certificate.</span>
+<span class="sd">    """</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">action_type</span> <span class="o">==</span> <span class="s2">"SPILLAGE_REDACTION_CERTIFICATE"</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">incident_ticket_ref</span><span class="p">:</span>
+        <span class="c1"># Filter by ticket reference in json_diff</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">json_diff</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">String</span><span class="p">)</span><span class="o">.</span><span class="n">like</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"%</span><span class="si">{</span><span class="n">incident_ticket_ref</span><span class="si">}</span><span class="s2">%"</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">entries</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">certificates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+        <span class="n">json_diff</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">json_diff</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">certificates</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"incident_ticket_ref"</span><span class="p">:</span> <span class="n">json_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"incident_ticket_ref"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="s2">"purging_officers"</span><span class="p">:</span> <span class="n">json_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"purging_officers"</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="s2">"redacted_node_count"</span><span class="p">:</span> <span class="n">json_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"redacted_node_count"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="s2">"tombstoned_audit_count"</span><span class="p">:</span> <span class="n">json_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"tombstoned_audit_count"</span><span class="p">,</span> <span class="mi">0</span>
+            <span class="p">),</span>
+            <span class="s2">"signed_at"</span><span class="p">:</span> <span class="n">json_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"signed_at"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="s2">"certificate_hash"</span><span class="p">:</span> <span class="n">json_diff</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"certificate_hash"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+            <span class="s2">"created_at"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">entry</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">created_at</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+        <span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">certificates</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>init_db &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Application Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">init_db</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for init_db</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Database initialization script for the Eisenhower Portfolio Manager.</span>
+
+<span class="sd">This script prepares the PostgreSQL database for the application by:</span>
+
+<span class="sd">1. Enabling required PostgreSQL extensions (``ltree`` for hierarchical queries).</span>
+<span class="sd">2. Creating all database tables defined in the SQLAlchemy models.</span>
+<span class="sd">3. Optionally seeding a default admin user for initial access.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">Run from the project root directory::</span>
+
+<span class="sd">    # Create tables and enable extensions only</span>
+<span class="sd">    python init_db.py</span>
+
+<span class="sd">    # Also create a default admin user</span>
+<span class="sd">    python init_db.py --seed</span>
+
+<span class="sd">Default Admin Credentials</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">When using the ``--seed`` flag, the script creates an admin user with:</span>
+
+<span class="sd">- **Username**: ``admin``</span>
+<span class="sd">- **Password**: ``admin123``</span>
+
+<span class="sd">**Security Warning**: Change this password immediately after first login.</span>
+
+<span class="sd">Prerequisites</span>
+<span class="sd">~~~~~~~~~~~~~</span>
+
+<span class="sd">- PostgreSQL must be running and accessible.</span>
+<span class="sd">- The database specified in ``DATABASE_URL`` must exist.</span>
+<span class="sd">- The PostgreSQL user must have permission to create extensions.</span>
+
+<span class="sd">What Gets Created</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- **ltree extension** — Enables hierarchical path queries on the</span>
+<span class="sd">  ``universal_breakdown_nodes`` table.</span>
+<span class="sd">- **10 database tables**:</span>
+
+<span class="sd">  - ``users`` — User accounts with clearance levels.</span>
+<span class="sd">  - ``user_display_settings`` — Server-side display profiles.</span>
+<span class="sd">  - ``universal_breakdown_nodes`` — Base table for the unified tree.</span>
+<span class="sd">  - ``portfolio_nodes`` — WBS-specific data (scheduling, EVM).</span>
+<span class="sd">  - ``resource_nodes`` — RBS-specific data (type, rate, location).</span>
+<span class="sd">  - ``location_nodes`` — LBS-specific data (tier, SCIF flags).</span>
+<span class="sd">  - ``dependency_links`` — Precedence relationships between tasks.</span>
+<span class="sd">  - ``resource_assignments`` — Resource-to-task allocations.</span>
+<span class="sd">  - ``node_blockers`` — Task impediment tracking.</span>
+<span class="sd">  - ``forensic_audit_logs`` — Tamper-evident audit trail.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">engine</span><span class="p">,</span> <span class="n">Base</span><span class="p">,</span> <span class="n">SessionLocal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">UserRole</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_password_hash</span>
+
+
+<div class="viewcode-block" id="enable_extensions">
+<a class="viewcode-back" href="../modules.html#init_db.enable_extensions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">enable_extensions</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Enable required PostgreSQL extensions.</span>
+
+<span class="sd">    Specifically enables the ``ltree`` extension, which provides native</span>
+<span class="sd">    support for hierarchical path storage and querying.  Without this</span>
+<span class="sd">    extension, the ``path`` column on ``universal_breakdown_nodes``</span>
+<span class="sd">    cannot use ltree operators (``&lt;@``, ``@&gt;``, ``~``) for efficient</span>
+<span class="sd">    ancestor/descendant queries.</span>
+<span class="sd">    """</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Enabling PostgreSQL extensions..."</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">engine</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span> <span class="k">as</span> <span class="n">conn</span><span class="p">:</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">"CREATE EXTENSION IF NOT EXISTS ltree;"</span><span class="p">))</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Extensions enabled successfully."</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_tables">
+<a class="viewcode-back" href="../modules.html#init_db.create_tables">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_tables</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Create all database tables defined in the SQLAlchemy models.</span>
+
+<span class="sd">    Uses ``Base.metadata.create_all()`` to create all tables that don't</span>
+<span class="sd">    already exist.  This is safe to run multiple times — it will not</span>
+<span class="sd">    drop or modify existing tables.</span>
+
+<span class="sd">    Note: In production, use Alembic migrations instead of ``create_all``</span>
+<span class="sd">    to manage schema changes between versions.</span>
+<span class="sd">    """</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Creating database tables..."</span><span class="p">)</span>
+    <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">create_all</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Tables created successfully."</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="seed_admin_user">
+<a class="viewcode-back" href="../modules.html#init_db.seed_admin_user">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">seed_admin_user</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Create a default admin user if none exists.</span>
+
+<span class="sd">    Checks whether an admin user already exists.  If not, creates one</span>
+<span class="sd">    with the username ``admin`` and password ``admin123``.</span>
+
+<span class="sd">    Security Warning</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    The default password is intentionally simple for development.</span>
+<span class="sd">    **Change it immediately** in production environments.</span>
+<span class="sd">    """</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">SessionLocal</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Check if admin already exists</span>
+        <span class="n">admin</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="n">UserRole</span><span class="o">.</span><span class="n">ADMIN</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">admin</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Admin user already exists: </span><span class="si">{</span><span class="n">admin</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">admin_user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span>
+            <span class="n">username</span><span class="o">=</span><span class="s2">"admin"</span><span class="p">,</span>
+            <span class="n">email</span><span class="o">=</span><span class="s2">"admin@eisenhower.local"</span><span class="p">,</span>
+            <span class="n">hashed_password</span><span class="o">=</span><span class="n">get_password_hash</span><span class="p">(</span><span class="s2">"admin123"</span><span class="p">),</span>
+            <span class="n">full_name</span><span class="o">=</span><span class="s2">"System Administrator"</span><span class="p">,</span>
+            <span class="n">role</span><span class="o">=</span><span class="n">UserRole</span><span class="o">.</span><span class="n">ADMIN</span><span class="p">,</span>
+            <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">admin_user</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Admin user created: admin / admin123"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"⚠️  Please change the default password immediately!"</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">enable_extensions</span><span class="p">()</span>
+    <span class="n">create_tables</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="s2">"--seed"</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">:</span>
+        <span class="n">seed_admin_user</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Use --seed flag to create a default admin user."</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

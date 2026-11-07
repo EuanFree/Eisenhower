@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.database &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.database</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.database</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Database connection and session management.</span>
+
+<span class="sd">This module establishes the connection to the PostgreSQL database and</span>
+<span class="sd">provides the SQLAlchemy engine, session factory, and declarative base</span>
+<span class="sd">used by all ORM models.</span>
+
+<span class="sd">Connection Configuration</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- **pool_pre_ping=True** — Tests connections before use to detect stale</span>
+<span class="sd">  connections (e.g., after a database restart) and automatically replace</span>
+<span class="sd">  them.</span>
+<span class="sd">- **pool_recycle=300** — Recycles connections after 5 minutes to prevent</span>
+<span class="sd">  issues with long-lived connections that may be dropped by the database</span>
+<span class="sd">  server or network infrastructure.</span>
+<span class="sd">- **SSL/TLS** — Database connections are encrypted using SSL.  The SSL</span>
+<span class="sd">  mode is configurable via ``DATABASE_SSL_MODE`` (default: ``require``).</span>
+<span class="sd">  In production, use ``verify-ca`` or ``verify-full`` for certificate</span>
+<span class="sd">  validation to prevent man-in-the-middle attacks.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All database connections are encrypted in transit.  The SSL mode can be</span>
+<span class="sd">set to:</span>
+
+<span class="sd">- ``require`` — Encrypt the connection (default).  Does not validate the</span>
+<span class="sd">  server certificate.  Protects against eavesdropping but not MITM.</span>
+<span class="sd">- ``verify-ca`` — Encrypt and validate the server certificate against a</span>
+<span class="sd">  trusted CA.  Protects against eavesdropping and MITM.</span>
+<span class="sd">- ``verify-full`` — Encrypt, validate the certificate, and verify the</span>
+<span class="sd">  server hostname matches the certificate.  Highest security.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">The :func:`get_db` function is used as a FastAPI dependency.  Each request</span>
+<span class="sd">receives a fresh database session that is automatically closed when the</span>
+<span class="sd">request completes, even if an error occurs.</span>
+
+<span class="sd">Example</span>
+<span class="sd">~~~~~~~</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    @router.get("/items")</span>
+<span class="sd">    def list_items(db: Session = Depends(get_db)):</span>
+<span class="sd">        return db.query(Item).all()</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_engine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">sessionmaker</span><span class="p">,</span> <span class="n">declarative_base</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
+
+<span class="c1"># Build connection arguments based on database type</span>
+<span class="n">_connect_args</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">DATABASE_URL</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"sqlite"</span><span class="p">):</span>
+    <span class="n">_connect_args</span><span class="p">[</span><span class="s2">"check_same_thread"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="k">elif</span> <span class="n">settings</span><span class="o">.</span><span class="n">DATABASE_SSL_MODE</span> <span class="o">!=</span> <span class="s2">"disable"</span><span class="p">:</span>
+    <span class="n">_connect_args</span><span class="p">[</span><span class="s2">"sslmode"</span><span class="p">]</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">DATABASE_SSL_MODE</span>
+
+<span class="n">engine</span> <span class="o">=</span> <span class="n">create_engine</span><span class="p">(</span>
+    <span class="n">settings</span><span class="o">.</span><span class="n">DATABASE_URL</span><span class="p">,</span>
+    <span class="n">pool_pre_ping</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">pool_recycle</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="n">connect_args</span><span class="o">=</span><span class="n">_connect_args</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="sd">"""SQLAlchemy engine for the PostgreSQL database.</span>
+
+<span class="sd">This engine manages the connection pool and is shared across the</span>
+<span class="sd">application.  It is configured with connection health checking</span>
+<span class="sd">(pool_pre_ping), automatic recycling (pool_recycle=300), and</span>
+<span class="sd">SSL/TLS encryption (sslmode from settings).</span>
+<span class="sd">"""</span>
+
+<span class="n">SessionLocal</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">autocommit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">autoflush</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">)</span>
+<span class="sd">"""Factory for creating database sessions.</span>
+
+<span class="sd">Each call to ``SessionLocal()`` creates a new session bound to the</span>
+<span class="sd">engine's connection pool.  Sessions are not thread-safe and should</span>
+<span class="sd">be used for a single request or operation.</span>
+<span class="sd">"""</span>
+
+<span class="n">Base</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">()</span>
+<span class="sd">"""SQLAlchemy declarative base for all ORM models.</span>
+
+<span class="sd">All database models inherit from this base class, which provides</span>
+<span class="sd">the ``__tablename__`` and ``__table__`` attributes required by</span>
+<span class="sd">SQLAlchemy's ORM.</span>
+<span class="sd">"""</span>
+
+
+<div class="viewcode-block" id="get_db">
+<a class="viewcode-back" href="../../modules.html#app.database.get_db">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_db</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""FastAPI dependency that provides a database session.</span>
+
+<span class="sd">    Creates a new database session for each request and ensures it is</span>
+<span class="sd">    properly closed when the request completes, even if an error occurs.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    Session</span>
+<span class="sd">        A SQLAlchemy database session bound to the connection pool.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    ~~~~~~~</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        @router.get("/items")</span>
+<span class="sd">        def list_items(db: Session = Depends(get_db)):</span>
+<span class="sd">            return db.query(Item).all()</span>
+<span class="sd">    """</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">SessionLocal</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">db</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

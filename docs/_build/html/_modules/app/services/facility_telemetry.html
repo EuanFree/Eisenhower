@@ -1,0 +1,778 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.facility_telemetry &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.facility_telemetry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.facility_telemetry</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Facility telemetry and chamber reservation engine.</span>
+
+<span class="sd">This module manages automated facility reservation, environmental envelope</span>
+<span class="sd">tracking, and physical conflict detection for high-demand physical resources</span>
+<span class="sd">such as EMC Anechoic Chambers, Thermal Vacuum Chambers, and Hardware-in-the-Loop</span>
+<span class="sd">(HIL) rigs.</span>
+
+<span class="sd">Core Functionality</span>
+<span class="sd">------------------</span>
+
+<span class="sd">The engine provides three validation gates before a chamber reservation is</span>
+<span class="sd">committed:</span>
+
+<span class="sd">1. **Capability Gate** — Validates that the task's required environmental</span>
+<span class="sd">   envelope (e.g., operating temperature range, RF shielding, power draw)</span>
+<span class="sd">   falls within the chamber's ``chamber_capabilities``.</span>
+
+<span class="sd">2. **Calibration Gate** — Rejects the reservation if the requested end time</span>
+<span class="sd">   exceeds the chamber's ``calibration_expiry_date``.</span>
+
+<span class="sd">3. **Buffer Enforcement** — Automatically inserts warmup/cooldown buffer</span>
+<span class="sd">   windows (``requires_warmup_cooldown_hours``) before and after the test</span>
+<span class="sd">   run.  If two project reservations overlap within a cooldown window, a</span>
+<span class="sd">   FACILITY_CONTRAVENTION clash is flagged.</span>
+
+<span class="sd">Integration</span>
+<span class="sd">~~~~~~~~~~~</span>
+
+<span class="sd">The :func:`scan_chamber_conflicts` function is called by the periodic sweep</span>
+<span class="sd">daemon (:mod:`app.services.clash_daemon`) to raise immediate triage items</span>
+<span class="sd">in :class:`app.models.ScheduleClashIssue` when project dates slip into</span>
+<span class="sd">reserved chamber maintenance slots.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    from app.services.facility_telemetry import validate_chamber_feasibility</span>
+
+<span class="sd">    result = validate_chamber_feasibility(</span>
+<span class="sd">        task_id="uuid-of-testing-task",</span>
+<span class="sd">        location_id="uuid-of-chamber",</span>
+<span class="sd">        requested_start=datetime(2026, 11, 15, 8, 0),</span>
+<span class="sd">        requested_end=datetime(2026, 11, 15, 18, 0),</span>
+<span class="sd">        db=session,</span>
+<span class="sd">    )</span>
+
+<span class="sd">    if not result.valid:</span>
+<span class="sd">        raise HTTPException(422, result.errors)</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.ext.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">selectinload</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ChamberReservation</span><span class="p">,</span>
+    <span class="n">LocationNode</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">ScheduleClashIssue</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ChamberReservationCreate</span><span class="p">,</span>
+    <span class="n">ChamberReservationResponse</span><span class="p">,</span>
+    <span class="n">FacilityTimelineResponse</span><span class="p">,</span>
+    <span class="n">FacilityValidationResponse</span><span class="p">,</span>
+    <span class="n">ReservationTimelineSlot</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Chamber Feasibility Validation</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="validate_chamber_feasibility">
+<a class="viewcode-back" href="../../../modules.html#app.services.facility_telemetry.validate_chamber_feasibility">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_chamber_feasibility</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">location_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">requested_start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+    <span class="n">requested_end</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span><span class="p">,</span>
+    <span class="n">power_profile_kw</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FacilityValidationResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Validate whether a chamber reservation is feasible.</span>
+
+<span class="sd">    This function performs three sequential gates before a reservation can</span>
+<span class="sd">    be committed.  If any gate fails, the reservation is rejected with</span>
+<span class="sd">    an explicit error message.</span>
+
+<span class="sd">    Capability Gate</span>
+<span class="sd">    ~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Reads the task's ``custom_attributes`` for an ``environmental_envelope``</span>
+<span class="sd">    key (e.g., ``{"temp_min_c": -40, "temp_max_c": 85, "rf_shielding_db": 80}``)</span>
+<span class="sd">    and compares it against the chamber's ``chamber_capabilities``.  If the</span>
+<span class="sd">    task requires a temperature range that the chamber cannot achieve, the</span>
+<span class="sd">    gate fails.</span>
+
+<span class="sd">    Calibration Gate</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    If the chamber has a ``calibration_expiry_date`` and the reservation's</span>
+<span class="sd">    ``requested_end`` exceeds it, the gate fails.  This prevents scheduling</span>
+<span class="sd">    tests in uncalibrated equipment.</span>
+
+<span class="sd">    Buffer Enforcement</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Calculates the full buffer window (warmup + test + cooldown) and checks</span>
+<span class="sd">    for overlaps with existing reservations on the same chamber.  If an</span>
+<span class="sd">    overlap is detected, the gate fails with details of the conflicting</span>
+<span class="sd">    reservation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : UUID</span>
+<span class="sd">        UUID of the PortfolioNode representing the testing activity.</span>
+<span class="sd">    location_id : UUID</span>
+<span class="sd">        UUID of the LocationNode (chamber, rig, etc.) to reserve.</span>
+<span class="sd">    requested_start : datetime</span>
+<span class="sd">        Requested start of the test run (UTC).</span>
+<span class="sd">    requested_end : datetime</span>
+<span class="sd">        Requested end of the test run (UTC).</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    power_profile_kw : float or None</span>
+<span class="sd">        Expected power draw in kilowatts during the test run.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FacilityValidationResponse</span>
+<span class="sd">        Validation result with gate status and error messages.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the requested time window is invalid (end before start).</span>
+<span class="sd">    """</span>
+    <span class="n">errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">capability_gate</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">calibration_gate</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">buffer_gate</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Basic time window validation</span>
+    <span class="k">if</span> <span class="n">requested_end</span> <span class="o">&lt;=</span> <span class="n">requested_start</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"Reservation end time must be after start time."</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Load the chamber location</span>
+    <span class="n">location_stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">location_id</span>
+    <span class="p">)</span>
+    <span class="n">location_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">location_stmt</span><span class="p">)</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">location_result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">location</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FacilityValidationResponse</span><span class="p">(</span>
+            <span class="n">valid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">errors</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">"Location </span><span class="si">{</span><span class="n">location_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Load the task node</span>
+    <span class="n">task_stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">task_id</span>
+    <span class="p">)</span>
+    <span class="n">task_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">task_stmt</span><span class="p">)</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">task_result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FacilityValidationResponse</span><span class="p">(</span>
+            <span class="n">valid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">errors</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">"Task </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Gate 1: Capability Gate</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="n">chamber_caps</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">chamber_capabilities</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">task_envelope</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">:</span>
+        <span class="n">task_envelope</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">custom_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"environmental_envelope"</span><span class="p">,</span> <span class="p">{})</span>
+
+    <span class="k">if</span> <span class="n">task_envelope</span> <span class="ow">and</span> <span class="n">chamber_caps</span><span class="p">:</span>
+        <span class="c1"># Temperature range check</span>
+        <span class="n">task_temp_min</span> <span class="o">=</span> <span class="n">task_envelope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"temp_min_c"</span><span class="p">)</span>
+        <span class="n">task_temp_max</span> <span class="o">=</span> <span class="n">task_envelope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"temp_max_c"</span><span class="p">)</span>
+        <span class="n">chamber_temp_min</span> <span class="o">=</span> <span class="n">chamber_caps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"temp_min_c"</span><span class="p">)</span>
+        <span class="n">chamber_temp_max</span> <span class="o">=</span> <span class="n">chamber_caps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"temp_max_c"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">task_temp_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">chamber_temp_min</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">task_temp_min</span> <span class="o">&lt;</span> <span class="n">chamber_temp_min</span><span class="p">:</span>
+                <span class="n">capability_gate</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Task requires minimum temperature </span><span class="si">{</span><span class="n">task_temp_min</span><span class="si">}</span><span class="s2">°C, "</span>
+                    <span class="sa">f</span><span class="s2">"but chamber minimum is </span><span class="si">{</span><span class="n">chamber_temp_min</span><span class="si">}</span><span class="s2">°C."</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">task_temp_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">chamber_temp_max</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">task_temp_max</span> <span class="o">&gt;</span> <span class="n">chamber_temp_max</span><span class="p">:</span>
+                <span class="n">capability_gate</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Task requires maximum temperature </span><span class="si">{</span><span class="n">task_temp_max</span><span class="si">}</span><span class="s2">°C, "</span>
+                    <span class="sa">f</span><span class="s2">"but chamber maximum is </span><span class="si">{</span><span class="n">chamber_temp_max</span><span class="si">}</span><span class="s2">°C."</span>
+                <span class="p">)</span>
+
+        <span class="c1"># RF shielding check</span>
+        <span class="n">task_rf</span> <span class="o">=</span> <span class="n">task_envelope</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rf_shielding_db"</span><span class="p">)</span>
+        <span class="n">chamber_rf</span> <span class="o">=</span> <span class="n">chamber_caps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rf_shielding_db"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">task_rf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">chamber_rf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">task_rf</span> <span class="o">&gt;</span> <span class="n">chamber_rf</span><span class="p">:</span>
+                <span class="n">capability_gate</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Task requires </span><span class="si">{</span><span class="n">task_rf</span><span class="si">}</span><span class="s2">dB RF shielding, "</span>
+                    <span class="sa">f</span><span class="s2">"but chamber provides </span><span class="si">{</span><span class="n">chamber_rf</span><span class="si">}</span><span class="s2">dB."</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Power draw check</span>
+        <span class="k">if</span> <span class="n">power_profile_kw</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">chamber_max_power</span> <span class="o">=</span> <span class="n">chamber_caps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"max_power_kw"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">chamber_max_power</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">power_profile_kw</span> <span class="o">&gt;</span> <span class="n">chamber_max_power</span><span class="p">:</span>
+                    <span class="n">capability_gate</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Task requires </span><span class="si">{</span><span class="n">power_profile_kw</span><span class="si">}</span><span class="s2">kW power, "</span>
+                        <span class="sa">f</span><span class="s2">"but chamber maximum is </span><span class="si">{</span><span class="n">chamber_max_power</span><span class="si">}</span><span class="s2">kW."</span>
+                    <span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Gate 2: Calibration Gate</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="k">if</span> <span class="n">location</span><span class="o">.</span><span class="n">calibration_expiry_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">reservation_date</span> <span class="o">=</span> <span class="n">requested_end</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">reservation_date</span> <span class="o">&gt;</span> <span class="n">location</span><span class="o">.</span><span class="n">calibration_expiry_date</span><span class="p">:</span>
+            <span class="n">calibration_gate</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Reservation end date </span><span class="si">{</span><span class="n">reservation_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2"> exceeds "</span>
+                <span class="sa">f</span><span class="s2">"chamber calibration expiry </span><span class="si">{</span><span class="n">location</span><span class="o">.</span><span class="n">calibration_expiry_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Gate 3: Buffer Enforcement</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="n">warmup_hours</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">requires_warmup_cooldown_hours</span> <span class="ow">or</span> <span class="mf">2.0</span>
+    <span class="n">buffer_delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">warmup_hours</span><span class="p">)</span>
+    <span class="n">buffer_start</span> <span class="o">=</span> <span class="n">requested_start</span> <span class="o">-</span> <span class="n">buffer_delta</span>
+    <span class="n">buffer_end</span> <span class="o">=</span> <span class="n">requested_end</span> <span class="o">+</span> <span class="n">buffer_delta</span>
+
+    <span class="c1"># Query existing reservations that overlap with the buffer window</span>
+    <span class="n">overlap_stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">ChamberReservation</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">ChamberReservation</span><span class="o">.</span><span class="n">location_node_id</span> <span class="o">==</span> <span class="n">location_id</span><span class="p">,</span>
+        <span class="n">ChamberReservation</span><span class="o">.</span><span class="n">reserved_start</span> <span class="o">&lt;</span> <span class="n">buffer_end</span><span class="p">,</span>
+        <span class="n">ChamberReservation</span><span class="o">.</span><span class="n">reserved_end</span> <span class="o">&gt;</span> <span class="n">buffer_start</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">overlap_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">overlap_stmt</span><span class="p">)</span>
+    <span class="n">overlapping</span> <span class="o">=</span> <span class="n">overlap_result</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">overlapping</span><span class="p">:</span>
+        <span class="n">buffer_gate</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">overlapping</span><span class="p">:</span>
+            <span class="n">res_buffer_start</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">reserved_start</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span>
+                <span class="n">hours</span><span class="o">=</span><span class="n">location</span><span class="o">.</span><span class="n">requires_warmup_cooldown_hours</span> <span class="ow">or</span> <span class="mf">2.0</span>
+            <span class="p">)</span>
+            <span class="n">res_buffer_end</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">reserved_end</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span>
+                <span class="n">hours</span><span class="o">=</span><span class="n">location</span><span class="o">.</span><span class="n">requires_warmup_cooldown_hours</span> <span class="ow">or</span> <span class="mf">2.0</span>
+            <span class="p">)</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Buffer window overlaps with existing reservation "</span>
+                <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">portfolio_node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">reserved_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2"> – </span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">reserved_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">)."</span>
+            <span class="p">)</span>
+
+    <span class="n">valid</span> <span class="o">=</span> <span class="n">capability_gate</span> <span class="ow">and</span> <span class="n">calibration_gate</span> <span class="ow">and</span> <span class="n">buffer_gate</span>
+
+    <span class="k">return</span> <span class="n">FacilityValidationResponse</span><span class="p">(</span>
+        <span class="n">valid</span><span class="o">=</span><span class="n">valid</span><span class="p">,</span>
+        <span class="n">capability_gate</span><span class="o">=</span><span class="n">capability_gate</span><span class="p">,</span>
+        <span class="n">calibration_gate</span><span class="o">=</span><span class="n">calibration_gate</span><span class="p">,</span>
+        <span class="n">buffer_gate</span><span class="o">=</span><span class="n">buffer_gate</span><span class="p">,</span>
+        <span class="n">errors</span><span class="o">=</span><span class="n">errors</span><span class="p">,</span>
+        <span class="n">buffer_start</span><span class="o">=</span><span class="n">buffer_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">valid</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">buffer_end</span><span class="o">=</span><span class="n">buffer_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">valid</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Reservation Creation</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="create_chamber_reservation">
+<a class="viewcode-back" href="../../../modules.html#app.services.facility_telemetry.create_chamber_reservation">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_chamber_reservation</span><span class="p">(</span>
+    <span class="n">reservation_data</span><span class="p">:</span> <span class="n">ChamberReservationCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChamberReservationResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a new chamber reservation after full validation.</span>
+
+<span class="sd">    This function orchestrates the complete reservation workflow:</span>
+
+<span class="sd">    1. Validates chamber feasibility via :func:`validate_chamber_feasibility`.</span>
+<span class="sd">    2. If validation passes, creates a :class:`ChamberReservation` record.</span>
+<span class="sd">    3. Returns the reservation with calculated buffer windows.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reservation_data : ChamberReservationCreate</span>
+<span class="sd">        Request data for the new reservation.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ChamberReservationResponse</span>
+<span class="sd">        The created reservation with buffer windows and location details.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If any validation gate fails.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Parse datetimes</span>
+    <span class="n">requested_start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">reserved_start</span><span class="p">)</span>
+    <span class="n">requested_end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">reserved_end</span><span class="p">)</span>
+
+    <span class="c1"># Validate feasibility</span>
+    <span class="n">validation</span> <span class="o">=</span> <span class="n">validate_chamber_feasibility</span><span class="p">(</span>
+        <span class="n">task_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+        <span class="n">location_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">location_node_id</span><span class="p">),</span>
+        <span class="n">requested_start</span><span class="o">=</span><span class="n">requested_start</span><span class="p">,</span>
+        <span class="n">requested_end</span><span class="o">=</span><span class="n">requested_end</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">power_profile_kw</span><span class="o">=</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">power_profile_kw</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">validation</span><span class="o">.</span><span class="n">valid</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Chamber reservation validation failed: </span><span class="si">{</span><span class="s1">'; '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">validation</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Load location for buffer calculation</span>
+    <span class="n">location_stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">location_node_id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">location_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">location_stmt</span><span class="p">)</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">location_result</span><span class="o">.</span><span class="n">scalar_one</span><span class="p">()</span>
+
+    <span class="c1"># Create the reservation</span>
+    <span class="n">reservation</span> <span class="o">=</span> <span class="n">ChamberReservation</span><span class="p">(</span>
+        <span class="n">location_node_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">location_node_id</span><span class="p">),</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+        <span class="n">reserved_start</span><span class="o">=</span><span class="n">requested_start</span><span class="p">,</span>
+        <span class="n">reserved_end</span><span class="o">=</span><span class="n">requested_end</span><span class="p">,</span>
+        <span class="n">setup_teardown_hours</span><span class="o">=</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">setup_teardown_hours</span><span class="p">,</span>
+        <span class="n">power_profile_kw</span><span class="o">=</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">power_profile_kw</span><span class="p">,</span>
+        <span class="n">test_operator_user_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">reservation_data</span><span class="o">.</span><span class="n">test_operator_user_id</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">reservation</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">reservation</span><span class="p">)</span>
+
+    <span class="c1"># Calculate buffer windows</span>
+    <span class="n">warmup_hours</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">requires_warmup_cooldown_hours</span> <span class="ow">or</span> <span class="mf">2.0</span>
+    <span class="n">buffer_delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">warmup_hours</span><span class="p">)</span>
+    <span class="n">buffer_start</span> <span class="o">=</span> <span class="n">requested_start</span> <span class="o">-</span> <span class="n">buffer_delta</span>
+    <span class="n">buffer_end</span> <span class="o">=</span> <span class="n">requested_end</span> <span class="o">+</span> <span class="n">buffer_delta</span>
+
+    <span class="k">return</span> <span class="n">ChamberReservationResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">reservation</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">location_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">reservation</span><span class="o">.</span><span class="n">location_node_id</span><span class="p">),</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">reservation</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+        <span class="n">reserved_start</span><span class="o">=</span><span class="n">reservation</span><span class="o">.</span><span class="n">reserved_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">reserved_end</span><span class="o">=</span><span class="n">reservation</span><span class="o">.</span><span class="n">reserved_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">setup_teardown_hours</span><span class="o">=</span><span class="n">reservation</span><span class="o">.</span><span class="n">setup_teardown_hours</span><span class="p">,</span>
+        <span class="n">power_profile_kw</span><span class="o">=</span><span class="n">reservation</span><span class="o">.</span><span class="n">power_profile_kw</span><span class="p">,</span>
+        <span class="n">test_operator_user_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">reservation</span><span class="o">.</span><span class="n">test_operator_user_id</span><span class="p">),</span>
+        <span class="n">buffer_start</span><span class="o">=</span><span class="n">buffer_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">buffer_end</span><span class="o">=</span><span class="n">buffer_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">location_code</span><span class="o">=</span><span class="n">location</span><span class="o">.</span><span class="n">code</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">location_name</span><span class="o">=</span><span class="n">location</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Timeline Query</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="get_facility_timeline">
+<a class="viewcode-back" href="../../../modules.html#app.services.facility_telemetry.get_facility_timeline">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_facility_timeline</span><span class="p">(</span>
+    <span class="n">location_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FacilityTimelineResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Retrieve the time-phased reservation timeline for a facility.</span>
+
+<span class="sd">    This function returns all reservations and their associated buffer</span>
+<span class="sd">    windows for a given location, sorted by start time.  The timeline</span>
+<span class="sd">    is used by the Gantt/calendar display to show reservation bands</span>
+<span class="sd">    and cooldown blocks.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    location_id : UUID</span>
+<span class="sd">        UUID of the LocationNode to query.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FacilityTimelineResponse</span>
+<span class="sd">        Full timeline data including location metadata, reservations,</span>
+<span class="sd">        and buffer slots.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Load location</span>
+    <span class="n">location_stmt</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">location_id</span>
+    <span class="p">)</span>
+    <span class="n">location_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">location_stmt</span><span class="p">)</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">location_result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">location</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Location </span><span class="si">{</span><span class="n">location_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">)</span>
+
+    <span class="c1"># Load reservations with related data</span>
+    <span class="n">reservations_stmt</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ChamberReservation</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">options</span><span class="p">(</span>
+            <span class="n">selectinload</span><span class="p">(</span><span class="n">ChamberReservation</span><span class="o">.</span><span class="n">portfolio_node</span><span class="p">),</span>
+            <span class="n">selectinload</span><span class="p">(</span><span class="n">ChamberReservation</span><span class="o">.</span><span class="n">test_operator</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">ChamberReservation</span><span class="o">.</span><span class="n">location_node_id</span> <span class="o">==</span> <span class="n">location_id</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ChamberReservation</span><span class="o">.</span><span class="n">reserved_start</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">reservations_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">reservations_stmt</span><span class="p">)</span>
+    <span class="n">reservations</span> <span class="o">=</span> <span class="n">reservations_result</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">warmup_hours</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">requires_warmup_cooldown_hours</span> <span class="ow">or</span> <span class="mf">2.0</span>
+    <span class="n">buffer_delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">warmup_hours</span><span class="p">)</span>
+
+    <span class="n">reservation_slots</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReservationTimelineSlot</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">buffer_slots</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReservationTimelineSlot</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">reservations</span><span class="p">:</span>
+        <span class="n">buffer_start</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">reserved_start</span> <span class="o">-</span> <span class="n">buffer_delta</span>
+        <span class="n">buffer_end</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">reserved_end</span> <span class="o">+</span> <span class="n">buffer_delta</span>
+
+        <span class="n">portfolio_code</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">portfolio_node</span><span class="o">.</span><span class="n">code</span> <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">portfolio_node</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">portfolio_name</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">portfolio_node</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">portfolio_node</span> <span class="k">else</span> <span class="s2">""</span>
+        <span class="n">operator_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">test_operator</span><span class="o">.</span><span class="n">username</span> <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">test_operator</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Main reservation slot</span>
+        <span class="n">reservation_slots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ReservationTimelineSlot</span><span class="p">(</span>
+            <span class="n">reservation_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+            <span class="n">portfolio_node_code</span><span class="o">=</span><span class="n">portfolio_code</span><span class="p">,</span>
+            <span class="n">portfolio_node_name</span><span class="o">=</span><span class="n">portfolio_name</span><span class="p">,</span>
+            <span class="n">reserved_start</span><span class="o">=</span><span class="n">res</span><span class="o">.</span><span class="n">reserved_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">reserved_end</span><span class="o">=</span><span class="n">res</span><span class="o">.</span><span class="n">reserved_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">buffer_start</span><span class="o">=</span><span class="n">buffer_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">buffer_end</span><span class="o">=</span><span class="n">buffer_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">test_operator_name</span><span class="o">=</span><span class="n">operator_name</span><span class="p">,</span>
+            <span class="n">slot_type</span><span class="o">=</span><span class="s2">"reservation"</span><span class="p">,</span>
+        <span class="p">))</span>
+
+        <span class="c1"># Buffer slot for visual display</span>
+        <span class="n">buffer_slots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ReservationTimelineSlot</span><span class="p">(</span>
+            <span class="n">reservation_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+            <span class="n">portfolio_node_code</span><span class="o">=</span><span class="n">portfolio_code</span><span class="p">,</span>
+            <span class="n">portfolio_node_name</span><span class="o">=</span><span class="n">portfolio_name</span><span class="p">,</span>
+            <span class="n">reserved_start</span><span class="o">=</span><span class="n">buffer_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">reserved_end</span><span class="o">=</span><span class="n">buffer_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">buffer_start</span><span class="o">=</span><span class="n">buffer_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">buffer_end</span><span class="o">=</span><span class="n">buffer_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">test_operator_name</span><span class="o">=</span><span class="n">operator_name</span><span class="p">,</span>
+            <span class="n">slot_type</span><span class="o">=</span><span class="s2">"buffer"</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">FacilityTimelineResponse</span><span class="p">(</span>
+        <span class="n">location_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">location</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">location_code</span><span class="o">=</span><span class="n">location</span><span class="o">.</span><span class="n">code</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">location_name</span><span class="o">=</span><span class="n">location</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">chamber_capabilities</span><span class="o">=</span><span class="n">location</span><span class="o">.</span><span class="n">chamber_capabilities</span><span class="p">,</span>
+        <span class="n">calibration_expiry_date</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">location</span><span class="o">.</span><span class="n">calibration_expiry_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">location</span><span class="o">.</span><span class="n">calibration_expiry_date</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+        <span class="n">warmup_cooldown_hours</span><span class="o">=</span><span class="n">warmup_hours</span><span class="p">,</span>
+        <span class="n">reservations</span><span class="o">=</span><span class="n">reservation_slots</span><span class="p">,</span>
+        <span class="n">buffer_slots</span><span class="o">=</span><span class="n">buffer_slots</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Clash Daemon Integration</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="scan_chamber_conflicts">
+<a class="viewcode-back" href="../../../modules.html#app.services.facility_telemetry.scan_chamber_conflicts">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">scan_chamber_conflicts</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span><span class="p">,</span>
+    <span class="n">sweep_run_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Scan for chamber reservation conflicts and create clash issues.</span>
+
+<span class="sd">    This function is called by the periodic sweep daemon to detect:</span>
+
+<span class="sd">    1. **Buffer Overlaps** — Two reservations on the same chamber whose</span>
+<span class="sd">       warmup/cooldown buffer windows overlap.</span>
+
+<span class="sd">    2. **Calibration Expiry** — Reservations that extend beyond the</span>
+<span class="sd">       chamber's calibration expiry date.</span>
+
+<span class="sd">    3. **Maintenance Collisions** — Reservations that overlap with</span>
+<span class="sd">       planned maintenance windows (CalendarException records on the</span>
+<span class="sd">       chamber's calendar).</span>
+
+<span class="sd">    Each conflict is persisted as a :class:`ScheduleClashIssue` with</span>
+<span class="sd">    category ``FACILITY_CONTRAVENTION``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    sweep_run_id : UUID</span>
+<span class="sd">        Unique identifier for this sweep run (used to group clash issues).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[ScheduleClashIssue]</span>
+<span class="sd">        List of clash issues created during this scan.</span>
+<span class="sd">    """</span>
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Load all active reservations with location data</span>
+    <span class="n">reservations_stmt</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ChamberReservation</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">options</span><span class="p">(</span>
+            <span class="n">selectinload</span><span class="p">(</span><span class="n">ChamberReservation</span><span class="o">.</span><span class="n">location_node</span><span class="p">),</span>
+            <span class="n">selectinload</span><span class="p">(</span><span class="n">ChamberReservation</span><span class="o">.</span><span class="n">portfolio_node</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ChamberReservation</span><span class="o">.</span><span class="n">reserved_start</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">reservations_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">reservations_stmt</span><span class="p">)</span>
+    <span class="n">reservations</span> <span class="o">=</span> <span class="n">reservations_result</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Group reservations by location</span>
+    <span class="n">by_location</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ChamberReservation</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">reservations</span><span class="p">:</span>
+        <span class="n">loc_id</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">location_node_id</span>
+        <span class="k">if</span> <span class="n">loc_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">by_location</span><span class="p">:</span>
+            <span class="n">by_location</span><span class="p">[</span><span class="n">loc_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">by_location</span><span class="p">[</span><span class="n">loc_id</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+    <span class="c1"># Check for buffer overlaps within each location</span>
+    <span class="k">for</span> <span class="n">loc_id</span><span class="p">,</span> <span class="n">loc_reservations</span> <span class="ow">in</span> <span class="n">by_location</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="n">loc_reservations</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">location_node</span>
+        <span class="k">if</span> <span class="n">location</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">warmup_hours</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">requires_warmup_cooldown_hours</span> <span class="ow">or</span> <span class="mf">2.0</span>
+        <span class="n">buffer_delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">warmup_hours</span><span class="p">)</span>
+
+        <span class="c1"># Compare each pair of reservations</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">res_a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loc_reservations</span><span class="p">):</span>
+            <span class="n">buffer_a_start</span> <span class="o">=</span> <span class="n">res_a</span><span class="o">.</span><span class="n">reserved_start</span> <span class="o">-</span> <span class="n">buffer_delta</span>
+            <span class="n">buffer_a_end</span> <span class="o">=</span> <span class="n">res_a</span><span class="o">.</span><span class="n">reserved_end</span> <span class="o">+</span> <span class="n">buffer_delta</span>
+
+            <span class="k">for</span> <span class="n">res_b</span> <span class="ow">in</span> <span class="n">loc_reservations</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">buffer_b_start</span> <span class="o">=</span> <span class="n">res_b</span><span class="o">.</span><span class="n">reserved_start</span> <span class="o">-</span> <span class="n">buffer_delta</span>
+                <span class="n">buffer_b_end</span> <span class="o">=</span> <span class="n">res_b</span><span class="o">.</span><span class="n">reserved_end</span> <span class="o">+</span> <span class="n">buffer_delta</span>
+
+                <span class="c1"># Check for overlap</span>
+                <span class="k">if</span> <span class="n">buffer_a_start</span> <span class="o">&lt;</span> <span class="n">buffer_b_end</span> <span class="ow">and</span> <span class="n">buffer_b_start</span> <span class="o">&lt;</span> <span class="n">buffer_a_end</span><span class="p">:</span>
+                    <span class="c1"># Overlap detected</span>
+                    <span class="n">clash</span> <span class="o">=</span> <span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                        <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_run_id</span><span class="p">,</span>
+                        <span class="n">category</span><span class="o">=</span><span class="s2">"FACILITY_CONTRAVENTION"</span><span class="p">,</span>
+                        <span class="n">severity</span><span class="o">=</span><span class="s2">"CRITICAL"</span><span class="p">,</span>
+                        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">res_a</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+                        <span class="n">conflicting_node_id</span><span class="o">=</span><span class="n">res_b</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+                        <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">buffer_a_start</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>
+                        <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">buffer_a_end</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>
+                        <span class="n">title</span><span class="o">=</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Chamber buffer overlap: "</span>
+                            <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">res_a</span><span class="o">.</span><span class="n">portfolio_node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' and "</span>
+                            <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">res_b</span><span class="o">.</span><span class="n">portfolio_node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">'"</span>
+                        <span class="p">),</span>
+                        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Two reservations on chamber '</span><span class="si">{</span><span class="n">location</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' "</span>
+                            <span class="sa">f</span><span class="s2">"have overlapping buffer windows. "</span>
+                            <span class="sa">f</span><span class="s2">"Reservation A: </span><span class="si">{</span><span class="n">res_a</span><span class="o">.</span><span class="n">reserved_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2"> – "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">res_a</span><span class="o">.</span><span class="n">reserved_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2"> (buffer: "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">buffer_a_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2"> – </span><span class="si">{</span><span class="n">buffer_a_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">). "</span>
+                            <span class="sa">f</span><span class="s2">"Reservation B: </span><span class="si">{</span><span class="n">res_b</span><span class="o">.</span><span class="n">reserved_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2"> – "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">res_b</span><span class="o">.</span><span class="n">reserved_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2"> (buffer: "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">buffer_b_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2"> – </span><span class="si">{</span><span class="n">buffer_b_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">)."</span>
+                        <span class="p">),</span>
+                        <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Reschedule one of the reservations to eliminate "</span>
+                            <span class="sa">f</span><span class="s2">"the </span><span class="si">{</span><span class="n">warmup_hours</span><span class="si">}</span><span class="s2">-hour buffer overlap on "</span>
+                            <span class="sa">f</span><span class="s2">"chamber '</span><span class="si">{</span><span class="n">location</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">'."</span>
+                        <span class="p">),</span>
+                        <span class="n">is_resolved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">clash</span><span class="p">)</span>
+                    <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clash</span><span class="p">)</span>
+
+    <span class="c1"># Check for calibration expiry violations</span>
+    <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">reservations</span><span class="p">:</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">location_node</span>
+        <span class="k">if</span> <span class="n">location</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">location</span><span class="o">.</span><span class="n">calibration_expiry_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">res</span><span class="o">.</span><span class="n">reserved_end</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">location</span><span class="o">.</span><span class="n">calibration_expiry_date</span>
+        <span class="p">):</span>
+            <span class="n">clash</span> <span class="o">=</span> <span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_run_id</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="s2">"FACILITY_CONTRAVENTION"</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="s2">"MAJOR"</span><span class="p">,</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">res</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+                <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">res</span><span class="o">.</span><span class="n">reserved_start</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>
+                <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">res</span><span class="o">.</span><span class="n">reserved_end</span><span class="o">.</span><span class="n">date</span><span class="p">(),</span>
+                <span class="n">title</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Calibration expiry: '</span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">portfolio_node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' "</span>
+                    <span class="sa">f</span><span class="s2">"exceeds chamber calibration"</span>
+                <span class="p">),</span>
+                <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Reservation for '</span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">portfolio_node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' on chamber "</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">location</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' extends to </span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">reserved_end</span><span class="o">.</span><span class="n">date</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">, "</span>
+                    <span class="sa">f</span><span class="s2">"but the chamber calibration expires on "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">location</span><span class="o">.</span><span class="n">calibration_expiry_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">),</span>
+                <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Renew the chamber calibration before "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">location</span><span class="o">.</span><span class="n">calibration_expiry_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2"> or "</span>
+                    <span class="sa">f</span><span class="s2">"reschedule the test to an earlier date."</span>
+                <span class="p">),</span>
+                <span class="n">is_resolved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">clash</span><span class="p">)</span>
+            <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clash</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">clashes</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

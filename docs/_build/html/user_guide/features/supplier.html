@@ -1,0 +1,214 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supplier Portal &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Supplier Portal</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/supplier.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="supplier-portal">
+<h1>Supplier Portal<a class="headerlink" href="#supplier-portal" title="Link to this heading"></a></h1>
+<p>External suppliers use this portal to submit deliverables and communicate with contract managers.</p>
+<section id="id1">
+<h2>supplier_portal<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>Supplier Portal API router — Isolated subcontractor boundary tenant.</p>
+<p>This module provides the REST API endpoints for the isolated supplier
+portal.  External tier-1/tier-2 subcontractors use these endpoints to
+manage their contractual work packages, log progress, submit deliverables,
+and upload schedule updates — all without exposure to the prime master
+schedule, EVM cost rates, or sibling work packages.</p>
+</section>
+<section id="security-model">
+<h2>Security Model<a class="headerlink" href="#security-model" title="Link to this heading"></a></h2>
+<p>Every endpoint enforces the Subcontractor ABAC filter:</p>
+<ol class="arabic simple">
+<li><p>The user must have <code class="docutils literal notranslate"><span class="pre">is_subcontractor_user</span> <span class="pre">==</span> <span class="pre">True</span></code>.</p></li>
+<li><p>The user’s <code class="docutils literal notranslate"><span class="pre">assigned_vendor_cage</span></code> must match the node’s
+<code class="docutils literal notranslate"><span class="pre">vendor_cage_code</span></code> in <code class="docutils literal notranslate"><span class="pre">custom_attributes</span></code>.</p></li>
+<li><p>All returned data has prime EVM cost fields replaced with
+<code class="docutils literal notranslate"><span class="pre">'[RESTRICTED]'</span></code>.</p></li>
+<li><p>Parent programme hierarchy paths are truncated to show only the
+boundary node and below.</p></li>
+</ol>
+</section>
+<section id="endpoints">
+<h2>Endpoints<a class="headerlink" href="#endpoints" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/tasks</span></code> — Returns the filtered subset of contractual boundary
+work packages assigned to the supplier’s CAGE code.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/tasks/{id}/progress</span></code> — Allows suppliers to log progress
+percentage, remaining duration, and notes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/cdrl</span></code> — Returns the deliverable in-tray with statutory
+countdown clocks and customer status dispositions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/cdrl/{id}/submit</span></code> — Allows suppliers to attach SDRL documents
+directly into the DocumentArtifact vault with automated metadata
+sanitization.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/schedule/upload</span></code> — Uploads monthly .xer or .xml schedule
+updates, triggering the automated delta-validation engine.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/profile</span></code> — Returns the supplier’s profile information.</p></li>
+</ul>
+</section>
+<section id="data-isolation">
+<h2>Data Isolation<a class="headerlink" href="#data-isolation" title="Link to this heading"></a></h2>
+<p>Subcontractors can never see:</p>
+<ul class="simple">
+<li><p>Parent programme roots or sibling work packages.</p></li>
+<li><p>Prime contractor EVM cost rates (BAC, PV, EV, AC).</p></li>
+<li><p>ODAC permissions or internal security caveats.</p></li>
+<li><p>Tasks assigned to other vendor CAGE codes.</p></li>
+<li><p>Full ltree paths above the boundary node.</p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get tasks for a subcontractor</span>
+<span class="n">GET</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">supplier</span><span class="o">-</span><span class="n">portal</span><span class="o">/</span><span class="n">tasks</span>
+
+<span class="c1"># Log progress on a task</span>
+<span class="n">POST</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">supplier</span><span class="o">-</span><span class="n">portal</span><span class="o">/</span><span class="n">tasks</span><span class="o">/</span><span class="p">{</span><span class="n">task_id</span><span class="p">}</span><span class="o">/</span><span class="n">progress</span>
+<span class="p">{</span>
+<span class="s2">"percent_complete"</span><span class="p">:</span> <span class="mf">45.0</span><span class="p">,</span>
+<span class="s2">"remaining_duration_days"</span><span class="p">:</span> <span class="mf">12.0</span><span class="p">,</span>
+<span class="s2">"notes"</span><span class="p">:</span> <span class="s2">"Integration testing in progress"</span>
+<span class="p">}</span>
+
+<span class="c1"># Submit a CDRL deliverable</span>
+<span class="n">POST</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">supplier</span><span class="o">-</span><span class="n">portal</span><span class="o">/</span><span class="n">cdrl</span><span class="o">/</span><span class="p">{</span><span class="n">cdrl_id</span><span class="p">}</span><span class="o">/</span><span class="n">submit</span>
+<span class="p">{</span>
+<span class="s2">"file_name"</span><span class="p">:</span> <span class="s2">"radar_test_report.pdf"</span><span class="p">,</span>
+<span class="s2">"file_size_bytes"</span><span class="p">:</span> <span class="mi">2048000</span><span class="p">,</span>
+<span class="s2">"mime_type"</span><span class="p">:</span> <span class="s2">"application/pdf"</span><span class="p">,</span>
+<span class="s2">"sha256_checksum"</span><span class="p">:</span> <span class="s2">"abc123..."</span><span class="p">,</span>
+<span class="s2">"s3_object_key"</span><span class="p">:</span> <span class="s2">"supplier/3K9X2/cdrl/abc123.pdf"</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: Return the filtered subset of contractual boundary work packages.</p></li>
+<li><p><strong>View</strong>: Return the deliverable in-tray for the subcontractor.</p></li>
+<li><p><strong>View</strong>: Return the supplier’s profile information.</p></li>
+</ul>
+<p><strong>Creating New Items</strong></p>
+<ul class="simple">
+<li><p><strong>Create</strong>: Log progress percentage, remaining duration, and notes.</p></li>
+<li><p><strong>Create</strong>: Submit an SDRL document into the DocumentArtifact vault.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

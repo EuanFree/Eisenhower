@@ -1,0 +1,1063 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.templates &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.templates</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.templates</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Template catalog API router.</span>
+
+<span class="sd">This module provides REST endpoints for managing structural templates</span>
+<span class="sd">and resource crew templates, as well as for snapshotting existing WBS</span>
+<span class="sd">sub-trees as templates and instantiating templates into the live</span>
+<span class="sd">operational schedule.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">---------</span>
+
+<span class="sd">Structural Templates</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- ``GET /api/v1/templates`` — List all structural templates.</span>
+<span class="sd">- ``POST /api/v1/templates`` — Create a new structural template.</span>
+<span class="sd">- ``GET /api/v1/templates/{id}`` — Get a single template.</span>
+<span class="sd">- ``PUT /api/v1/templates/{id}`` — Update a template.</span>
+<span class="sd">- ``DELETE /api/v1/templates/{id}`` — Delete a template.</span>
+<span class="sd">- ``POST /api/v1/templates/snapshot`` — Snapshot an existing WBS sub-tree as a template.</span>
+<span class="sd">- ``POST /api/v1/templates/instantiate`` — Instantiate a template into the live schedule.</span>
+
+<span class="sd">Resource Crew Templates</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- ``GET /api/v1/templates/crew`` — List all crew templates.</span>
+<span class="sd">- ``POST /api/v1/templates/crew`` — Create a new crew template.</span>
+<span class="sd">- ``GET /api/v1/templates/crew/{id}`` — Get a single crew template with members.</span>
+<span class="sd">- ``PUT /api/v1/templates/crew/{id}`` — Update a crew template.</span>
+<span class="sd">- ``DELETE /api/v1/templates/crew/{id}`` — Delete a crew template.</span>
+
+<span class="sd">Crew Template Members</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- ``POST /api/v1/templates/crew/{id}/members`` — Add a role to a crew template.</span>
+<span class="sd">- ``PUT /api/v1/templates/crew/{id}/members/{member_id}`` — Update a crew member role.</span>
+<span class="sd">- ``DELETE /api/v1/templates/crew/{id}/members/{member_id}`` — Remove a crew member role.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All endpoints require JWT authentication via the ``get_current_user``</span>
+<span class="sd">dependency.  Template operations are available to all authenticated</span>
+<span class="sd">users; deletion may require Admin/Manager role in production.</span>
+
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StructuralTemplate</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplate</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplateMember</span><span class="p">,</span>
+    <span class="n">TemplateTier</span><span class="p">,</span>
+    <span class="n">ResourceType</span><span class="p">,</span>
+    <span class="n">ProficiencyLevel</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StructuralTemplateCreate</span><span class="p">,</span>
+    <span class="n">StructuralTemplateUpdate</span><span class="p">,</span>
+    <span class="n">StructuralTemplateResponse</span><span class="p">,</span>
+    <span class="n">StructuralTemplateListResponse</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplateCreate</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplateUpdate</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplateResponse</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplateWithMembersResponse</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplateMemberCreate</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplateMemberUpdate</span><span class="p">,</span>
+    <span class="n">ResourceCrewTemplateMemberResponse</span><span class="p">,</span>
+    <span class="n">TemplateSnapshotRequest</span><span class="p">,</span>
+    <span class="n">TemplateSnapshotResponse</span><span class="p">,</span>
+    <span class="n">TemplateInstantiateRequest</span><span class="p">,</span>
+    <span class="n">TemplateInstantiateResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.templating</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">snapshot_node_as_template</span><span class="p">,</span>
+    <span class="n">instantiate_template</span><span class="p">,</span>
+    <span class="n">create_crew_template_with_members</span><span class="p">,</span>
+    <span class="n">instantiate_crew_template</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/v1/templates"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"Templates - Catalog &amp; Instantiation"</span><span class="p">])</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Structural Templates</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="list_templates">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.list_templates">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">StructuralTemplateListResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"List all structural templates"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Returns a paginated list of all structural templates, "</span>
+                <span class="s2">"optionally filtered by tier and active status."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_templates</span><span class="p">(</span>
+    <span class="n">tier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">is_active</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StructuralTemplateListResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""List all structural templates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tier : str or None</span>
+<span class="sd">        Filter by template tier (PROGRAMME, PROJECT, WORK_PACKAGE, TASK_COLLECTION).</span>
+<span class="sd">    is_active : bool or None</span>
+<span class="sd">        Filter by active status.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    StructuralTemplateListResponse</span>
+<span class="sd">        List of templates with total count.</span>
+<span class="sd">    """</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">StructuralTemplate</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">tier</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">StructuralTemplate</span><span class="o">.</span><span class="n">tier</span> <span class="o">==</span> <span class="n">tier</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_active</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">StructuralTemplate</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="n">is_active</span><span class="p">)</span>
+
+    <span class="n">templates</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">StructuralTemplate</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">StructuralTemplateListResponse</span><span class="p">(</span>
+        <span class="n">templates</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">StructuralTemplateResponse</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="n">code</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                <span class="n">tier</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+                <span class="n">revision_version</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">revision_version</span><span class="p">,</span>
+                <span class="n">is_active</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+                <span class="n">created_at</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                <span class="n">updated_at</span><span class="o">=</span><span class="n">t</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">templates</span>
+        <span class="p">],</span>
+        <span class="n">total_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">templates</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_template">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.create_template">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">StructuralTemplateResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Create a new structural template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Creates a new structural template with the provided graph payload."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_template</span><span class="p">(</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">StructuralTemplateCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StructuralTemplateResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a new structural template.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    body : StructuralTemplateCreate</span>
+<span class="sd">        Template creation data.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    StructuralTemplateResponse</span>
+<span class="sd">        The newly created template.</span>
+<span class="sd">    """</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">StructuralTemplate</span><span class="p">(</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">template_graph_payload</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">template_graph_payload</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">StructuralTemplateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">revision_version</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">revision_version</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_template">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.get_template">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{template_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">StructuralTemplateResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Get a single structural template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Returns the details of a specific structural template."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_template</span><span class="p">(</span>
+    <span class="n">template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StructuralTemplateResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get a single structural template.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    template_id : str</span>
+<span class="sd">        UUID of the template.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    StructuralTemplateResponse</span>
+<span class="sd">        Template details.</span>
+<span class="sd">    """</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">StructuralTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">StructuralTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">template_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Template with ID </span><span class="si">{</span><span class="n">template_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">StructuralTemplateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">revision_version</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">revision_version</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_template">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.update_template">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{template_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">StructuralTemplateResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Update a structural template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Partially updates a structural template. Only provided fields are changed."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_template</span><span class="p">(</span>
+    <span class="n">template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">StructuralTemplateUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StructuralTemplateResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Update a structural template.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    template_id : str</span>
+<span class="sd">        UUID of the template.</span>
+<span class="sd">    body : StructuralTemplateUpdate</span>
+<span class="sd">        Fields to update.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    StructuralTemplateResponse</span>
+<span class="sd">        Updated template details.</span>
+<span class="sd">    """</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">StructuralTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">StructuralTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">template_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Template with ID </span><span class="si">{</span><span class="n">template_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">update_data</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">update_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="c1"># Increment revision version if graph payload changed</span>
+    <span class="k">if</span> <span class="s2">"template_graph_payload"</span> <span class="ow">in</span> <span class="n">update_data</span><span class="p">:</span>
+        <span class="n">template</span><span class="o">.</span><span class="n">revision_version</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">StructuralTemplateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">revision_version</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">revision_version</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_template">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.delete_template">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{template_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Delete a structural template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Permanently deletes a structural template."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_template</span><span class="p">(</span>
+    <span class="n">template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Delete a structural template.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    template_id : str</span>
+<span class="sd">        UUID of the template.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    """</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">StructuralTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">StructuralTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">template_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">template</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Template with ID </span><span class="si">{</span><span class="n">template_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">template</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Snapshot &amp; Instantiate</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="snapshot_tree">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.snapshot_tree">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/snapshot"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">TemplateSnapshotResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Snapshot an existing WBS sub-tree as a template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Extracts an active WBS sub-tree, normalises dates to relative "</span>
+                <span class="s2">"day offsets, and saves the result as a new StructuralTemplate."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">snapshot_tree</span><span class="p">(</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">TemplateSnapshotRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TemplateSnapshotResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Snapshot an existing WBS sub-tree as a template.</span>
+
+<span class="sd">    This captures the current state of a WBS sub-tree, including all</span>
+<span class="sd">    nodes, dependencies, and deliverables, and saves it as a reusable</span>
+<span class="sd">    template.  All absolute dates are converted to relative day offsets</span>
+<span class="sd">    from the earliest planned start date.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    body : TemplateSnapshotRequest</span>
+<span class="sd">        Snapshot request data.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TemplateSnapshotResponse</span>
+<span class="sd">        Details of the newly created template.</span>
+<span class="sd">    """</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">snapshot_node_as_template</span><span class="p">(</span>
+        <span class="n">node_id</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">email</span> <span class="ow">or</span> <span class="n">current_user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">template_graph_payload</span>
+    <span class="k">return</span> <span class="n">TemplateSnapshotResponse</span><span class="p">(</span>
+        <span class="n">template_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">node_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[])),</span>
+        <span class="n">dependency_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dependencies"</span><span class="p">,</span> <span class="p">[])),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="instantiate">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.instantiate">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/instantiate"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">TemplateInstantiateResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Instantiate a template into the live schedule"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Stamps out a template into the live operational schedule, "</span>
+                <span class="s2">"creating new PortfolioNode records with correctly nested "</span>
+                <span class="s2">"ltree paths and remapped dependency links."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">instantiate</span><span class="p">(</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">TemplateInstantiateRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TemplateInstantiateResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Instantiate a template into the live schedule.</span>
+
+<span class="sd">    Creates new PortfolioNode records from a template, computing absolute</span>
+<span class="sd">    dates from relative offsets and the provided anchor date.  Supports</span>
+<span class="sd">    both forward scheduling (START_DATE) and backward scheduling</span>
+<span class="sd">    (FINISH_DATE).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    body : TemplateInstantiateRequest</span>
+<span class="sd">        Instantiation request data.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TemplateInstantiateResponse</span>
+<span class="sd">        Details of the instantiated sub-tree.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">instantiate_template</span><span class="p">(</span>
+        <span class="n">template_id</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">template_id</span><span class="p">,</span>
+        <span class="n">parent_node_id</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">parent_node_id</span><span class="p">,</span>
+        <span class="n">anchor_date</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">anchor_date</span><span class="p">,</span>
+        <span class="n">anchor_type</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">anchor_type</span><span class="p">,</span>
+        <span class="n">code_prefix</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">code_prefix</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">TemplateInstantiateResponse</span><span class="p">(</span>
+        <span class="n">root_node_id</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"root_node_id"</span><span class="p">],</span>
+        <span class="n">node_count</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"node_count"</span><span class="p">],</span>
+        <span class="n">dependency_count</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"dependency_count"</span><span class="p">],</span>
+        <span class="n">placeholder_resource_count</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"placeholder_resource_count"</span><span class="p">],</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Resource Crew Templates</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="list_crew_templates">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.list_crew_templates">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/crew"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">List</span><span class="p">[</span><span class="n">ResourceCrewTemplateResponse</span><span class="p">],</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"List all resource crew templates"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Returns a list of all resource crew templates."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_crew_templates</span><span class="p">(</span>
+    <span class="n">is_active</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ResourceCrewTemplateResponse</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""List all resource crew templates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    is_active : bool or None</span>
+<span class="sd">        Filter by active status.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[ResourceCrewTemplateResponse]</span>
+<span class="sd">        List of crew templates.</span>
+<span class="sd">    """</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceCrewTemplate</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_active</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceCrewTemplate</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="n">is_active</span><span class="p">)</span>
+
+    <span class="n">crews</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ResourceCrewTemplate</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">ResourceCrewTemplateResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">is_active</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+            <span class="n">created_at</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="n">updated_at</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">crews</span>
+    <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="create_crew_template">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.create_crew_template">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/crew"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ResourceCrewTemplateWithMembersResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Create a new resource crew template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Creates a new crew template, optionally with member roles."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_crew_template</span><span class="p">(</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">ResourceCrewTemplateCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResourceCrewTemplateWithMembersResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a new resource crew template.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    body : ResourceCrewTemplateCreate</span>
+<span class="sd">        Crew template creation data.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ResourceCrewTemplateWithMembersResponse</span>
+<span class="sd">        The newly created crew template.</span>
+<span class="sd">    """</span>
+    <span class="n">crew</span> <span class="o">=</span> <span class="n">ResourceCrewTemplate</span><span class="p">(</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">crew</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">ResourceCrewTemplateWithMembersResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">crew</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">members</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">crew</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">crew</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_crew_template">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.get_crew_template">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/crew/</span><span class="si">{crew_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ResourceCrewTemplateWithMembersResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Get a crew template with its member roles"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Returns a crew template including all its role definitions."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_crew_template</span><span class="p">(</span>
+    <span class="n">crew_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResourceCrewTemplateWithMembersResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get a crew template with its member roles.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    crew_id : str</span>
+<span class="sd">        UUID of the crew template.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ResourceCrewTemplateWithMembersResponse</span>
+<span class="sd">        Crew template with member roles.</span>
+<span class="sd">    """</span>
+    <span class="n">crew</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceCrewTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceCrewTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">crew_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">crew</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Crew template with ID </span><span class="si">{</span><span class="n">crew_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ResourceCrewTemplateWithMembersResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">crew</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">members</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">ResourceCrewTemplateMemberResponse</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="n">crew_template_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">crew_template_id</span><span class="p">),</span>
+                <span class="n">role_name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">role_name</span><span class="p">,</span>
+                <span class="n">resource_type</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">resource_type</span><span class="p">,</span>
+                <span class="n">required_skill_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">required_skill_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">required_skill_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">min_proficiency</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">min_proficiency</span><span class="p">,</span>
+                <span class="n">min_clearance</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">min_clearance</span><span class="p">,</span>
+                <span class="n">default_allocation_fraction</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">default_allocation_fraction</span><span class="p">),</span>
+                <span class="n">created_at</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                <span class="n">updated_at</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">crew</span><span class="o">.</span><span class="n">members</span>
+        <span class="p">],</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">crew</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">crew</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_crew_template">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.update_crew_template">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+    <span class="s2">"/crew/</span><span class="si">{crew_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ResourceCrewTemplateResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Update a crew template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Partially updates a crew template's metadata."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_crew_template</span><span class="p">(</span>
+    <span class="n">crew_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">ResourceCrewTemplateUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResourceCrewTemplateResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Update a crew template.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    crew_id : str</span>
+<span class="sd">        UUID of the crew template.</span>
+<span class="sd">    body : ResourceCrewTemplateUpdate</span>
+<span class="sd">        Fields to update.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ResourceCrewTemplateResponse</span>
+<span class="sd">        Updated crew template.</span>
+<span class="sd">    """</span>
+    <span class="n">crew</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceCrewTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceCrewTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">crew_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">crew</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Crew template with ID </span><span class="si">{</span><span class="n">crew_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">update_data</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">update_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">crew</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">ResourceCrewTemplateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">crew</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">crew</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">crew</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_crew_template">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.delete_crew_template">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="s2">"/crew/</span><span class="si">{crew_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Delete a crew template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Permanently deletes a crew template and all its member roles."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_crew_template</span><span class="p">(</span>
+    <span class="n">crew_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Delete a crew template.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    crew_id : str</span>
+<span class="sd">        UUID of the crew template.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    """</span>
+    <span class="n">crew</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceCrewTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceCrewTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">crew_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">crew</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Crew template with ID </span><span class="si">{</span><span class="n">crew_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">crew</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Crew Template Members</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="add_crew_member">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.add_crew_member">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/crew/</span><span class="si">{crew_id}</span><span class="s2">/members"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ResourceCrewTemplateMemberResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Add a role to a crew template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Adds a new role definition to an existing crew template."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_crew_member</span><span class="p">(</span>
+    <span class="n">crew_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">ResourceCrewTemplateMemberCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResourceCrewTemplateMemberResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add a role to a crew template.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    crew_id : str</span>
+<span class="sd">        UUID of the crew template.</span>
+<span class="sd">    body : ResourceCrewTemplateMemberCreate</span>
+<span class="sd">        Role definition data.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ResourceCrewTemplateMemberResponse</span>
+<span class="sd">        The newly created member role.</span>
+<span class="sd">    """</span>
+    <span class="n">crew</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceCrewTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceCrewTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">crew_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">crew</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Crew template with ID </span><span class="si">{</span><span class="n">crew_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">member</span> <span class="o">=</span> <span class="n">ResourceCrewTemplateMember</span><span class="p">(</span>
+        <span class="n">crew_template_id</span><span class="o">=</span><span class="n">crew</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">role_name</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">role_name</span><span class="p">,</span>
+        <span class="n">resource_type</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">resource_type</span><span class="p">,</span>
+        <span class="n">required_skill_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">required_skill_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">body</span><span class="o">.</span><span class="n">required_skill_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">min_proficiency</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">min_proficiency</span><span class="p">,</span>
+        <span class="n">min_clearance</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">min_clearance</span><span class="p">,</span>
+        <span class="n">default_allocation_fraction</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">default_allocation_fraction</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">ResourceCrewTemplateMemberResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">crew_template_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">crew_template_id</span><span class="p">),</span>
+        <span class="n">role_name</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">role_name</span><span class="p">,</span>
+        <span class="n">resource_type</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">resource_type</span><span class="p">,</span>
+        <span class="n">required_skill_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">required_skill_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">required_skill_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">min_proficiency</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">min_proficiency</span><span class="p">,</span>
+        <span class="n">min_clearance</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">min_clearance</span><span class="p">,</span>
+        <span class="n">default_allocation_fraction</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">default_allocation_fraction</span><span class="p">),</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_crew_member">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.update_crew_member">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+    <span class="s2">"/crew/</span><span class="si">{crew_id}</span><span class="s2">/members/</span><span class="si">{member_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ResourceCrewTemplateMemberResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Update a crew member role"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Partially updates a role definition within a crew template."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_crew_member</span><span class="p">(</span>
+    <span class="n">crew_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">member_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">body</span><span class="p">:</span> <span class="n">ResourceCrewTemplateMemberUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ResourceCrewTemplateMemberResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Update a crew member role.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    crew_id : str</span>
+<span class="sd">        UUID of the crew template.</span>
+<span class="sd">    member_id : str</span>
+<span class="sd">        UUID of the member role.</span>
+<span class="sd">    body : ResourceCrewTemplateMemberUpdate</span>
+<span class="sd">        Fields to update.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ResourceCrewTemplateMemberResponse</span>
+<span class="sd">        Updated member role.</span>
+<span class="sd">    """</span>
+    <span class="n">member</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceCrewTemplateMember</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceCrewTemplateMember</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">member_id</span><span class="p">),</span>
+        <span class="n">ResourceCrewTemplateMember</span><span class="o">.</span><span class="n">crew_template_id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">crew_id</span><span class="p">),</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">member</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Member with ID </span><span class="si">{</span><span class="n">member_id</span><span class="si">}</span><span class="s2"> not found in crew </span><span class="si">{</span><span class="n">crew_id</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">update_data</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">update_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">member</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">ResourceCrewTemplateMemberResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">crew_template_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">crew_template_id</span><span class="p">),</span>
+        <span class="n">role_name</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">role_name</span><span class="p">,</span>
+        <span class="n">resource_type</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">resource_type</span><span class="p">,</span>
+        <span class="n">required_skill_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">required_skill_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">required_skill_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">min_proficiency</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">min_proficiency</span><span class="p">,</span>
+        <span class="n">min_clearance</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">min_clearance</span><span class="p">,</span>
+        <span class="n">default_allocation_fraction</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">member</span><span class="o">.</span><span class="n">default_allocation_fraction</span><span class="p">),</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">member</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_crew_member">
+<a class="viewcode-back" href="../../../modules.html#app.routers.templates.delete_crew_member">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="s2">"/crew/</span><span class="si">{crew_id}</span><span class="s2">/members/</span><span class="si">{member_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Remove a crew member role"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Removes a role definition from a crew template."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_crew_member</span><span class="p">(</span>
+    <span class="n">crew_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">member_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Remove a crew member role.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    crew_id : str</span>
+<span class="sd">        UUID of the crew template.</span>
+<span class="sd">    member_id : str</span>
+<span class="sd">        UUID of the member role.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    """</span>
+    <span class="n">member</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceCrewTemplateMember</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceCrewTemplateMember</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">member_id</span><span class="p">),</span>
+        <span class="n">ResourceCrewTemplateMember</span><span class="o">.</span><span class="n">crew_template_id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">crew_id</span><span class="p">),</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">member</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Member with ID </span><span class="si">{</span><span class="n">member_id</span><span class="si">}</span><span class="s2"> not found in crew </span><span class="si">{</span><span class="n">crew_id</span><span class="si">}</span><span class="s2">."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">member</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.mcp &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.mcp</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.mcp</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""MCP (Model Context Protocol) SSE router for conversational AI integration.</span>
+
+<span class="sd">This module mounts the MCP server's SSE (Server-Sent Events) transport</span>
+<span class="sd">into the FastAPI application, allowing local desktop or browser-based</span>
+<span class="sd">AI copilot flyouts to connect and invoke the exposed tool functions.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">~~~~~~~~~</span>
+
+<span class="sd">- **GET /sse** — Establishes an SSE connection.  The server sends the</span>
+<span class="sd">  message endpoint URL as the first event, then keeps the connection</span>
+<span class="sd">  open for real-time tool response streaming.</span>
+
+<span class="sd">- **POST /messages** — Receives MCP protocol messages (tool calls,</span>
+<span class="sd">  results, etc.) from the connected client and routes them to the</span>
+<span class="sd">  appropriate MCP tool handler.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All tool invocations must include a valid ``auth_token`` parameter</span>
+<span class="sd">containing the user's JWT Bearer token.  The MCP service layer</span>
+<span class="sd">validates this token on every tool call and enforces ABAC clearance</span>
+<span class="sd">filtering before returning any data.</span>
+
+<span class="sd">Connection Flow</span>
+<span class="sd">~~~~~~~~~~~~~~~</span>
+
+<span class="sd">1. Client opens an SSE connection to ``/api/v1/mcp/sse``.</span>
+<span class="sd">2. Server responds with the message endpoint URL</span>
+<span class="sd">   (e.g., ``/api/v1/mcp/messages/?session_id=...``).</span>
+<span class="sd">3. Client sends MCP protocol JSON-RPC messages via POST to the</span>
+<span class="sd">   message endpoint.</span>
+<span class="sd">4. Server processes tool calls and streams results back over the</span>
+<span class="sd">   SSE connection.</span>
+
+<span class="sd">Why SSE?</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">SSE (Server-Sent Events) is the recommended transport for integrating</span>
+<span class="sd">MCP servers into web applications.  Unlike STDIO transport (which</span>
+<span class="sd">requires local process spawning), SSE works over standard HTTP and</span>
+<span class="sd">can be used from browser-based copilot interfaces.</span>
+
+<span class="sd">The SSE connection is unidirectional (server-to-client for events),</span>
+<span class="sd">while client-to-server communication uses standard HTTP POST requests</span>
+<span class="sd">to the message endpoint.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Request</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">starlette.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">StreamingResponse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.mcp_server</span><span class="w"> </span><span class="kn">import</span> <span class="n">mcp</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span>
+    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"MCP Gateway"</span><span class="p">],</span>
+    <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/mcp"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="sd">"""FastAPI router for MCP SSE transport endpoints.</span>
+
+<span class="sd">This router exposes two endpoints that together implement the MCP</span>
+<span class="sd">SSE transport protocol:</span>
+
+<span class="sd">- ``GET /sse`` — Opens a Server-Sent Events connection.</span>
+<span class="sd">- ``POST /messages`` — Handles incoming MCP protocol messages.</span>
+
+<span class="sd">The router is mounted at ``/api/v1/mcp`` so the full paths are:</span>
+
+<span class="sd">- ``GET /api/v1/mcp/sse``</span>
+<span class="sd">- ``POST /api/v1/mcp/messages``</span>
+<span class="sd">"""</span>
+
+
+<div class="viewcode-block" id="sse_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mcp.sse_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/sse"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">sse_endpoint</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Establish an SSE (Server-Sent Events) connection for MCP protocol.</span>
+
+<span class="sd">    This endpoint opens a persistent HTTP connection that the server uses</span>
+<span class="sd">    to stream real-time events back to the client.  The first event sent</span>
+<span class="sd">    is the message endpoint URL, which the client uses to send MCP</span>
+<span class="sd">    protocol messages (tool calls, etc.).</span>
+
+<span class="sd">    The SSE connection remains open until the client disconnects or</span>
+<span class="sd">    the server shuts down.  While connected, the client receives:</span>
+
+<span class="sd">    - Tool execution results as JSON-RPC responses.</span>
+<span class="sd">    - Progress notifications for long-running operations.</span>
+<span class="sd">    - Error notifications if a tool call fails.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : Request</span>
+<span class="sd">        The incoming HTTP request object.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    StreamingResponse</span>
+<span class="sd">        An SSE stream that sends events to the connected client.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    Connect from a browser::</span>
+
+<span class="sd">        const eventSource = new EventSource('/api/v1/mcp/sse');</span>
+<span class="sd">        eventSource.onmessage = (event) =&gt; {</span>
+<span class="sd">            console.log('MCP event:', event.data);</span>
+<span class="sd">        };</span>
+
+<span class="sd">    Connect from Python::</span>
+
+<span class="sd">        import sseclient</span>
+<span class="sd">        import requests</span>
+
+<span class="sd">        response = requests.get('http://localhost:8000/api/v1/mcp/sse', stream=True)</span>
+<span class="sd">        client = sseclient.SSEClient(response)</span>
+<span class="sd">        for event in client.events():</span>
+<span class="sd">            print(event.data)</span>
+<span class="sd">    """</span>
+    <span class="c1"># The MCPServer.sse_app() method returns a Starlette app that handles</span>
+    <span class="c1"># the SSE protocol.  We delegate to it for proper MCP protocol handling.</span>
+    <span class="n">sse_app</span> <span class="o">=</span> <span class="n">mcp</span><span class="o">.</span><span class="n">sse_app</span><span class="p">(</span>
+        <span class="n">sse_path</span><span class="o">=</span><span class="s2">"/api/v1/mcp/sse"</span><span class="p">,</span>
+        <span class="n">message_path</span><span class="o">=</span><span class="s2">"/api/v1/mcp/messages/"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># For the GET /sse endpoint, we need to handle the SSE handshake</span>
+    <span class="c1"># The MCPServer handles this internally via its sse_app</span>
+    <span class="c1"># We return a simple SSE response that provides the message URL</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+
+    <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">message_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"/api/v1/mcp/messages/?session_id=</span><span class="si">{</span><span class="n">session_id</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">event_generator</span><span class="p">():</span>
+<span class="w">        </span><span class="sd">"""Generate SSE events for the MCP handshake.</span>
+
+<span class="sd">        Yields</span>
+<span class="sd">        ------</span>
+<span class="sd">        str</span>
+<span class="sd">            SSE-formatted event strings: the first event provides the</span>
+<span class="sd">            message endpoint URL, and a keep-alive ping follows.</span>
+<span class="sd">        """</span>
+        <span class="c1"># Send the message endpoint URL as the first event</span>
+        <span class="k">yield</span> <span class="sa">f</span><span class="s2">"event: endpoint</span><span class="se">\n</span><span class="s2">data: </span><span class="si">{</span><span class="n">message_url</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="c1"># Keep the connection open — the MCPServer handles the rest</span>
+        <span class="c1"># via its internal event loop</span>
+        <span class="k">yield</span> <span class="s2">": ping</span><span class="se">\n\n</span><span class="s2">"</span>
+
+    <span class="k">return</span> <span class="n">StreamingResponse</span><span class="p">(</span>
+        <span class="n">event_generator</span><span class="p">(),</span>
+        <span class="n">media_type</span><span class="o">=</span><span class="s2">"text/event-stream"</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"Cache-Control"</span><span class="p">:</span> <span class="s2">"no-cache"</span><span class="p">,</span>
+            <span class="s2">"Connection"</span><span class="p">:</span> <span class="s2">"keep-alive"</span><span class="p">,</span>
+            <span class="s2">"X-Accel-Buffering"</span><span class="p">:</span> <span class="s2">"no"</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="messages_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mcp.messages_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/messages"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">messages_endpoint</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Handle incoming MCP protocol messages from connected clients.</span>
+
+<span class="sd">    This endpoint receives JSON-RPC messages from MCP clients and routes</span>
+<span class="sd">    them to the appropriate tool handler.  The message format follows the</span>
+<span class="sd">    MCP specification:</span>
+
+<span class="sd">    - ``jsonrpc``: "2.0"</span>
+<span class="sd">    - ``method``: The MCP method (e.g., "tools/call")</span>
+<span class="sd">    - ``params``: Method-specific parameters</span>
+<span class="sd">    - ``id``: Request ID for matching responses</span>
+
+<span class="sd">    For tool calls, the ``params`` object includes:</span>
+
+<span class="sd">    - ``name``: The tool name (e.g., "get_project_critical_path")</span>
+<span class="sd">    - ``arguments``: Dictionary of tool arguments</span>
+
+<span class="sd">    Every tool call must include an ``auth_token`` argument containing</span>
+<span class="sd">    the user's JWT Bearer token for authentication and authorization.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : Request</span>
+<span class="sd">        The incoming HTTP request containing the JSON-RPC message.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        JSON-RPC response containing the tool execution result or error.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the message format is invalid or the tool call fails.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    Call a tool from a client::</span>
+
+<span class="sd">        import requests</span>
+
+<span class="sd">        message = {</span>
+<span class="sd">            "jsonrpc": "2.0",</span>
+<span class="sd">            "method": "tools/call",</span>
+<span class="sd">            "params": {</span>
+<span class="sd">                "name": "get_project_critical_path",</span>
+<span class="sd">                "arguments": {</span>
+<span class="sd">                    "project_id": "550e8400-e29b-41d4-a716-446655440000",</span>
+<span class="sd">                    "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",</span>
+<span class="sd">                },</span>
+<span class="sd">            },</span>
+<span class="sd">            "id": 1,</span>
+<span class="sd">        }</span>
+
+<span class="sd">        response = requests.post(</span>
+<span class="sd">            "http://localhost:8000/api/v1/mcp/messages/",</span>
+<span class="sd">            json=message,</span>
+<span class="sd">            params={"session_id": "..."},</span>
+<span class="sd">        )</span>
+<span class="sd">        print(response.json())</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span>
+
+    <span class="n">session_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">query_params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"session_id"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">session_id</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Missing session_id query parameter. Connect to /sse first."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="k">await</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid JSON in request body"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Validate JSON-RPC format</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Request body must be a JSON object"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">method</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"method"</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"params"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">request_id</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
+
+    <span class="c1"># Route to the appropriate handler</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"tools/call"</span><span class="p">:</span>
+        <span class="n">tool_name</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">)</span>
+        <span class="n">tool_args</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"arguments"</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="c1"># List available tools (async in mcp 2.x)</span>
+        <span class="n">available_tools</span> <span class="o">=</span> <span class="k">await</span> <span class="n">mcp</span><span class="o">.</span><span class="n">list_tools</span><span class="p">()</span>
+        <span class="n">tool_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">available_tools</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">tool_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tool_names</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">"jsonrpc"</span><span class="p">:</span> <span class="s2">"2.0"</span><span class="p">,</span>
+                <span class="s2">"error"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"code"</span><span class="p">:</span> <span class="o">-</span><span class="mi">32601</span><span class="p">,</span>
+                    <span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Unknown tool: </span><span class="si">{</span><span class="n">tool_name</span><span class="si">}</span><span class="s2">. Available: </span><span class="si">{</span><span class="n">tool_names</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">"id"</span><span class="p">:</span> <span class="n">request_id</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="c1"># Call the tool (async in mcp 2.x)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">mcp</span><span class="o">.</span><span class="n">call_tool</span><span class="p">(</span><span class="n">tool_name</span><span class="p">,</span> <span class="n">tool_args</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">"jsonrpc"</span><span class="p">:</span> <span class="s2">"2.0"</span><span class="p">,</span>
+                <span class="s2">"result"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"content"</span><span class="p">:</span> <span class="p">[{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"text"</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)}],</span>
+                <span class="p">},</span>
+                <span class="s2">"id"</span><span class="p">:</span> <span class="n">request_id</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">"jsonrpc"</span><span class="p">:</span> <span class="s2">"2.0"</span><span class="p">,</span>
+                <span class="s2">"error"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"code"</span><span class="p">:</span> <span class="o">-</span><span class="mi">32603</span><span class="p">,</span>
+                    <span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Tool execution error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="s2">"id"</span><span class="p">:</span> <span class="n">request_id</span><span class="p">,</span>
+            <span class="p">}</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"tools/list"</span><span class="p">:</span>
+        <span class="n">available_tools</span> <span class="o">=</span> <span class="k">await</span> <span class="n">mcp</span><span class="o">.</span><span class="n">list_tools</span><span class="p">()</span>
+        <span class="n">tools</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">tool</span> <span class="ow">in</span> <span class="n">available_tools</span><span class="p">:</span>
+            <span class="n">tools</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"name"</span><span class="p">:</span> <span class="n">tool</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">"description"</span><span class="p">:</span> <span class="n">tool</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                <span class="s2">"inputSchema"</span><span class="p">:</span> <span class="n">tool</span><span class="o">.</span><span class="n">inputSchema</span><span class="p">,</span>
+            <span class="p">})</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"jsonrpc"</span><span class="p">:</span> <span class="s2">"2.0"</span><span class="p">,</span>
+            <span class="s2">"result"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"tools"</span><span class="p">:</span> <span class="n">tools</span><span class="p">},</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">request_id</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"initialize"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"jsonrpc"</span><span class="p">:</span> <span class="s2">"2.0"</span><span class="p">,</span>
+            <span class="s2">"result"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"protocolVersion"</span><span class="p">:</span> <span class="s2">"2024-11-05"</span><span class="p">,</span>
+                <span class="s2">"capabilities"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"tools"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"listChanged"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="p">},</span>
+                <span class="p">},</span>
+                <span class="s2">"serverInfo"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="n">mcp</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="s2">"version"</span><span class="p">:</span> <span class="n">mcp</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">request_id</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"ping"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"jsonrpc"</span><span class="p">:</span> <span class="s2">"2.0"</span><span class="p">,</span>
+            <span class="s2">"result"</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">request_id</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"jsonrpc"</span><span class="p">:</span> <span class="s2">"2.0"</span><span class="p">,</span>
+            <span class="s2">"error"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"code"</span><span class="p">:</span> <span class="o">-</span><span class="mi">32601</span><span class="p">,</span>
+                <span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Unknown method: </span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="n">request_id</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

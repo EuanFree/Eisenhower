@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.main &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.main</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.main</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Eisenhower Portfolio Manager — Application entry point.</span>
+
+<span class="sd">This module creates and configures the FastAPI application instance.</span>
+<span class="sd">It is the main entry point for the web server and is responsible for:</span>
+
+<span class="sd">- Creating the FastAPI app with metadata (title, version, description).</span>
+<span class="sd">- Registering all API routers under the ``/api`` prefix.</span>
+<span class="sd">- Configuring CORS middleware for cross-origin requests (restricted methods/headers).</span>
+<span class="sd">- Configuring security headers middleware (HSTS, CSP, X-Frame-Options, etc.).</span>
+<span class="sd">- Creating database tables on startup.</span>
+<span class="sd">- Providing health check and root endpoints.</span>
+
+<span class="sd">Running the Application</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Start the server using Uvicorn::</span>
+
+<span class="sd">    uvicorn app.main:app --reload</span>
+
+<span class="sd">The ``--reload`` flag enables auto-reload on code changes (development only).</span>
+
+<span class="sd">API Structure</span>
+<span class="sd">~~~~~~~~~~~~~</span>
+
+<span class="sd">All API endpoints are mounted under ``/api``:</span>
+
+<span class="sd">- ``/api/auth/*`` — Authentication (login, register).</span>
+<span class="sd">- ``/api/users/*`` — User management.</span>
+<span class="sd">- ``/api/users/me/display-settings`` — Display profile persistence.</span>
+<span class="sd">- ``/api/v1/wbs/*`` — Work Breakdown Structure queries with ABAC.</span>
+<span class="sd">- ``/api/v1/schedule/*`` — CPM schedule recalculation.</span>
+<span class="sd">- ``/api/v1/cockpit/*`` — Daily Cockpit dashboard endpoints.</span>
+<span class="sd">- ``/api/v1/baselines/*`` — PMB baseline governance and BCR workflows.</span>
+<span class="sd">- ``/api/v1/notifications/webhooks/*`` — Teams webhook management and dispatch.</span>
+<span class="sd">- ``/api/v1/cdrl/*`` — Contract Deliverables and V&amp;V test case management.</span>
+<span class="sd">- ``/api/v1/procurement/*`` — Supply chain procurement tracking and constraints.</span>
+<span class="sd">- ``/api/v1/reserves/*`` — Management Reserve budget tracking and drawdowns.</span>
+<span class="sd">- ``/api/v1/mcp/*`` — MCP gateway for conversational AI integration.</span>
+<span class="sd">- ``/api/v1/previews/*`` — Lightweight hover preview endpoints.</span>
+<span class="sd">- ``/api/v1/subcontractors/*`` — Subcontractor schedule ingest pipeline.</span>
+<span class="sd">- ``/api/v1/reports/evm/*`` — IPMR/CPR EVM report export (Format 1, 5).</span>
+<span class="sd">- ``/api/v1/reports/briefing/*`` — Executive briefing deck export (.pptx).</span>
+<span class="sd">- ``/api/v1/programmes/*`` — Programme closeout and WORM cold-storage sealing.</span>
+<span class="sd">- ``/api/v1/admin/security/*`` — Admin security (heartbeat, spillage purge, audit, SBOM, vulnerability report).</span>
+<span class="sd">- ``/api/v1/admin/db-health/*`` — Database health metrics and maintenance.</span>
+<span class="sd">- ``/api/v1/supplier-portal/*`` — Isolated subcontractor supplier portal.</span>
+<span class="sd">- ``/api/v1/facilities/*`` — Facility reservation and chamber telemetry.</span>
+<span class="sd">- ``/api/v1/merkle-sync/*`` — Merkle tree sync for offline multi-site reconciliation.</span>
+<span class="sd">- ``/api/v1/audit/*`` — Audit chain integrity verification and forensic investigation.</span>
+<span class="sd">- ``/api/v1/equipment/*`` — Equipment calibration and maintenance management.</span>
+<span class="sd">- ``/api/v1/engineering/*`` — Engineering governance (concessions, DAL gates).</span>
+<span class="sd">- ``/api/v1/commercial/*`` — Commercial governance (contracts, fiscal caps, acceptance).</span>
+<span class="sd">- ``/api/v1/materials/*`` — Perishable materials and clearance lifecycle.</span>
+<span class="sd">- ``/api/v1/views/*`` — Gantt view preset storage, sharing, and import/export.</span>
+<span class="sd">- ``/api/v1/presets/*`` — Multi-view preset storage, sharing, and import/export.</span>
+<span class="sd">- ``/api/v1/resources/*`` — Resource creation with permission governance.</span>
+<span class="sd">- ``/api/v1/schedule_quarantine/*`` — Schedule quarantine buffer and remediation.</span>
+<span class="sd">- ``/api/v1/leases/*`` — Sub-tree check-out lease lifecycle management.</span>
+<span class="sd">- ``/api/v1/copilot/*`` — CoPilot AI chat with MCP tool integration.</span>
+
+<span class="sd">Interactive Documentation</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">FastAPI automatically generates interactive API documentation:</span>
+
+<span class="sd">- **Swagger UI**: ``http://localhost:8000/docs``</span>
+<span class="sd">- **ReDoc**: ``http://localhost:8000/redoc``</span>
+
+<span class="sd">These are useful for testing endpoints and exploring the API schema.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">asynccontextmanager</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.middleware.cors</span><span class="w"> </span><span class="kn">import</span> <span class="n">CORSMiddleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm.exc</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaleDataError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">engine</span><span class="p">,</span> <span class="n">Base</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">stale_data_exception_handler</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.middleware.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">SecurityHeadersMiddleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.routers</span><span class="w"> </span><span class="kn">import</span> <span class="n">auth</span><span class="p">,</span> <span class="n">users</span><span class="p">,</span> <span class="n">display_settings</span><span class="p">,</span> <span class="n">schedule</span><span class="p">,</span> <span class="n">wbs</span><span class="p">,</span> <span class="n">cockpit</span><span class="p">,</span> <span class="n">requisitions</span><span class="p">,</span> <span class="n">clashes</span><span class="p">,</span> <span class="n">baselines</span><span class="p">,</span> <span class="n">notifications</span><span class="p">,</span> <span class="n">cdrl</span><span class="p">,</span> <span class="n">oracle_timesheets</span><span class="p">,</span> <span class="n">costing</span><span class="p">,</span> <span class="n">templates</span><span class="p">,</span> <span class="n">artifacts</span><span class="p">,</span> <span class="n">airgap</span><span class="p">,</span> <span class="n">sandboxes</span><span class="p">,</span> <span class="n">evm</span><span class="p">,</span> <span class="n">procurement</span><span class="p">,</span> <span class="n">reserves</span><span class="p">,</span> <span class="n">spatial</span><span class="p">,</span> <span class="n">calendars</span><span class="p">,</span> <span class="n">currency</span><span class="p">,</span> <span class="n">mcp</span><span class="p">,</span> <span class="n">previews</span><span class="p">,</span> <span class="n">websocket</span><span class="p">,</span> <span class="n">subcontractors</span><span class="p">,</span> <span class="n">ipmr_reports</span><span class="p">,</span> <span class="n">briefing</span><span class="p">,</span> <span class="n">programmes</span><span class="p">,</span> <span class="n">admin_security</span><span class="p">,</span> <span class="n">db_health</span><span class="p">,</span> <span class="n">supplier_portal</span><span class="p">,</span> <span class="n">facilities</span><span class="p">,</span> <span class="n">merkle_sync</span><span class="p">,</span> <span class="n">audit</span><span class="p">,</span> <span class="n">equipment</span><span class="p">,</span> <span class="n">engineering</span><span class="p">,</span> <span class="n">commercial</span><span class="p">,</span> <span class="n">materials</span><span class="p">,</span> <span class="n">views</span><span class="p">,</span> <span class="n">presets</span><span class="p">,</span> <span class="n">resources</span><span class="p">,</span> <span class="n">schedule_quarantine</span><span class="p">,</span> <span class="n">leases</span><span class="p">,</span> <span class="n">db_backup</span><span class="p">,</span> <span class="n">admin_tools</span><span class="p">,</span> <span class="n">dashboard</span><span class="p">,</span> <span class="n">export</span><span class="p">,</span> <span class="n">copilot</span><span class="p">,</span> <span class="n">line_management</span><span class="p">,</span> <span class="n">delegation</span><span class="p">,</span> <span class="n">agents</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.routers.admin</span><span class="w"> </span><span class="kn">import</span> <span class="n">custom_fields</span> <span class="k">as</span> <span class="n">custom_fields_router</span>
+
+<span class="c1"># Import all model modules so they are registered with SQLAlchemy's declarative base</span>
+<span class="c1"># This must happen before create_all is called</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">app.models.models</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">app.models.display</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">app.models.custom_fields</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">app.models.leases</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">app.models.dashboard</span>  <span class="c1"># noqa: F401</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">app.models.agent_staging</span>  <span class="c1"># noqa: F401</span>
+
+<span class="c1"># Developer mock fixtures — only load in non-production environments</span>
+<span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">ENVIRONMENT</span> <span class="o">!=</span> <span class="s2">"production"</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.routers</span><span class="w"> </span><span class="kn">import</span> <span class="n">mock_fixtures</span>
+
+
+<div class="viewcode-block" id="lifespan">
+<a class="viewcode-back" href="../../modules.html#app.main.lifespan">[docs]</a>
+<span class="nd">@asynccontextmanager</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">lifespan</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="n">FastAPI</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Application lifespan context manager for startup and shutdown events.</span>
+
+<span class="sd">    This replaces the deprecated ``@app.on_event("startup")`` pattern with</span>
+<span class="sd">    the modern FastAPI lifespan context manager. It ensures that database</span>
+<span class="sd">    tables are created before the application starts serving requests.</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. On startup: Create all database tables defined in the SQLAlchemy models.</span>
+<span class="sd">       In production, Alembic migrations should be used instead of ``create_all``.</span>
+<span class="sd">    2. Yield control to FastAPI to start serving requests.</span>
+<span class="sd">    3. On shutdown: Perform any cleanup tasks (currently none).</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ------</span>
+<span class="sd">    None</span>
+<span class="sd">        Yields control to FastAPI to start serving requests.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Startup: Create database tables</span>
+    <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">create_all</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">)</span>
+    <span class="k">yield</span></div>
+
+    <span class="c1"># Shutdown: Add cleanup tasks here if needed</span>
+
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span>
+    <span class="n">title</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">APP_NAME</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Enterprise Portfolio Management System API"</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="s2">"1.0.0"</span><span class="p">,</span>
+    <span class="n">lifespan</span><span class="o">=</span><span class="n">lifespan</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="sd">"""The main FastAPI application instance.</span>
+
+<span class="sd">This is the ASGI application that handles all incoming HTTP requests.</span>
+<span class="sd">It is configured with automatic API documentation (Swagger UI and ReDoc)</span>
+<span class="sd">and includes all API routers under the ``/api`` prefix.</span>
+<span class="sd">"""</span>
+
+<span class="c1"># Register exception handlers</span>
+<span class="n">app</span><span class="o">.</span><span class="n">add_exception_handler</span><span class="p">(</span><span class="n">StaleDataError</span><span class="p">,</span> <span class="n">stale_data_exception_handler</span><span class="p">)</span>
+
+<span class="c1"># Security Headers Middleware — adds HSTS, CSP, X-Frame-Options, etc.</span>
+<span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span><span class="n">SecurityHeadersMiddleware</span><span class="p">)</span>
+
+<span class="c1"># CORS Middleware — restrict cross-origin requests</span>
+<span class="n">allowed_origins</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">ALLOWED_ORIGINS</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">ALLOWED_ORIGINS</span> <span class="o">!=</span> <span class="s2">"*"</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"*"</span><span class="p">]</span>
+<span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span>
+    <span class="n">CORSMiddleware</span><span class="p">,</span>
+    <span class="n">allow_origins</span><span class="o">=</span><span class="n">allowed_origins</span><span class="p">,</span>
+    <span class="n">allow_credentials</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">allow_methods</span><span class="o">=</span><span class="p">[</span><span class="s2">"GET"</span><span class="p">,</span> <span class="s2">"POST"</span><span class="p">,</span> <span class="s2">"PUT"</span><span class="p">,</span> <span class="s2">"PATCH"</span><span class="p">,</span> <span class="s2">"DELETE"</span><span class="p">,</span> <span class="s2">"OPTIONS"</span><span class="p">],</span>
+    <span class="n">allow_headers</span><span class="o">=</span><span class="p">[</span><span class="s2">"Authorization"</span><span class="p">,</span> <span class="s2">"Content-Type"</span><span class="p">,</span> <span class="s2">"Accept"</span><span class="p">],</span>
+    <span class="n">expose_headers</span><span class="o">=</span><span class="p">[</span><span class="s2">"Link"</span><span class="p">,</span> <span class="s2">"X-Total-Count"</span><span class="p">],</span>
+    <span class="n">max_age</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Register routers</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">auth</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">users</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">display_settings</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">wbs</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">cockpit</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">requisitions</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/requisitions"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">clashes</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">baselines</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">notifications</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/notifications"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">cdrl</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/cdrl"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">oracle_timesheets</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/timesheets/oracle"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">costing</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/costing"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">templates</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">artifacts</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/artifacts"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">airgap</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/airgap"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">sandboxes</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">evm</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/evm"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">procurement</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/procurement"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">reserves</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/reserves"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">spatial</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/spatial"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">calendars</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/calendars"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">currency</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/currency"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">mcp</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/mcp"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">previews</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/previews"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">subcontractors</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/subcontractors"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">ipmr_reports</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/reports/evm"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">briefing</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/reports/briefing"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">programmes</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/programmes"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">websocket</span><span class="o">.</span><span class="n">router</span><span class="p">)</span>  <span class="c1"># WebSocket endpoint at /ws/projects/{project_id}</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">admin_security</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/admin/security"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">db_health</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/admin"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">supplier_portal</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/supplier-portal"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">facilities</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/facilities"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">merkle_sync</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/merkle-sync"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">audit</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/audit"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">dashboard</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">copilot</span><span class="o">.</span><span class="n">router</span><span class="p">)</span>  <span class="c1"># CoPilot chat at /api/v1/copilot</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">equipment</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/equipment"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">engineering</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/engineering"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">commercial</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/commercial"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">materials</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/materials"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">views</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/views"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">presets</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/presets"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">resources</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/resources"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">custom_fields_router</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/admin"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">schedule_quarantine</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/schedule_quarantine"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">leases</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/leases"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">db_backup</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/admin/backups"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">admin_tools</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">export</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/export"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">line_management</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">line_management</span><span class="o">.</span><span class="n">leave_router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">line_management</span><span class="o">.</span><span class="n">downtime_router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">line_management</span><span class="o">.</span><span class="n">skills_router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">delegation</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api"</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">agents</span><span class="o">.</span><span class="n">router</span><span class="p">)</span>  <span class="c1"># Agent proposal sessions at /api/v1/agents</span>
+
+<span class="c1"># Developer mock fixtures — only register in non-production environments</span>
+<span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">ENVIRONMENT</span> <span class="o">!=</span> <span class="s2">"production"</span><span class="p">:</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">include_router</span><span class="p">(</span><span class="n">mock_fixtures</span><span class="o">.</span><span class="n">router</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"/api/v1/dev"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="root">
+<a class="viewcode-back" href="../../modules.html#app.main.root">[docs]</a>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">root</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Root endpoint returning API information.</span>
+
+<span class="sd">    Returns the application name, version, and a link to the</span>
+<span class="sd">    interactive API documentation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing the API name, version, and docs URL.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">APP_NAME</span><span class="p">,</span>
+        <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"1.0.0"</span><span class="p">,</span>
+        <span class="s2">"docs"</span><span class="p">:</span> <span class="s2">"/docs"</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="health_check">
+<a class="viewcode-back" href="../../modules.html#app.main.health_check">[docs]</a>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/health"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">health_check</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Health check endpoint for load balancers and monitoring.</span>
+
+<span class="sd">    Returns a simple status indicator that the application is running.</span>
+<span class="sd">    Load balancers and monitoring systems use this endpoint to determine</span>
+<span class="sd">    whether the service is healthy and should receive traffic.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary with ``{"status": "healthy"}``.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"status"</span><span class="p">:</span> <span class="s2">"healthy"</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,453 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.clashes &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.clashes</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.clashes</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Schedule clash detection and resource leveling router.</span>
+
+<span class="sd">Provides endpoints for:</span>
+
+<span class="sd">- **Listing active clashes** — Retrieve unresolved schedule conflicts</span>
+<span class="sd">  detected by the clash daemon, filtered by severity.</span>
+<span class="sd">- **Running a portfolio sweep** — Trigger a new audit pass to detect</span>
+<span class="sd">  resource overallocations, clearance lapses, facility collisions,</span>
+<span class="sd">  negative float slips, and predecessor violations.</span>
+<span class="sd">- **Computing a leveling proposal** — Run the Burgess-Killebrew</span>
+<span class="sd">  heuristic to propose date shifts that resolve overallocations</span>
+<span class="sd">  without extending the critical path.</span>
+<span class="sd">- **Applying leveling** — Commit signed-off leveling shifts to the</span>
+<span class="sd">  database in an atomic transaction.</span>
+
+<span class="sd">Sub-Tree Locking</span>
+<span class="sd">~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The ``POST /apply-leveling`` endpoint acquires a sub-tree lock before</span>
+<span class="sd">committing date shifts.  This prevents concurrent mutations from</span>
+<span class="sd">interfering with the leveling process.  If a lock is already held,</span>
+<span class="sd">HTTP 423 (Locked) is returned.</span>
+
+<span class="sd">All endpoints require JWT authentication.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">ClashSeverity</span><span class="p">,</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span> <span class="n">LockOperationType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ClashIssueResponse</span><span class="p">,</span> <span class="n">ClashListResponse</span><span class="p">,</span> <span class="n">SweepResultResponse</span><span class="p">,</span>
+    <span class="n">LevelingShiftResponse</span><span class="p">,</span> <span class="n">LevelingProposalResponse</span><span class="p">,</span> <span class="n">LevelingApplyResponse</span><span class="p">,</span> <span class="n">LevelingApplyRequest</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.clash_daemon</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_portfolio_sweep</span><span class="p">,</span> <span class="n">get_active_clashes</span><span class="p">,</span> <span class="n">resolve_clash</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.leveling</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_leveling_proposal</span><span class="p">,</span> <span class="n">apply_leveling</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.lock_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">acquire_subtree_lock</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/v1/schedule/clashes"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"Schedule Clashes"</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="list_clashes">
+<a class="viewcode-back" href="../../../modules.html#app.routers.clashes.list_clashes">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ClashListResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"List active schedule clashes"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Returns all unresolved schedule clashes detected by the clash daemon. "</span>
+        <span class="s2">"Optionally filter by severity level.  Clashes are ordered by severity "</span>
+        <span class="s2">"(CRITICAL first) and then by creation time (newest first)."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_clashes</span><span class="p">(</span>
+    <span class="n">severity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by severity: CRITICAL, MAJOR, or ADVISORY"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List active (unresolved) schedule clashes, optionally filtered by severity."""</span>
+    <span class="c1"># Parse severity filter</span>
+    <span class="n">severity_enum</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">severity</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">severity_enum</span> <span class="o">=</span> <span class="n">ClashSeverity</span><span class="p">(</span><span class="n">severity</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid severity '</span><span class="si">{</span><span class="n">severity</span><span class="si">}</span><span class="s2">'. Must be one of: CRITICAL, MAJOR, ADVISORY"</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="n">clashes</span> <span class="o">=</span> <span class="n">get_active_clashes</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="n">severity_enum</span><span class="p">)</span>
+
+    <span class="c1"># Count by severity</span>
+    <span class="n">by_severity</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"CRITICAL"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"MAJOR"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"ADVISORY"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">clashes</span><span class="p">:</span>
+        <span class="n">by_severity</span><span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">by_severity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># Serialize clashes</span>
+    <span class="n">clash_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">clashes</span><span class="p">:</span>
+        <span class="n">clash_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ClashIssueResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">sweep_run_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">sweep_run_id</span><span class="p">),</span>
+            <span class="n">category</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+            <span class="n">severity</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+            <span class="n">conflicting_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">conflicting_node_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">conflicting_node_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">conflicting_resource_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">conflicting_resource_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">conflicting_resource_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">conflict_window_start</span><span class="p">,</span>
+            <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">conflict_window_end</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">recommended_action</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">recommended_action</span><span class="p">,</span>
+            <span class="n">is_resolved</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">is_resolved</span><span class="p">,</span>
+            <span class="n">created_at</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ClashListResponse</span><span class="p">(</span>
+        <span class="n">total_clashes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">clash_list</span><span class="p">),</span>
+        <span class="n">by_severity</span><span class="o">=</span><span class="n">by_severity</span><span class="p">,</span>
+        <span class="n">clashes</span><span class="o">=</span><span class="n">clash_list</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="trigger_sweep">
+<a class="viewcode-back" href="../../../modules.html#app.routers.clashes.trigger_sweep">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/sweep/</span><span class="si">{project_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">SweepResultResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Run a portfolio clash sweep"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Triggers a new audit pass over the specified project, detecting: "</span>
+        <span class="s2">"resource overallocations, security clearance lapses, SCIF facility "</span>
+        <span class="s2">"collisions, negative float slips, and predecessor violations. "</span>
+        <span class="s2">"All discovered clashes are persisted with a unique sweep_run_id."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">trigger_sweep</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Run a complete portfolio sweep and persist discovered clashes."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">run_portfolio_sweep</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Sweep failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="compute_leveling">
+<a class="viewcode-back" href="../../../modules.html#app.routers.clashes.compute_leveling">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/leveling-proposal/</span><span class="si">{project_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">LevelingProposalResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Compute resource leveling proposal"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Runs the Burgess-Killebrew heuristic leveling algorithm on the "</span>
+        <span class="s2">"specified project.  Identifies time windows where total allocated "</span>
+        <span class="s2">"resource units exceed 100</span><span class="si">% c</span><span class="s2">apacity, then proposes date shifts for "</span>
+        <span class="s2">"non-critical tasks within their float window.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"This operates in **Proposal Mode**: no changes are committed to the "</span>
+        <span class="s2">"database.  Review the proposal and call ``POST /apply-leveling`` to "</span>
+        <span class="s2">"commit the shifts."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_leveling</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Compute and return a proposed resource leveling plan."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">compute_leveling_proposal</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span>
+
+        <span class="c1"># Parse shifts into response model</span>
+        <span class="n">shifts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"shifts"</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">shifts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LevelingShiftResponse</span><span class="p">(</span>
+                <span class="n">node_id</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"node_id"</span><span class="p">],</span>
+                <span class="n">code</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"code"</span><span class="p">],</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+                <span class="n">original_start</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"original_start"</span><span class="p">],</span>
+                <span class="n">original_finish</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"original_finish"</span><span class="p">],</span>
+                <span class="n">proposed_start</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"proposed_start"</span><span class="p">],</span>
+                <span class="n">proposed_finish</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"proposed_finish"</span><span class="p">],</span>
+                <span class="n">consumed_float_days</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"consumed_float_days"</span><span class="p">],</span>
+                <span class="n">milestone_breach</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"milestone_breach"</span><span class="p">],</span>
+                <span class="n">reason</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"reason"</span><span class="p">],</span>
+            <span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"project_id"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"project_id"</span><span class="p">],</span>
+            <span class="s2">"total_shifts"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"total_shifts"</span><span class="p">],</span>
+            <span class="s2">"shifts"</span><span class="p">:</span> <span class="n">shifts</span><span class="p">,</span>
+            <span class="s2">"overallocation_windows"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"overallocation_windows"</span><span class="p">],</span>
+            <span class="s2">"milestone_breaches"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"milestone_breaches"</span><span class="p">],</span>
+            <span class="s2">"computed_at"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"computed_at"</span><span class="p">],</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"message"</span><span class="p">),</span>
+        <span class="p">}</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Leveling computation failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="apply_leveling_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.clashes.apply_leveling_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/apply-leveling/</span><span class="si">{project_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">LevelingApplyResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Apply signed-off leveling shifts"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Commits the leveling shifts returned by ``POST /leveling-proposal`` "</span>
+        <span class="s2">"to the database in a single atomic transaction.  Each shift updates "</span>
+        <span class="s2">"the ``planned_start_date`` and ``planned_end_date`` of the target node.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"This endpoint acquires a sub-tree lock before applying shifts to "</span>
+        <span class="s2">"prevent concurrent mutations.  If another operation is already "</span>
+        <span class="s2">"running on this sub-tree, HTTP 423 (Locked) is returned.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"Only shifts that pass validation (node exists, node is under the "</span>
+        <span class="s2">"project root) are applied.  Failed shifts are reported in the response."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_leveling_endpoint</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">LevelingApplyRequest</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Commit signed-off leveling shifts to the database within a sub-tree lock."""</span>
+    <span class="c1"># Find the root node to get its ltree path</span>
+    <span class="n">root_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">project_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root_node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Project node </span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">root_path</span> <span class="o">=</span> <span class="n">root_node</span><span class="o">.</span><span class="n">path</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Acquire sub-tree lock and apply leveling</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span>
+                <span class="n">_apply_leveling_with_lock</span><span class="p">(</span>
+                    <span class="n">db</span><span class="p">,</span> <span class="n">root_path</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">shifts</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">id</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Failed to apply leveling: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_apply_leveling_with_lock</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">shifts</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Apply leveling shifts within a sub-tree lock.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    root_path : str</span>
+<span class="sd">        Ltree path of the project root.</span>
+<span class="sd">    project_id : UUID</span>
+<span class="sd">        UUID of the project root node.</span>
+<span class="sd">    shifts : list</span>
+<span class="sd">        List of leveling shift dicts.</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        ID of the user initiating the leveling.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        The leveling apply result.</span>
+<span class="sd">    """</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">acquire_subtree_lock</span><span class="p">(</span>
+        <span class="n">db</span><span class="p">,</span> <span class="n">root_path</span><span class="p">,</span> <span class="n">LockOperationType</span><span class="o">.</span><span class="n">RESOURCE_LEVELING</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">ttl_seconds</span><span class="o">=</span><span class="mi">60</span>
+    <span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">apply_leveling</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span> <span class="n">shifts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="resolve_clash_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.clashes.resolve_clash_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/resolve/</span><span class="si">{clash_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Mark a clash as resolved"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Marks the specified clash issue as resolved.  The record is retained "</span>
+        <span class="s2">"for historical analysis but will no longer appear in the active clashes list."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_clash_endpoint</span><span class="p">(</span>
+    <span class="n">clash_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Mark a clash issue as resolved."""</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="n">resolve_clash</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">clash_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Clash issue </span><span class="si">{</span><span class="n">clash_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"clash_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">clash_id</span><span class="p">),</span> <span class="s2">"resolved"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

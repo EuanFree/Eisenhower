@@ -1,0 +1,213 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Getting Started &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="User Roles &amp; Permissions" href="roles.html" />
+    <link rel="prev" title="Eisenhower Portfolio Manager — User Guide" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html#quick-start">Quick Start</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#logging-in">1. Logging In</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#understanding-your-role">2. Understanding Your Role</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#your-daily-cockpit">3. Your Daily Cockpit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#navigating-the-system">4. Navigating the System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#understanding-security-classifications">5. Understanding Security Classifications</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-help">6. Getting Help</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+      <li class="breadcrumb-item active">Getting Started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/user_guide/getting-started.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
+<p>This guide will help you take your first steps with the Eisenhower
+Portfolio Manager system.</p>
+<section id="logging-in">
+<h2>1. Logging In<a class="headerlink" href="#logging-in" title="Link to this heading"></a></h2>
+<p>When you first access the system, you will see a login screen.
+Enter the username and password provided by your system administrator.</p>
+<p>After logging in for the first time, you will be prompted to change
+your password. Choose a strong password that you can remember.</p>
+</section>
+<section id="understanding-your-role">
+<h2>2. Understanding Your Role<a class="headerlink" href="#understanding-your-role" title="Link to this heading"></a></h2>
+<p>Your system administrator assigns you a role that determines what you
+can do in the system. The available roles are:</p>
+<blockquote>
+<div><p><strong>Admin</strong>
+Full system access. Can manage all users, configure security, and perform administrative tasks.</p>
+<p><strong>Manager</strong>
+Can create and manage portfolios, projects, and tasks. Can assign team members and manage resources.</p>
+<p><strong>Member</strong>
+Can create and edit tasks within assigned portfolios. Can update progress and report blockers.</p>
+<p><strong>Viewer</strong>
+Read-only access to data for which they have clearance. Cannot modify any data.</p>
+</div></blockquote>
+</section>
+<section id="your-daily-cockpit">
+<h2>3. Your Daily Cockpit<a class="headerlink" href="#your-daily-cockpit" title="Link to this heading"></a></h2>
+<p>After logging in, you land on your <strong>Daily Cockpit</strong> — your personal
+dashboard. Here you will see:</p>
+<ul class="simple">
+<li><p><strong>Active Tasks</strong> — Tasks assigned to you that are not yet complete.</p></li>
+<li><p><strong>Focus Queue</strong> — Tasks prioritised by their position on the critical path.</p></li>
+<li><p><strong>Claimable Tasks</strong> — Placeholder tasks that you can volunteer to take on.</p></li>
+<li><p><strong>Upcoming Deadlines</strong> — Tasks due within the next 48 hours.</p></li>
+<li><p><strong>Blockers</strong> — Issues that are preventing progress on your tasks.</p></li>
+</ul>
+</section>
+<section id="navigating-the-system">
+<h2>4. Navigating the System<a class="headerlink" href="#navigating-the-system" title="Link to this heading"></a></h2>
+<p>The main navigation menu on the left provides access to all features:</p>
+<ul class="simple">
+<li><p><strong>Dashboard</strong> — High-level project statistics and activity feed.</p></li>
+<li><p><strong>Programmes</strong> — Browse and manage programme hierarchies.</p></li>
+<li><p><strong>Schedule</strong> — View and edit project timelines.</p></li>
+<li><p><strong>Resources</strong> — Manage people, equipment, and facilities.</p></li>
+<li><p><strong>Reports</strong> — Generate and export reports.</p></li>
+<li><p><strong>Settings</strong> — Configure your display preferences.</p></li>
+</ul>
+</section>
+<section id="understanding-security-classifications">
+<h2>5. Understanding Security Classifications<a class="headerlink" href="#understanding-security-classifications" title="Link to this heading"></a></h2>
+<p>The Eisenhower system handles classified data. Each piece of information
+carries a security classification:</p>
+<ul class="simple">
+<li><p><strong>OFFICIAL</strong> — Standard information.</p></li>
+<li><p><strong>OFFICIAL-SENSITIVE</strong> — Information that could cause damage if disclosed.</p></li>
+<li><p><strong>SECRET</strong> — Information that could cause serious damage if disclosed.</p></li>
+<li><p><strong>TOP SECRET</strong> — Information that could cause exceptionally grave damage.</p></li>
+</ul>
+<p>You can only see data at or below your clearance level. If you encounter
+a <strong>ghost node</strong> (shown with redacted data), it means you lack clearance
+for that item but have clearance for items beneath it.</p>
+</section>
+<section id="getting-help">
+<h2>6. Getting Help<a class="headerlink" href="#getting-help" title="Link to this heading"></a></h2>
+<p>If you need help while using the system:</p>
+<ul class="simple">
+<li><p>Use the <strong>Help Center</strong> (accessible from the navigation menu) for
+quick reference guides on specific topics.</p></li>
+<li><p>Contact your system administrator for account or access issues.</p></li>
+<li><p>Refer to this user guide for detailed feature documentation.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Eisenhower Portfolio Manager — User Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="roles.html" class="btn btn-neutral float-right" title="User Roles &amp; Permissions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

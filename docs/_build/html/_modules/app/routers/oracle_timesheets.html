@@ -1,0 +1,821 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.oracle_timesheets &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.oracle_timesheets</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.oracle_timesheets</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Oracle timesheet and ERP export API router.</span>
+
+<span class="sd">This module provides the REST API endpoints for the timesheet pre-population</span>
+<span class="sd">engine and Oracle ERP export staging service.  It bridges the Eisenhower</span>
+<span class="sd">Portfolio Manager's internal scheduling system with Oracle EBS cost accounting.</span>
+
+<span class="sd">Endpoints Overview</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The router is mounted at ``/api/v1/timesheets/oracle`` and provides:</span>
+
+<span class="sd">- **GET /prepopulate** — Pre-populate a user's weekly timesheet from active</span>
+<span class="sd">  CPM assignments.  Returns scheduled hours for each working day so the user</span>
+<span class="sd">  can confirm or adjust rather than entering from scratch.</span>
+
+<span class="sd">- **POST /batches/create** — Close an approved weekly period and generate</span>
+<span class="sd">  an export batch.  This creates a TimesheetOracleExportBatch record and</span>
+<span class="sd">  prepares the staging payload.</span>
+
+<span class="sd">- **GET /batches/{id}/download** — Stream the formatted Oracle staging</span>
+<span class="sd">  payload (CSV) for a given batch.  Classified task names are automatically</span>
+<span class="sd">  replaced with sanitised cost-code identifiers.</span>
+
+<span class="sd">- **GET /batches/{id}** — Get the details of an export batch including</span>
+<span class="sd">  status, period, and record count.</span>
+
+<span class="sd">- **GET /coherence-audit** — Inspect flagged divergence batches by running</span>
+<span class="sd">  a coherence audit on a given timesheet batch.  Detects labor-progress</span>
+<span class="sd">  divergences and ACWP/PV cost overruns.</span>
+
+<span class="sd">- **POST /{id}/justify** — Submit a CAM technical variance narrative to</span>
+<span class="sd">  clear a billing hold on a held timesheet batch.</span>
+
+<span class="sd">Authentication</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">All endpoints require a valid JWT token.  The authenticated user's identity</span>
+<span class="sd">is used to determine which timesheet data to return and to record audit</span>
+<span class="sd">trail entries.</span>
+
+<span class="sd">Data Sanitization</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">When generating Oracle staging payloads, classified task names (SECRET or</span>
+<span class="sd">higher) are automatically replaced with their Oracle cost-code identifiers.</span>
+<span class="sd">This prevents classified information from leaking into the ERP system.</span>
+
+<span class="sd">For example, a task named "CLASSIFIED AVIONICS INTEGRATION" with Oracle</span>
+<span class="sd">task number "10.02.01" will appear in the export as "Task 10.02.01".</span>
+
+<span class="sd">Coherence Audit</span>
+<span class="sd">~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The coherence audit endpoints enforce statutory allowable cost billing gates</span>
+<span class="sd">for defence programmes.  When divergences are detected on TCIF or single-source</span>
+<span class="sd">work packages, timesheet line items are placed in HELD_FOR_CAM_JUSTIFICATION</span>
+<span class="sd">status until the CAM submits an attested variance justification.</span>
+
+<span class="sd">Dependencies</span>
+<span class="sd">~~~~~~~~~~~~</span>
+
+<span class="sd">These endpoints require a live PostgreSQL instance to query ResourceAssignments,</span>
+<span class="sd">PortfolioNodes, and OracleProjectMappings.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">StreamingResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BatchCreateRequest</span><span class="p">,</span>
+    <span class="n">BatchCreateResponse</span><span class="p">,</span>
+    <span class="n">TimesheetOracleExportBatchResponse</span><span class="p">,</span>
+    <span class="n">TimesheetPrepopulateResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.oracle_gateway</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">create_export_batch</span><span class="p">,</span>
+    <span class="n">generate_oracle_staging_payload</span><span class="p">,</span>
+    <span class="n">prepopulate_timesheet_from_schedule</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">TimesheetOracleExportBatch</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="get_prepopulated_timesheet">
+<a class="viewcode-back" href="../../../modules.html#app.routers.oracle_timesheets.get_prepopulated_timesheet">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/prepopulate"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">TimesheetPrepopulateResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_prepopulated_timesheet</span><span class="p">(</span>
+    <span class="n">period_start</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Start date of the timesheet period (ISO format, e.g. 2024-01-15)"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">period_end</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"End date of the timesheet period (ISO format, e.g. 2024-01-21)"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Pre-populate the authenticated user's weekly timesheet from active CPM assignments.</span>
+
+<span class="sd">    When a user opens their weekly timesheet, this endpoint inspects their</span>
+<span class="sd">    active ResourceAssignments and auto-populates scheduled hours for each</span>
+<span class="sd">    working day within the requested period.</span>
+
+<span class="sd">    The algorithm:</span>
+
+<span class="sd">    1. Finds the ResourceNode corresponding to the authenticated user.</span>
+<span class="sd">    2. Queries all active ResourceAssignments for that resource.</span>
+<span class="sd">    3. Filters to assignments whose portfolio node dates overlap the period.</span>
+<span class="sd">    4. Distributes planned hours across working days (Mon–Fri).</span>
+<span class="sd">    5. Looks up Oracle cost codes for each portfolio node.</span>
+<span class="sd">    6. Returns the pre-populated line items.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    period_start : str</span>
+<span class="sd">        Start date of the timesheet period in ISO format (YYYY-MM-DD).</span>
+<span class="sd">    period_end : str</span>
+<span class="sd">        End date of the timesheet period in ISO format (YYYY-MM-DD).</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TimesheetPrepopulateResponse</span>
+<span class="sd">        Pre-populated timesheet with scheduled line items.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if dates are invalid or period_start &gt; period_end.</span>
+<span class="sd">        404 if the user is not found.</span>
+<span class="sd">        500 if a database error occurs.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">period_start</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">period_end</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid date format. Use ISO format (YYYY-MM-DD)."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"period_start must be before or equal to period_end."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">prepopulate_timesheet_from_schedule</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">period_start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+            <span class="n">period_end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Error pre-populating timesheet: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_timesheet_batch">
+<a class="viewcode-back" href="../../../modules.html#app.routers.oracle_timesheets.create_timesheet_batch">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/batches/create"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">BatchCreateResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_timesheet_batch</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">BatchCreateRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Close an approved weekly period and generate an Oracle export batch.</span>
+
+<span class="sd">    When a weekly timesheet period is closed, this endpoint creates a</span>
+<span class="sd">    TimesheetOracleExportBatch record.  The batch groups all approved</span>
+<span class="sd">    timesheet lines for the period and prepares them for export to</span>
+<span class="sd">    Oracle EBS.</span>
+
+<span class="sd">    The batch reference is auto-generated in the format:</span>
+<span class="sd">    ``TS-{YEAR}-W{WEEK}-{RANDOM}`` (e.g., ``TS-2024-W42-A3F1``).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : BatchCreateRequest</span>
+<span class="sd">        Request body containing period_start and period_end dates.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BatchCreateResponse</span>
+<span class="sd">        Details of the newly created export batch.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if dates are invalid or period_start &gt; period_end.</span>
+<span class="sd">        409 if a batch already exists for the same period.</span>
+<span class="sd">        500 if a database error occurs.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">period_start</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">period_end</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid date format. Use ISO format (YYYY-MM-DD)."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"period_start must be before or equal to period_end."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check for existing batch for the same period</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TimesheetOracleExportBatch</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">TimesheetOracleExportBatch</span><span class="o">.</span><span class="n">period_start_date</span> <span class="o">==</span> <span class="n">start</span><span class="p">,</span>
+            <span class="n">TimesheetOracleExportBatch</span><span class="o">.</span><span class="n">period_end_date</span> <span class="o">==</span> <span class="n">end</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">409</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"A batch already exists for this period: </span><span class="si">{</span><span class="n">existing</span><span class="o">.</span><span class="n">batch_reference</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Generate line items for the batch</span>
+        <span class="c1"># In a full implementation, this would query a timesheet_lines table</span>
+        <span class="c1"># For now, we derive from ResourceAssignments</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.oracle_gateway</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">_get_workdays_in_range</span><span class="p">,</span>
+            <span class="n">_get_oracle_mapping</span><span class="p">,</span>
+            <span class="n">_sanitize_task_description</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+            <span class="n">ResourceAssignment</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="p">,</span>
+            <span class="n">ResourceNode</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span> <span class="k">as</span> <span class="n">_uuid4</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+
+        <span class="n">assignments</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">line_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">workdays</span> <span class="o">=</span> <span class="n">_get_workdays_in_range</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+        <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+        <span class="n">batch_source</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"EISENHOWER_BATCH_CREATE"</span>
+
+        <span class="n">STANDARD_DAILY_HOURS</span> <span class="o">=</span> <span class="mf">8.0</span>
+
+        <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">mapping</span> <span class="o">=</span> <span class="n">_get_oracle_mapping</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">resource</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Check overlap with node dates</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+                <span class="n">node_start</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span>
+                <span class="p">)</span>
+                <span class="n">node_end</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span>
+                <span class="p">)</span>
+                <span class="n">filtered_days</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">workdays</span> <span class="k">if</span> <span class="n">node_start</span> <span class="o">&lt;=</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">node_end</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">filtered_days</span> <span class="o">=</span> <span class="n">workdays</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">filtered_days</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Calculate daily hours</span>
+            <span class="n">allocated_units</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">allocated_units</span> <span class="ow">or</span> <span class="mf">0.0</span>
+            <span class="n">daily_hours</span> <span class="o">=</span> <span class="n">STANDARD_DAILY_HOURS</span> <span class="o">*</span> <span class="n">allocated_units</span>
+
+            <span class="k">if</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span> <span class="ow">and</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+                    <span class="n">all_node_workdays</span> <span class="o">=</span> <span class="n">_get_workdays_in_range</span><span class="p">(</span><span class="n">node_start</span><span class="p">,</span> <span class="n">node_end</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">all_node_workdays</span> <span class="o">=</span> <span class="n">filtered_days</span>
+                <span class="k">if</span> <span class="n">all_node_workdays</span><span class="p">:</span>
+                    <span class="n">daily_hours</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_node_workdays</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">workday</span> <span class="ow">in</span> <span class="n">filtered_days</span><span class="p">:</span>
+                <span class="n">transaction_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_uuid4</span><span class="p">())</span>
+                <span class="n">sanitized_desc</span> <span class="o">=</span> <span class="n">_sanitize_task_description</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">mapping</span><span class="p">)</span>
+
+                <span class="n">row</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"TRANSACTION_ID"</span><span class="p">:</span> <span class="n">transaction_id</span><span class="p">,</span>
+                    <span class="s2">"ORGANIZATION_ID"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_expenditure_org_name</span><span class="p">,</span>
+                    <span class="s2">"PROJECT_ID"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_project_number</span><span class="p">,</span>
+                    <span class="s2">"TASK_ID"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_task_number</span><span class="p">,</span>
+                    <span class="s2">"EXPENDITURE_TYPE"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_expenditure_type</span><span class="p">,</span>
+                    <span class="s2">"TRANSACTION_DATE"</span><span class="p">:</span> <span class="n">workday</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                    <span class="s2">"TRANSACTION_STATUS"</span><span class="p">:</span> <span class="s2">"PENDING"</span><span class="p">,</span>
+                    <span class="s2">"BILLABLE_FLAG"</span><span class="p">:</span> <span class="s2">"Y"</span><span class="p">,</span>
+                    <span class="s2">"CREATION_DATE"</span><span class="p">:</span> <span class="n">now</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                    <span class="s2">"CREATED_BY"</span><span class="p">:</span> <span class="n">resource</span><span class="o">.</span><span class="n">code</span> <span class="k">if</span> <span class="n">resource</span> <span class="k">else</span> <span class="s2">"SYSTEM"</span><span class="p">,</span>
+                    <span class="s2">"RESOURCE_ID"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">if</span> <span class="n">resource</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                    <span class="s2">"NAME"</span><span class="p">:</span> <span class="n">resource</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">resource</span> <span class="k">else</span> <span class="s2">"Unknown"</span><span class="p">,</span>
+                    <span class="s2">"DESCRIPTION"</span><span class="p">:</span> <span class="n">sanitized_desc</span><span class="p">,</span>
+                    <span class="s2">"TRANSACTION_AMOUNT"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">daily_hours</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+                    <span class="s2">"EXCHANGE_RATE"</span><span class="p">:</span> <span class="s2">"1.0"</span><span class="p">,</span>
+                    <span class="s2">"EXCHANGE_RATE_TYPE"</span><span class="p">:</span> <span class="s2">"Corporate"</span><span class="p">,</span>
+                    <span class="s2">"EXCHANGE_RATE_DATE"</span><span class="p">:</span> <span class="n">workday</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                    <span class="s2">"ATTRIBUTE_CATEGORY"</span><span class="p">:</span> <span class="s2">"TIMESHEET"</span><span class="p">,</span>
+                    <span class="s2">"GLOBAL_ATTRIBUTE_CATEGORY"</span><span class="p">:</span> <span class="s2">"EISENHOWER"</span><span class="p">,</span>
+                    <span class="s2">"BATCH_SOURCE_NAME"</span><span class="p">:</span> <span class="n">batch_source</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="n">line_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+        <span class="c1"># Create the batch</span>
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">create_export_batch</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">period_start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+            <span class="n">period_end</span><span class="o">=</span><span class="n">end</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">line_items</span><span class="o">=</span><span class="n">line_items</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"batch_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"batch_reference"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">batch_reference</span><span class="p">,</span>
+            <span class="s2">"period_start"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">period_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"period_end"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">period_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+            <span class="s2">"total_hours"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">total_hours</span><span class="p">),</span>
+            <span class="s2">"record_count"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">record_count</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Error creating export batch: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="download_oracle_staging_payload">
+<a class="viewcode-back" href="../../../modules.html#app.routers.oracle_timesheets.download_oracle_staging_payload">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/batches/</span><span class="si">{batch_id}</span><span class="s2">/download"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">download_oracle_staging_payload</span><span class="p">(</span>
+    <span class="n">batch_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Download the Oracle EBS staging payload for a given export batch.</span>
+
+<span class="sd">    This endpoint generates and streams the CSV-formatted staging payload</span>
+<span class="sd">    for Oracle EBS PA_TRANSACTION_INTERFACE_ALL schema.  Classified task</span>
+<span class="sd">    names are automatically replaced with sanitised cost-code identifiers.</span>
+
+<span class="sd">    The payload is streamed as a CSV file with the filename:</span>
+<span class="sd">    ``oracle_staging_{batch_reference}.csv``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batch_id : str</span>
+<span class="sd">        The UUID of the export batch to download.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    StreamingResponse</span>
+<span class="sd">        CSV file stream with appropriate headers for download.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the batch is not found.</span>
+<span class="sd">        400 if the batch_id is not a valid UUID.</span>
+<span class="sd">        500 if payload generation fails.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">batch_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">batch_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid batch_id. Must be a valid UUID."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check batch exists</span>
+    <span class="n">batch</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TimesheetOracleExportBatch</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">TimesheetOracleExportBatch</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">batch_uuid</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">batch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Export batch </span><span class="si">{</span><span class="n">batch_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">csv_content</span><span class="p">,</span> <span class="n">line_items</span> <span class="o">=</span> <span class="n">generate_oracle_staging_payload</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">batch_id</span><span class="o">=</span><span class="n">batch_uuid</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"oracle_staging_</span><span class="si">{</span><span class="n">batch</span><span class="o">.</span><span class="n">batch_reference</span><span class="si">}</span><span class="s2">.csv"</span>
+
+        <span class="k">return</span> <span class="n">StreamingResponse</span><span class="p">(</span>
+            <span class="nb">iter</span><span class="p">([</span><span class="n">csv_content</span><span class="p">]),</span>
+            <span class="n">media_type</span><span class="o">=</span><span class="s2">"text/csv"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"Content-Disposition"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"attachment; filename=</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Error generating staging payload: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_export_batch">
+<a class="viewcode-back" href="../../../modules.html#app.routers.oracle_timesheets.get_export_batch">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/batches/</span><span class="si">{batch_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">TimesheetOracleExportBatchResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_export_batch</span><span class="p">(</span>
+    <span class="n">batch_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get the details of an Oracle export batch.</span>
+
+<span class="sd">    Returns the batch metadata including status, period dates, total hours,</span>
+<span class="sd">    and record count.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batch_id : str</span>
+<span class="sd">        The UUID of the export batch.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TimesheetOracleExportBatchResponse</span>
+<span class="sd">        Batch details including status and metadata.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the batch is not found.</span>
+<span class="sd">        400 if the batch_id is not a valid UUID.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">batch_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">batch_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid batch_id. Must be a valid UUID."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">batch</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TimesheetOracleExportBatch</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">TimesheetOracleExportBatch</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">batch_uuid</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">batch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Export batch </span><span class="si">{</span><span class="n">batch_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"batch_reference"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">batch_reference</span><span class="p">,</span>
+        <span class="s2">"period_start"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">period_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="s2">"period_end"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">period_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="s2">"status"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="s2">"total_hours"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">batch</span><span class="o">.</span><span class="n">total_hours</span><span class="p">),</span>
+        <span class="s2">"record_count"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">record_count</span><span class="p">,</span>
+        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">batch</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"updated_at"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">batch</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Coherence Audit Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="JustifyRequestBody">
+<a class="viewcode-back" href="../../../modules.html#app.routers.oracle_timesheets.JustifyRequestBody">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">JustifyRequestBody</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Pydantic-like request body for CAM justification."""</span>
+<div class="viewcode-block" id="JustifyRequestBody.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.routers.oracle_timesheets.JustifyRequestBody.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">narrative</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">narrative</span> <span class="o">=</span> <span class="n">narrative</span></div>
+</div>
+
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+<div class="viewcode-block" id="JustifyRequest">
+<a class="viewcode-back" href="../../../modules.html#app.routers.oracle_timesheets.JustifyRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">JustifyRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Request body for submitting CAM variance justification."""</span>
+    <span class="n">narrative</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">min_length</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"The variance justification narrative following IPMR Format 5 "</span>
+            <span class="s2">"variance narrative structure. Minimum 50 characters."</span>
+        <span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_coherence_audit">
+<a class="viewcode-back" href="../../../modules.html#app.routers.oracle_timesheets.get_coherence_audit">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/coherence-audit"</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="s2">"Coherence audit for timesheet batch"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_coherence_audit</span><span class="p">(</span>
+    <span class="n">batch_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The UUID of the timesheet export batch to audit."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Inspect flagged divergence batches by running a coherence audit.</span>
+
+<span class="sd">    This endpoint runs the time-to-progress coherence detector against</span>
+<span class="sd">    a given timesheet export batch.  It checks for:</span>
+
+<span class="sd">    1. **LABOR_PROGRESS_DIVERGENCE** — Labor burn &gt; 15% with 0% physical progress.</span>
+<span class="sd">    2. **ACWP_PV_DIVERGENCE** — ACWP exceeds PV by ≥ 20% without earned value delivery.</span>
+
+<span class="sd">    For TCIF or single-source work packages, divergent line items are</span>
+<span class="sd">    placed in HELD_FOR_CAM_JUSTIFICATION status.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batch_id : str</span>
+<span class="sd">        The UUID of the timesheet export batch to audit.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Audit result with divergences, held lines, and summary statistics.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if batch_id is not a valid UUID.</span>
+<span class="sd">        404 if the batch is not found.</span>
+<span class="sd">        500 if audit fails.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">batch_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">batch_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid batch_id. Must be a valid UUID."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.timesheet_coherence</span><span class="w"> </span><span class="kn">import</span> <span class="n">audit_timesheet_coherence</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">audit_timesheet_coherence</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">timesheet_batch_id</span><span class="o">=</span><span class="n">batch_uuid</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Error running coherence audit: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="justify_timesheet_batch">
+<a class="viewcode-back" href="../../../modules.html#app.routers.oracle_timesheets.justify_timesheet_batch">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/</span><span class="si">{batch_id}</span><span class="s2">/justify"</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="s2">"Submit CAM variance justification"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">justify_timesheet_batch</span><span class="p">(</span>
+    <span class="n">batch_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">JustifyRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Submit a CAM technical variance narrative to clear a billing hold.</span>
+
+<span class="sd">    When divergences are detected on TCIF or single-source defense work</span>
+<span class="sd">    packages, timesheet line items are placed in HELD_FOR_CAM_JUSTIFICATION</span>
+<span class="sd">    status.  This endpoint allows the Contracting Activity Manager (CAM)</span>
+<span class="sd">    to submit an attested variance justification following the IPMR Format 5</span>
+<span class="sd">    variance narrative structure.</span>
+
+<span class="sd">    Once justified, the billing hold is cleared and export to Oracle Projects</span>
+<span class="sd">    is permitted.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    batch_id : str</span>
+<span class="sd">        The UUID of the held timesheet batch.</span>
+<span class="sd">    request : JustifyRequest</span>
+<span class="sd">        Request body containing the variance justification narrative.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected, assumed to be the CAM).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Justification result with status and clearance confirmation.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if batch_id is invalid or narrative is too short.</span>
+<span class="sd">        404 if the batch is not found.</span>
+<span class="sd">        500 if justification submission fails.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">batch_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">batch_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid batch_id. Must be a valid UUID."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.timesheet_coherence</span><span class="w"> </span><span class="kn">import</span> <span class="n">submit_cam_justification</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">submit_cam_justification</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">timesheet_batch_id</span><span class="o">=</span><span class="n">batch_uuid</span><span class="p">,</span>
+            <span class="n">narrative</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">narrative</span><span class="p">,</span>
+            <span class="n">cam_user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Error submitting CAM justification: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

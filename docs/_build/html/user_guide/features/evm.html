@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Earned Value Management &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Earned Value Management</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/evm.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="earned-value-management">
+<h1>Earned Value Management<a class="headerlink" href="#earned-value-management" title="Link to this heading"></a></h1>
+<p>Track project performance using Earned Value Management metrics. Monitor cost and schedule variance, and forecast final costs.</p>
+<section id="evm">
+<h2>evm<a class="headerlink" href="#evm" title="Link to this heading"></a></h2>
+<p>EVM (Earned Value Management) API router.</p>
+<p>This module provides the REST API endpoints for ANSI/EIA-748 Earned Value
+Management.  It enables programme managers to:</p>
+<ul class="simple">
+<li><p>View S-Curve data for charting cumulative PV, EV, and AC over time.</p></li>
+<li><p>Inspect task-level EVM breakdowns with variances and performance indices.</p></li>
+<li><p>Manage milestone weight steps for the MILESTONE_WEIGHTS EVM technique.</p></li>
+<li><p>Verify milestone checkpoints, triggering automatic EV recalculation.</p></li>
+</ul>
+</section>
+<section id="s-curve-charting">
+<h2>S-Curve Charting<a class="headerlink" href="#s-curve-charting" title="Link to this heading"></a></h2>
+<p>The S-Curve endpoint returns time-phased data points that the frontend
+can plot as cumulative curves.  Three lines are typically shown:</p>
+<ul class="simple">
+<li><p><strong>Planned Value (PV)</strong> — The baseline schedule in monetary terms.</p></li>
+<li><p><strong>Earned Value (EV)</strong> — The actual work performed in budgeted terms.</p></li>
+<li><p><strong>Actual Cost (AC)</strong> — The real cost incurred.</p></li>
+</ul>
+<p>The gap between PV and EV shows schedule variance, while the gap between
+EV and AC shows cost variance.</p>
+</section>
+<section id="milestone-weight-steps">
+<h2>Milestone Weight Steps<a class="headerlink" href="#milestone-weight-steps" title="Link to this heading"></a></h2>
+<p>For tasks using the MILESTONE_WEIGHTS EVM technique, milestone steps
+define the checkpoints at which EV is earned.  Each step has a weight
+fraction, and the sum of all weights must equal 1.000.</p>
+<p>When a milestone is verified as passed, the task’s EV is automatically
+recalculated based on the sum of verified weights.</p>
+</section>
+<section id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Link to this heading"></a></h2>
+<p>All endpoints require JWT authentication via the <code class="docutils literal notranslate"><span class="pre">get_current_user</span></code>
+dependency.  Users must have appropriate clearance to access the
+portfolio nodes they query.</p>
+</section>
+<section id="endpoints">
+<h2>Endpoints<a class="headerlink" href="#endpoints" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/projects/{id}/s-curve-data</span></code> — S-Curve charting data.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/projects/{id}/evm-rollup</span></code> — Hierarchical EVM rollup.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/tasks/{id}/cost-breakdown</span></code> — Task-level EVM breakdown.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/tasks/{id}/calculate-ev</span></code> — Recalculate EV for a task.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/tasks/{id}/milestone-steps</span></code> — List milestone weight steps.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/tasks/{id}/milestone-steps</span></code> — Create a milestone step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PUT</span> <span class="pre">/tasks/{id}/milestone-steps/{step_id}</span></code> — Update a milestone step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">/tasks/{id}/milestone-steps/{step_id}</span></code> — Delete a milestone step.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/tasks/{id}/milestone-steps/{step_id}/verify</span></code> — Verify a milestone.</p></li>
+</ul>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: Retrieve time-phased S-Curve data for a project.</p></li>
+<li><p><strong>View</strong>: Retrieve hierarchical EVM rollup for a project.</p></li>
+<li><p><strong>View</strong>: Retrieve the complete EVM breakdown for a single task.</p></li>
+<li><p><strong>View</strong>: List all milestone weight steps for a task.</p></li>
+</ul>
+<p><strong>Creating New Items</strong></p>
+<ul class="simple">
+<li><p><strong>Create</strong>: Recalculate Earned Value for a task using its assigned EVM technique.</p></li>
+<li><p><strong>Create</strong>: Create a new milestone weight step for a task.</p></li>
+<li><p><strong>Create</strong>: Verify a milestone step as passed.</p></li>
+</ul>
+<p><strong>Updating Information</strong></p>
+<ul class="simple">
+<li><p><strong>Update</strong>: Update an existing milestone weight step.</p></li>
+</ul>
+<p><strong>Removing Items</strong></p>
+<ul class="simple">
+<li><p><strong>Delete</strong>: Delete a milestone weight step.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

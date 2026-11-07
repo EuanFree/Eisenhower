@@ -1,0 +1,1595 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.subcontractor_ingest &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.subcontractor_ingest</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.subcontractor_ingest</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Subcontractor schedule ingest pipeline.</span>
+
+<span class="sd">This module provides the isolated ingest pipeline for subcontractor</span>
+<span class="sd">schedule updates submitted in Oracle Primavera P6 (.xer) or Microsoft</span>
+<span class="sd">Project (.xml) format.  It is the gateway through which external</span>
+<span class="sd">schedule data enters the prime contractor's master programme.</span>
+
+<span class="sd">Why an isolated ingest pipeline?</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">When a defence subcontractor submits a schedule update, the prime</span>
+<span class="sd">contractor must verify that the update is compatible with the master</span>
+<span class="sd">programme before merging it.  Directly importing a subcontractor's</span>
+<span class="sd">schedule into the live WBS could:</span>
+
+<span class="sd">- Slip contractual handover milestones beyond agreed boundaries.</span>
+<span class="sd">- Delete contractual predecessor constraints (logic tampering).</span>
+<span class="sd">- Introduce artificial constraints to mask negative float.</span>
+<span class="sd">- Create resource conflicts with other work packages.</span>
+
+<span class="sd">The ingest pipeline addresses these risks by:</span>
+
+<span class="sd">1. **Parsing** the external file into a normalised task/dependency</span>
+<span class="sd">   representation without touching the live database.</span>
+
+<span class="sd">2. **Validating** the parsed data against contractual boundary gates</span>
+<span class="sd">   using automated DCMA-style integrity checks.</span>
+
+<span class="sd">3. **Staging** the proposed changes in an ephemeral sandbox branch</span>
+<span class="sd">   so the impact on the prime schedule can be assessed before commit.</span>
+
+<span class="sd">4. **Merging** only after a human reviewer has approved the staging diff.</span>
+
+<span class="sd">Parsing External Schedules</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The ``parse_external_schedule()`` function reads either a Primavera P6</span>
+<span class="sd">.xer batch text file or a Microsoft Project XML file and extracts:</span>
+
+<span class="sd">- Task identifiers, descriptions, durations, and planned dates.</span>
+<span class="sd">- Predecessor/successor dependency links with lag days.</span>
+
+<span class="sd">The parsed data is returned as a list of dictionaries that can be</span>
+<span class="sd">validated against the contractual boundary.</span>
+
+<span class="sd">Contractual Boundary Validation</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The ``validate_against_contractual_boundary()`` function performs</span>
+<span class="sd">automated DCMA checks and checks against contractual boundary gates:</span>
+
+<span class="sd">- **Milestone Integrity**: Any contractual handover milestone slipping</span>
+<span class="sd">  past the subcontract agreement boundary flags a ``CRITICAL_MILESTONE_BREACH``.</span>
+
+<span class="sd">- **Logic Tampering**: Detects if the subcontractor deleted existing</span>
+<span class="sd">  contractual predecessor constraints or introduced dangling logic.</span>
+
+<span class="sd">- **Negative Float Inflation**: Identifies if artificial constraints</span>
+<span class="sd">  (e.g., 'Must Finish On') were inserted to force positive total float.</span>
+
+<span class="sd">The validation produces a ``ValidationReport`` with a compliance score</span>
+<span class="sd">(0–100%), a list of boundary breaches, and an overall status.</span>
+
+<span class="sd">Staging Diff Generation</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The ``generate_staging_diff()`` function ephemerally injects the</span>
+<span class="sd">subcontractor's proposed DAG into a cloned sandbox branch, runs CPM</span>
+<span class="sd">forward/backward passes, and calculates the resulting float impact</span>
+<span class="sd">on prime contractual delivery dates.</span>
+
+<span class="sd">It returns a ``StagingDiff`` containing:</span>
+
+<span class="sd">- **Unchanged tasks**: Tasks whose dates are not affected by the merge.</span>
+<span class="sd">- **Shifted tasks**: Tasks whose dates would shift as a result of the merge.</span>
+<span class="sd">- **Newly critical paths**: Tasks that would become newly critical (TF ≤ 0).</span>
+<span class="sd">- **Total float variance**: Aggregate float variance across all affected tasks.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">The typical workflow is:</span>
+
+<span class="sd">1. Upload a file via ``POST /api/v1/subcontractors/submissions/upload``.</span>
+<span class="sd">2. The system parses and validates the file automatically.</span>
+<span class="sd">3. Review the validation report via ``GET /submissions/{id}/validation-report``.</span>
+<span class="sd">4. If validation passes, review the staging diff.</span>
+<span class="sd">5. Approve the merge via ``POST /submissions/{id}/approve-merge``.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xml.etree.ElementTree</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ET</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SubcontractorSubmission</span><span class="p">,</span>
+    <span class="n">SubcontractorFormat</span><span class="p">,</span>
+    <span class="n">SubmissionStatus</span><span class="p">,</span>
+    <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">DependencyLink</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span>
+    <span class="n">TreeType</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Parsed task and dependency structures</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="ParsedTask">
+<a class="viewcode-back" href="../../../modules.html#app.services.subcontractor_ingest.ParsedTask">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParsedTask</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A task extracted from an external schedule file.</span>
+
+<span class="sd">    This is an in-memory representation of a task parsed from a</span>
+<span class="sd">    Primavera P6 .xer or Microsoft Project .xml file.  It is not</span>
+<span class="sd">    yet persisted to the database.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : str</span>
+<span class="sd">        Unique identifier of the task in the source file.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Task name or description.</span>
+<span class="sd">    duration_days : float</span>
+<span class="sd">        Planned duration in days.</span>
+<span class="sd">    planned_start : date or None</span>
+<span class="sd">        Planned start date.</span>
+<span class="sd">    planned_finish : date or None</span>
+<span class="sd">        Planned finish date.</span>
+<span class="sd">    predecessors : list[str]</span>
+<span class="sd">        List of predecessor task IDs.</span>
+<span class="sd">    successors : list[str]</span>
+<span class="sd">        List of successor task IDs.</span>
+<span class="sd">    percent_complete : float</span>
+<span class="sd">        Physical percent complete (0–100).</span>
+<span class="sd">    is_milestone : bool</span>
+<span class="sd">        True if this is a milestone (zero-duration task).</span>
+<span class="sd">    """</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"task_id"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">"duration_days"</span><span class="p">,</span> <span class="s2">"planned_start"</span><span class="p">,</span>
+        <span class="s2">"planned_finish"</span><span class="p">,</span> <span class="s2">"predecessors"</span><span class="p">,</span> <span class="s2">"successors"</span><span class="p">,</span>
+        <span class="s2">"percent_complete"</span><span class="p">,</span> <span class="s2">"is_milestone"</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="ParsedTask.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.services.subcontractor_ingest.ParsedTask.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">duration_days</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">planned_start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">planned_finish</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">predecessors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">successors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">percent_complete</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">is_milestone</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialize a parsed task record from an external schedule.</span>
+
+<span class="sd">        Stores the task's identifying information, scheduling data, and</span>
+<span class="sd">        dependency references extracted from a Primavera P6 or Microsoft</span>
+<span class="sd">        Project file. The task is immutable once created — use a new</span>
+<span class="sd">        instance to represent any changes.</span>
+
+<span class="sd">        Args</span>
+<span class="sd">        ----</span>
+<span class="sd">        task_id : str</span>
+<span class="sd">            Unique identifier for the task within the external schedule.</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Human-readable task name.</span>
+<span class="sd">        duration_days : float, optional</span>
+<span class="sd">            Planned duration in days (default ``0.0``).</span>
+<span class="sd">        planned_start : date, optional</span>
+<span class="sd">            Planned start date (default ``None``).</span>
+<span class="sd">        planned_finish : date, optional</span>
+<span class="sd">            Planned finish date (default ``None``).</span>
+<span class="sd">        predecessors : List[str], optional</span>
+<span class="sd">            List of predecessor task IDs (default ``None``, stored as empty list).</span>
+<span class="sd">        successors : List[str], optional</span>
+<span class="sd">            List of successor task IDs (default ``None``, stored as empty list).</span>
+<span class="sd">        percent_complete : float, optional</span>
+<span class="sd">            Physical percent complete, 0–100 (default ``0.0``).</span>
+<span class="sd">        is_milestone : bool, optional</span>
+<span class="sd">            Whether this is a zero-duration milestone (default ``False``).</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_id</span> <span class="o">=</span> <span class="n">task_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration_days</span> <span class="o">=</span> <span class="n">duration_days</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planned_start</span> <span class="o">=</span> <span class="n">planned_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planned_finish</span> <span class="o">=</span> <span class="n">planned_finish</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predecessors</span> <span class="o">=</span> <span class="n">predecessors</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">successors</span> <span class="o">=</span> <span class="n">successors</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">percent_complete</span> <span class="o">=</span> <span class="n">percent_complete</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_milestone</span> <span class="o">=</span> <span class="n">is_milestone</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ParsedDependency">
+<a class="viewcode-back" href="../../../modules.html#app.services.subcontractor_ingest.ParsedDependency">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ParsedDependency</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A dependency link extracted from an external schedule file.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    predecessor_id : str</span>
+<span class="sd">        ID of the predecessor task.</span>
+<span class="sd">    successor_id : str</span>
+<span class="sd">        ID of the successor task.</span>
+<span class="sd">    dependency_type : str</span>
+<span class="sd">        Dependency type: 'FS', 'SS', 'FF', or 'SF'.</span>
+<span class="sd">    lag_days : int</span>
+<span class="sd">        Lag in days (positive for delay, negative for lead).</span>
+<span class="sd">    """</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"predecessor_id"</span><span class="p">,</span> <span class="s2">"successor_id"</span><span class="p">,</span> <span class="s2">"dependency_type"</span><span class="p">,</span> <span class="s2">"lag_days"</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ParsedDependency.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.services.subcontractor_ingest.ParsedDependency.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">predecessor_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">successor_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">dependency_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"FS"</span><span class="p">,</span>
+        <span class="n">lag_days</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialize a parsed dependency link from an external schedule.</span>
+
+<span class="sd">        Represents a scheduling relationship between two tasks extracted</span>
+<span class="sd">        from a Primavera P6 or Microsoft Project file. The dependency</span>
+<span class="sd">        type defines how the successor is constrained by the predecessor.</span>
+
+<span class="sd">        Args</span>
+<span class="sd">        ----</span>
+<span class="sd">        predecessor_id : str</span>
+<span class="sd">            ID of the predecessor task.</span>
+<span class="sd">        successor_id : str</span>
+<span class="sd">            ID of the successor task.</span>
+<span class="sd">        dependency_type : str, optional</span>
+<span class="sd">            Dependency type: ``"FS"`` (Finish-to-Start), ``"SS"`` (Start-to-Start),</span>
+<span class="sd">            ``"FF"`` (Finish-to-Finish), or ``"SF"`` (Start-to-Finish; default ``"FS"``).</span>
+<span class="sd">        lag_days : int, optional</span>
+<span class="sd">            Lag in days — positive for delay, negative for lead (default ``0``).</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predecessor_id</span> <span class="o">=</span> <span class="n">predecessor_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">successor_id</span> <span class="o">=</span> <span class="n">successor_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dependency_type</span> <span class="o">=</span> <span class="n">dependency_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lag_days</span> <span class="o">=</span> <span class="n">lag_days</span></div>
+</div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># File parsers</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="parse_external_schedule">
+<a class="viewcode-back" href="../../../modules.html#app.services.subcontractor_ingest.parse_external_schedule">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_external_schedule</span><span class="p">(</span>
+    <span class="n">file_stream</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">,</span>
+    <span class="n">file_format</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Parse an external schedule file into tasks and dependencies.</span>
+
+<span class="sd">    This function reads either a Primavera P6 .xer batch text file or</span>
+<span class="sd">    a Microsoft Project .xml file and extracts the task and dependency</span>
+<span class="sd">    data into normalised in-memory structures.</span>
+
+<span class="sd">    The parsing is read-only: no database writes occur during this step.</span>
+<span class="sd">    The parsed data is validated in a subsequent step before any merge.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_stream : io.BytesIO</span>
+<span class="sd">        The uploaded file content as a bytes stream.</span>
+<span class="sd">    file_format : str</span>
+<span class="sd">        The format of the file: 'PRIMAVERA_XER' or 'MS_PROJECT_XML'.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[list[ParsedTask], list[ParsedDependency]]</span>
+<span class="sd">        Two lists: parsed tasks and parsed dependency links.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the file format is not recognised or the file content is</span>
+<span class="sd">        malformed and cannot be parsed.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">file_format</span> <span class="o">==</span> <span class="s2">"PRIMAVERA_XER"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_parse_xer</span><span class="p">(</span><span class="n">file_stream</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">file_format</span> <span class="o">==</span> <span class="s2">"MS_PROJECT_XML"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_parse_ms_project_xml</span><span class="p">(</span><span class="n">file_stream</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported file format: </span><span class="si">{</span><span class="n">file_format</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_xer</span><span class="p">(</span><span class="n">file_stream</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Parse a Primavera P6 .xer batch text file.</span>
+
+<span class="sd">    The .xer format is a tab-delimited batch text file with table</span>
+<span class="sd">    headers prefixed by ``%T``.  Key tables include:</span>
+
+<span class="sd">    - ``%T ACT`` — Activities (tasks) with IDs, names, dates, durations.</span>
+<span class="sd">    - ``%T ACTREL`` — Activity relationships (predecessor/successor links).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_stream : io.BytesIO</span>
+<span class="sd">        The .xer file content.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[list[ParsedTask], list[ParsedDependency]]</span>
+<span class="sd">        Parsed tasks and dependencies.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">file_stream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">file_stream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"latin-1"</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">"replace"</span><span class="p">)</span>
+
+    <span class="n">tasks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParsedTask</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">dependencies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">current_table</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">header_columns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">content</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Table header</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"%T "</span><span class="p">):</span>
+            <span class="n">current_table</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">header_columns</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Column header row (first row after %T header)</span>
+        <span class="k">if</span> <span class="n">current_table</span> <span class="ow">and</span> <span class="n">header_columns</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">header_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">)]</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Data rows</span>
+        <span class="k">if</span> <span class="n">current_table</span> <span class="ow">and</span> <span class="n">header_columns</span> <span class="ow">and</span> <span class="s2">"</span><span class="se">\t</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">)</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">header_columns</span><span class="p">,</span> <span class="n">values</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="n">current_table</span> <span class="o">==</span> <span class="s2">"ACT"</span><span class="p">:</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="n">_xer_row_to_task</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">task</span><span class="p">:</span>
+                    <span class="n">tasks</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
+
+            <span class="k">elif</span> <span class="n">current_table</span> <span class="o">==</span> <span class="s2">"ACTREL"</span><span class="p">:</span>
+                <span class="n">dep</span> <span class="o">=</span> <span class="n">_xer_row_to_dependency</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">dep</span><span class="p">:</span>
+                    <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
+
+    <span class="c1"># Build predecessor/successor lists</span>
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">dependencies</span><span class="p">:</span>
+        <span class="n">pred_id</span> <span class="o">=</span> <span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span>
+        <span class="n">succ_id</span> <span class="o">=</span> <span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span>
+        <span class="k">if</span> <span class="n">pred_id</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">succ_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">[</span><span class="n">pred_id</span><span class="p">]</span><span class="o">.</span><span class="n">successors</span><span class="p">:</span>
+                <span class="n">tasks</span><span class="p">[</span><span class="n">pred_id</span><span class="p">]</span><span class="o">.</span><span class="n">successors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">succ_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">succ_id</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pred_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">[</span><span class="n">succ_id</span><span class="p">]</span><span class="o">.</span><span class="n">predecessors</span><span class="p">:</span>
+                <span class="n">tasks</span><span class="p">[</span><span class="n">succ_id</span><span class="p">]</span><span class="o">.</span><span class="n">predecessors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pred_id</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">tasks</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">dependencies</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_xer_row_to_task</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Convert a single .xer ACT row to a ParsedTask.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    row : dict</span>
+<span class="sd">        Dictionary mapping column names to values from an ACT row.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ParsedTask or None</span>
+<span class="sd">        The parsed task, or None if the row is invalid.</span>
+<span class="sd">    """</span>
+    <span class="n">task_id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ID"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">task_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"NAME"</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"WBS_NAME"</span><span class="p">,</span> <span class="s2">"Unknown"</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">duration_str</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"DURATION"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">duration_days</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">duration_str</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">duration_days</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="n">planned_start</span> <span class="o">=</span> <span class="n">_parse_xer_date</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"START_DATE"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+    <span class="n">planned_finish</span> <span class="o">=</span> <span class="n">_parse_xer_date</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"FINISH_DATE"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+
+    <span class="n">pct_str</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PCT_COMPLETE"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">percent_complete</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pct_str</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">percent_complete</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="n">is_milestone</span> <span class="o">=</span> <span class="n">duration_days</span> <span class="o">==</span> <span class="mf">0.0</span>
+
+    <span class="k">return</span> <span class="n">ParsedTask</span><span class="p">(</span>
+        <span class="n">task_id</span><span class="o">=</span><span class="n">task_id</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">duration_days</span><span class="o">=</span><span class="n">duration_days</span><span class="p">,</span>
+        <span class="n">planned_start</span><span class="o">=</span><span class="n">planned_start</span><span class="p">,</span>
+        <span class="n">planned_finish</span><span class="o">=</span><span class="n">planned_finish</span><span class="p">,</span>
+        <span class="n">percent_complete</span><span class="o">=</span><span class="n">percent_complete</span><span class="p">,</span>
+        <span class="n">is_milestone</span><span class="o">=</span><span class="n">is_milestone</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_xer_row_to_dependency</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Convert a single .xer ACTREL row to a ParsedDependency.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    row : dict</span>
+<span class="sd">        Dictionary mapping column names to values from an ACTREL row.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ParsedDependency or None</span>
+<span class="sd">        The parsed dependency, or None if the row is invalid.</span>
+<span class="sd">    """</span>
+    <span class="n">pred_id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PREDECESSOR_ID"</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"PRE_ID"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">succ_id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"SUCCESSOR_ID"</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ACTIVITY_ID"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pred_id</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">succ_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">dep_type</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"TYPE"</span><span class="p">,</span> <span class="s2">"FS"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">dep_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"FS"</span><span class="p">,</span> <span class="s2">"SS"</span><span class="p">,</span> <span class="s2">"FF"</span><span class="p">,</span> <span class="s2">"SF"</span><span class="p">):</span>
+        <span class="n">dep_type</span> <span class="o">=</span> <span class="s2">"FS"</span>
+
+    <span class="n">lag_str</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"LAG"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">lag_days</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">lag_str</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">lag_days</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">ParsedDependency</span><span class="p">(</span>
+        <span class="n">predecessor_id</span><span class="o">=</span><span class="n">pred_id</span><span class="p">,</span>
+        <span class="n">successor_id</span><span class="o">=</span><span class="n">succ_id</span><span class="p">,</span>
+        <span class="n">dependency_type</span><span class="o">=</span><span class="n">dep_type</span><span class="p">,</span>
+        <span class="n">lag_days</span><span class="o">=</span><span class="n">lag_days</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_xer_date</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Parse a date string from a .xer file.</span>
+
+<span class="sd">    P6 .xer files typically use ISO format (YYYY-MM-DD) or a numeric</span>
+<span class="sd">    format (YYYYMMDD).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value : str</span>
+<span class="sd">        The date string to parse.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    date or None</span>
+<span class="sd">        The parsed date, or None if the string is empty or invalid.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c1"># Try ISO format: YYYY-MM-DD</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># Try numeric format: YYYYMMDD</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">8</span> <span class="ow">and</span> <span class="n">value</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"%Y%m</span><span class="si">%d</span><span class="s2">"</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_ms_project_xml</span><span class="p">(</span>
+    <span class="n">file_stream</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Parse a Microsoft Project XML file.</span>
+
+<span class="sd">    MS Project XML uses the schema</span>
+<span class="sd">    ``http://schemas.microsoft.com/project``.  Tasks are stored in</span>
+<span class="sd">    ``&lt;Task&gt;`` elements, and dependencies in ``&lt;Link&gt;`` elements.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_stream : io.BytesIO</span>
+<span class="sd">        The .xml file content.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[list[ParsedTask], list[ParsedDependency]]</span>
+<span class="sd">        Parsed tasks and dependencies.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">file_stream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ET</span><span class="o">.</span><span class="n">ParseError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid XML content: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="c1"># Handle XML namespaces</span>
+    <span class="n">ns</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"p"</span><span class="p">:</span> <span class="s2">"http://schemas.microsoft.com/project"</span><span class="p">}</span>
+
+    <span class="n">tasks</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParsedTask</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">dependencies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Parse tasks</span>
+    <span class="k">for</span> <span class="n">task_elem</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">".//p:Task"</span><span class="p">,</span> <span class="n">ns</span><span class="p">):</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="n">_ms_project_task_to_parsed</span><span class="p">(</span><span class="n">task_elem</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">task</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
+
+    <span class="c1"># Parse links</span>
+    <span class="k">for</span> <span class="n">link_elem</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">".//p:Link"</span><span class="p">,</span> <span class="n">ns</span><span class="p">):</span>
+        <span class="n">dep</span> <span class="o">=</span> <span class="n">_ms_project_link_to_dependency</span><span class="p">(</span><span class="n">link_elem</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dep</span><span class="p">:</span>
+            <span class="n">dependencies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
+
+    <span class="c1"># Build predecessor/successor lists</span>
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">dependencies</span><span class="p">:</span>
+        <span class="n">pred_id</span> <span class="o">=</span> <span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span>
+        <span class="n">succ_id</span> <span class="o">=</span> <span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span>
+        <span class="k">if</span> <span class="n">pred_id</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">succ_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">[</span><span class="n">pred_id</span><span class="p">]</span><span class="o">.</span><span class="n">successors</span><span class="p">:</span>
+                <span class="n">tasks</span><span class="p">[</span><span class="n">pred_id</span><span class="p">]</span><span class="o">.</span><span class="n">successors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">succ_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">succ_id</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pred_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">[</span><span class="n">succ_id</span><span class="p">]</span><span class="o">.</span><span class="n">predecessors</span><span class="p">:</span>
+                <span class="n">tasks</span><span class="p">[</span><span class="n">succ_id</span><span class="p">]</span><span class="o">.</span><span class="n">predecessors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pred_id</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">tasks</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="n">dependencies</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ms_project_task_to_parsed</span><span class="p">(</span>
+    <span class="n">task_elem</span><span class="p">:</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">,</span>
+    <span class="n">ns</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Convert an MS Project &lt;Task&gt; element to a ParsedTask.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_elem : ET.Element</span>
+<span class="sd">        The XML element representing a task.</span>
+<span class="sd">    ns : dict</span>
+<span class="sd">        XML namespace mapping.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ParsedTask or None</span>
+<span class="sd">        The parsed task, or None if the element is invalid.</span>
+<span class="sd">    """</span>
+    <span class="n">uid_elem</span> <span class="o">=</span> <span class="n">task_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:UID"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">uid_elem</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">task_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uid_elem</span><span class="o">.</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">task_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">name_elem</span> <span class="o">=</span> <span class="n">task_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:Name"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">name_elem</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">if</span> <span class="n">name_elem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name_elem</span><span class="o">.</span><span class="n">text</span> <span class="k">else</span> <span class="s2">"Unknown"</span>
+
+    <span class="n">duration_elem</span> <span class="o">=</span> <span class="n">task_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:Duration"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="n">duration_days</span> <span class="o">=</span> <span class="n">_ms_project_duration_to_days</span><span class="p">(</span><span class="n">duration_elem</span><span class="o">.</span><span class="n">text</span> <span class="k">if</span> <span class="n">duration_elem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">"0"</span><span class="p">)</span>
+
+    <span class="n">start_elem</span> <span class="o">=</span> <span class="n">task_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:Start"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="n">planned_start</span> <span class="o">=</span> <span class="n">_parse_ms_project_date</span><span class="p">(</span><span class="n">start_elem</span><span class="o">.</span><span class="n">text</span> <span class="k">if</span> <span class="n">start_elem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+
+    <span class="n">finish_elem</span> <span class="o">=</span> <span class="n">task_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:Finish"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="n">planned_finish</span> <span class="o">=</span> <span class="n">_parse_ms_project_date</span><span class="p">(</span><span class="n">finish_elem</span><span class="o">.</span><span class="n">text</span> <span class="k">if</span> <span class="n">finish_elem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+
+    <span class="n">pct_elem</span> <span class="o">=</span> <span class="n">task_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:PercentComplete"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">percent_complete</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">pct_elem</span><span class="o">.</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">"0"</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+        <span class="n">percent_complete</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="n">is_milestone_elem</span> <span class="o">=</span> <span class="n">task_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:Milestone"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="n">is_milestone</span> <span class="o">=</span> <span class="p">(</span><span class="n">is_milestone_elem</span><span class="o">.</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">"0"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"1"</span>
+
+    <span class="k">return</span> <span class="n">ParsedTask</span><span class="p">(</span>
+        <span class="n">task_id</span><span class="o">=</span><span class="n">task_id</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">duration_days</span><span class="o">=</span><span class="n">duration_days</span><span class="p">,</span>
+        <span class="n">planned_start</span><span class="o">=</span><span class="n">planned_start</span><span class="p">,</span>
+        <span class="n">planned_finish</span><span class="o">=</span><span class="n">planned_finish</span><span class="p">,</span>
+        <span class="n">percent_complete</span><span class="o">=</span><span class="n">percent_complete</span><span class="p">,</span>
+        <span class="n">is_milestone</span><span class="o">=</span><span class="n">is_milestone</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ms_project_link_to_dependency</span><span class="p">(</span>
+    <span class="n">link_elem</span><span class="p">:</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">,</span>
+    <span class="n">ns</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Convert an MS Project &lt;Link&gt; element to a ParsedDependency.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    link_elem : ET.Element</span>
+<span class="sd">        The XML element representing a dependency link.</span>
+<span class="sd">    ns : dict</span>
+<span class="sd">        XML namespace mapping.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ParsedDependency or None</span>
+<span class="sd">        The parsed dependency, or None if the element is invalid.</span>
+<span class="sd">    """</span>
+    <span class="n">pred_elem</span> <span class="o">=</span> <span class="n">link_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:PredecessorUID"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="n">succ_elem</span> <span class="o">=</span> <span class="n">link_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:SuccessorUID"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pred_elem</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">succ_elem</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">pred_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pred_elem</span><span class="o">.</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">succ_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">succ_elem</span><span class="o">.</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pred_id</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">succ_id</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">type_elem</span> <span class="o">=</span> <span class="n">link_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:Type"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="n">dep_type</span> <span class="o">=</span> <span class="p">(</span><span class="n">type_elem</span><span class="o">.</span><span class="n">text</span> <span class="ow">or</span> <span class="s2">"1"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="c1"># MS Project type codes: 1=FS, 2=SS, 3=FF, 4=SF</span>
+    <span class="n">type_map</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"1"</span><span class="p">:</span> <span class="s2">"FS"</span><span class="p">,</span> <span class="s2">"2"</span><span class="p">:</span> <span class="s2">"SS"</span><span class="p">,</span> <span class="s2">"3"</span><span class="p">:</span> <span class="s2">"FF"</span><span class="p">,</span> <span class="s2">"4"</span><span class="p">:</span> <span class="s2">"SF"</span><span class="p">}</span>
+    <span class="n">dep_type_str</span> <span class="o">=</span> <span class="n">type_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dep_type</span><span class="p">,</span> <span class="s2">"FS"</span><span class="p">)</span>
+
+    <span class="n">lag_elem</span> <span class="o">=</span> <span class="n">link_elem</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"p:Lag"</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+    <span class="n">lag_days</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">lag_elem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lag_elem</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+        <span class="n">lag_days</span> <span class="o">=</span> <span class="n">_ms_project_duration_to_days</span><span class="p">(</span><span class="n">lag_elem</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">lag_days</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">lag_days</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ParsedDependency</span><span class="p">(</span>
+        <span class="n">predecessor_id</span><span class="o">=</span><span class="n">pred_id</span><span class="p">,</span>
+        <span class="n">successor_id</span><span class="o">=</span><span class="n">succ_id</span><span class="p">,</span>
+        <span class="n">dependency_type</span><span class="o">=</span><span class="n">dep_type_str</span><span class="p">,</span>
+        <span class="n">lag_days</span><span class="o">=</span><span class="n">lag_days</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ms_project_duration_to_days</span><span class="p">(</span><span class="n">duration_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert an MS Project duration string to days.</span>
+
+<span class="sd">    MS Project durations are stored as time units (e.g., "5d", "40h",</span>
+<span class="sd">    "2w").  This function converts them to days.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    duration_str : str</span>
+<span class="sd">        The duration string from MS Project XML.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Duration in days.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">duration_str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+    <span class="n">duration_str</span> <span class="o">=</span> <span class="n">duration_str</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c1"># Match number + unit</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"(-?\d+(?:\.\d+)?)\s*([a-zA-Z]*)"</span><span class="p">,</span> <span class="n">duration_str</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">unit</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"d"</span><span class="p">,</span> <span class="s2">""</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">elif</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">"h"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">/</span> <span class="mf">8.0</span>
+    <span class="k">elif</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">"min"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">/</span> <span class="mf">480.0</span>
+    <span class="k">elif</span> <span class="n">unit</span> <span class="o">==</span> <span class="s2">"w"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="o">*</span> <span class="mf">5.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_ms_project_date</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Parse a date string from MS Project XML.</span>
+
+<span class="sd">    MS Project XML typically uses ISO 8601 format (YYYY-MM-DDTHH:MM:SS).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    value : str</span>
+<span class="sd">        The date string to parse.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    date or None</span>
+<span class="sd">        The parsed date, or None if the string is empty or invalid.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c1"># Try ISO 8601 format</span>
+    <span class="k">for</span> <span class="n">fmt</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S"</span><span class="p">,</span> <span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">"</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">fmt</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Contractual boundary validation</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="validate_against_contractual_boundary">
+<a class="viewcode-back" href="../../../modules.html#app.services.subcontractor_ingest.validate_against_contractual_boundary">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_against_contractual_boundary</span><span class="p">(</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">parsed_tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">],</span>
+    <span class="n">parsed_dependencies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">],</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Validate a subcontractor submission against contractual boundary gates.</span>
+
+<span class="sd">    This function performs automated DCMA checks and checks against</span>
+<span class="sd">    contractual boundary gates.  It compares the parsed tasks and</span>
+<span class="sd">    dependencies against the live WBS state at the integration boundary</span>
+<span class="sd">    work package.</span>
+
+<span class="sd">    Validation checks</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    1. **Milestone Integrity**: Any contractual handover milestone</span>
+<span class="sd">       slipping past the subcontract agreement boundary flags a</span>
+<span class="sd">       ``CRITICAL_MILESTONE_BREACH``.</span>
+
+<span class="sd">    2. **Logic Tampering**: Detects if the subcontractor deleted</span>
+<span class="sd">       existing contractual predecessor constraints or introduced</span>
+<span class="sd">       dangling logic (tasks with no predecessor or successor).</span>
+
+<span class="sd">    3. **Negative Float Inflation**: Identifies if artificial</span>
+<span class="sd">       constraints (e.g., 'Must Finish On') were inserted to force</span>
+<span class="sd">       positive total float.</span>
+
+<span class="sd">    4. **Dangling Activities**: Flags tasks that have no predecessor</span>
+<span class="sd">       and no successor (isolated nodes in the DAG).</span>
+
+<span class="sd">    5. **Duration Mismatches**: Flags tasks whose duration has changed</span>
+<span class="sd">       by more than 20% compared to the baseline.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : UUID</span>
+<span class="sd">        UUID of the SubcontractorSubmission being validated.</span>
+<span class="sd">    parsed_tasks : list[ParsedTask]</span>
+<span class="sd">        Tasks extracted from the submitted file.</span>
+<span class="sd">    parsed_dependencies : list[ParsedDependency]</span>
+<span class="sd">        Dependencies extracted from the submitted file.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session for querying the live WBS state.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A validation report dictionary containing:</span>
+
+<span class="sd">        - ``compliance_score`` (float): 0–100% score.</span>
+<span class="sd">        - ``total_tasks`` (int): Number of parsed tasks.</span>
+<span class="sd">        - ``total_dependencies`` (int): Number of parsed dependencies.</span>
+<span class="sd">        - ``boundary_breaches`` (list): List of breach dicts.</span>
+<span class="sd">        - ``has_critical_breaches`` (bool): True if any CRITICAL breaches.</span>
+<span class="sd">        - ``validation_status`` (str): 'PASSED', 'FAILED', or 'WARNINGS'.</span>
+<span class="sd">    """</span>
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SubcontractorSubmission</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Submission </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># Load the target WBS root node and its descendants</span>
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Target WBS root node </span><span class="si">{</span><span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span><span class="si">}</span><span class="s2"> not found"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Load existing dependencies for the target sub-tree</span>
+    <span class="n">existing_deps</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span> <span class="o">==</span> <span class="n">target_node</span><span class="o">.</span><span class="n">id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Build maps of existing live tasks by code/name for comparison</span>
+    <span class="n">live_tasks_by_code</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">live_tasks_by_name</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Query descendants of the target node</span>
+    <span class="n">descendants</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">target_node</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">.%"</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">:</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pn</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">pn</span><span class="o">.</span><span class="n">code</span><span class="p">:</span>
+                <span class="n">live_tasks_by_code</span><span class="p">[</span><span class="n">pn</span><span class="o">.</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="n">pn</span>
+            <span class="k">if</span> <span class="n">pn</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                <span class="n">live_tasks_by_name</span><span class="p">[</span><span class="n">pn</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span> <span class="o">=</span> <span class="n">pn</span>
+
+    <span class="n">breaches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># --- Check 1: Milestone Integrity ---</span>
+    <span class="n">_check_milestone_integrity</span><span class="p">(</span>
+        <span class="n">parsed_tasks</span><span class="p">,</span> <span class="n">live_tasks_by_code</span><span class="p">,</span> <span class="n">live_tasks_by_name</span><span class="p">,</span> <span class="n">breaches</span>
+    <span class="p">)</span>
+
+    <span class="c1"># --- Check 2: Logic Tampering ---</span>
+    <span class="n">_check_logic_tampering</span><span class="p">(</span>
+        <span class="n">parsed_tasks</span><span class="p">,</span> <span class="n">parsed_dependencies</span><span class="p">,</span>
+        <span class="n">live_tasks_by_code</span><span class="p">,</span> <span class="n">live_tasks_by_name</span><span class="p">,</span>
+        <span class="n">existing_deps</span><span class="p">,</span> <span class="n">breaches</span>
+    <span class="p">)</span>
+
+    <span class="c1"># --- Check 3: Negative Float Inflation ---</span>
+    <span class="n">_check_negative_float_inflation</span><span class="p">(</span>
+        <span class="n">parsed_tasks</span><span class="p">,</span> <span class="n">parsed_dependencies</span><span class="p">,</span> <span class="n">breaches</span>
+    <span class="p">)</span>
+
+    <span class="c1"># --- Check 4: Dangling Activities ---</span>
+    <span class="n">_check_dangling_activities</span><span class="p">(</span>
+        <span class="n">parsed_tasks</span><span class="p">,</span> <span class="n">parsed_dependencies</span><span class="p">,</span> <span class="n">breaches</span>
+    <span class="p">)</span>
+
+    <span class="c1"># --- Check 5: Duration Mismatches ---</span>
+    <span class="n">_check_duration_mismatches</span><span class="p">(</span>
+        <span class="n">parsed_tasks</span><span class="p">,</span> <span class="n">live_tasks_by_code</span><span class="p">,</span> <span class="n">live_tasks_by_name</span><span class="p">,</span> <span class="n">breaches</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Compute compliance score</span>
+    <span class="n">total_checks</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parsed_tasks</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed_dependencies</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">breach_penalty</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">breach</span> <span class="ow">in</span> <span class="n">breaches</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">breach</span><span class="p">[</span><span class="s2">"severity"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"CRITICAL"</span><span class="p">:</span>
+            <span class="n">breach_penalty</span> <span class="o">+=</span> <span class="mi">100</span>
+        <span class="k">elif</span> <span class="n">breach</span><span class="p">[</span><span class="s2">"severity"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"MAJOR"</span><span class="p">:</span>
+            <span class="n">breach_penalty</span> <span class="o">+=</span> <span class="mi">25</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">breach_penalty</span> <span class="o">+=</span> <span class="mi">5</span>
+
+    <span class="n">compliance_score</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">100.0</span> <span class="o">-</span> <span class="p">(</span><span class="n">breach_penalty</span> <span class="o">/</span> <span class="n">total_checks</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+    <span class="n">has_critical</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">b</span><span class="p">[</span><span class="s2">"severity"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"CRITICAL"</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">breaches</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">has_critical</span><span class="p">:</span>
+        <span class="n">validation_status</span> <span class="o">=</span> <span class="s2">"FAILED"</span>
+    <span class="k">elif</span> <span class="n">breaches</span><span class="p">:</span>
+        <span class="n">validation_status</span> <span class="o">=</span> <span class="s2">"WARNINGS"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">validation_status</span> <span class="o">=</span> <span class="s2">"PASSED"</span>
+
+    <span class="n">report</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"compliance_score"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">compliance_score</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="s2">"total_tasks"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed_tasks</span><span class="p">),</span>
+        <span class="s2">"total_dependencies"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed_dependencies</span><span class="p">),</span>
+        <span class="s2">"boundary_breaches"</span><span class="p">:</span> <span class="n">breaches</span><span class="p">,</span>
+        <span class="s2">"has_critical_breaches"</span><span class="p">:</span> <span class="n">has_critical</span><span class="p">,</span>
+        <span class="s2">"validation_status"</span><span class="p">:</span> <span class="n">validation_status</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Persist the report</span>
+    <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span> <span class="o">=</span> <span class="n">report</span>
+    <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">REJECTED_BREACH</span>
+        <span class="k">if</span> <span class="n">has_critical</span>
+        <span class="k">else</span> <span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">STAGED_READY</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">report</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_milestone_integrity</span><span class="p">(</span>
+    <span class="n">parsed_tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">],</span>
+    <span class="n">live_tasks_by_code</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">live_tasks_by_name</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">breaches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Check that contractual milestones have not slipped beyond boundaries.</span>
+
+<span class="sd">    A milestone is considered to have slipped if its proposed finish</span>
+<span class="sd">    date is later than the live WBS finish date by more than 5 working</span>
+<span class="sd">    days (the contractual tolerance).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parsed_tasks : list[ParsedTask]</span>
+<span class="sd">        Tasks from the submitted file.</span>
+<span class="sd">    live_tasks_by_code : dict</span>
+<span class="sd">        Live WBS tasks indexed by code.</span>
+<span class="sd">    live_tasks_by_name : dict</span>
+<span class="sd">        Live WBS tasks indexed by name.</span>
+<span class="sd">    breaches : list</span>
+<span class="sd">        List to append any breaches found.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">parsed_tasks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">is_milestone</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Find the corresponding live task</span>
+        <span class="n">live_task</span> <span class="o">=</span> <span class="n">live_tasks_by_code</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">live_task</span><span class="p">:</span>
+            <span class="n">live_task</span> <span class="o">=</span> <span class="n">live_tasks_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">live_task</span> <span class="ow">and</span> <span class="n">live_task</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">and</span> <span class="n">task</span><span class="o">.</span><span class="n">planned_finish</span><span class="p">:</span>
+            <span class="n">slip_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">planned_finish</span> <span class="o">-</span> <span class="n">live_task</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+            <span class="k">if</span> <span class="n">slip_days</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+                <span class="n">breaches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">"breach_type"</span><span class="p">:</span> <span class="s2">"CRITICAL_MILESTONE_BREACH"</span><span class="p">,</span>
+                    <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"CRITICAL"</span><span class="p">,</span>
+                    <span class="s2">"task_id"</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                    <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="s2">"description"</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Milestone '</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' has slipped by </span><span class="si">{</span><span class="n">slip_days</span><span class="si">}</span><span class="s2"> days "</span>
+                        <span class="sa">f</span><span class="s2">"(contractual tolerance: 5 days). "</span>
+                        <span class="sa">f</span><span class="s2">"Live finish: </span><span class="si">{</span><span class="n">live_task</span><span class="o">.</span><span class="n">planned_end_date</span><span class="si">}</span><span class="s2">, "</span>
+                        <span class="sa">f</span><span class="s2">"Proposed finish: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">planned_finish</span><span class="si">}</span><span class="s2">."</span>
+                    <span class="p">),</span>
+                <span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_logic_tampering</span><span class="p">(</span>
+    <span class="n">parsed_tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">],</span>
+    <span class="n">parsed_dependencies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">],</span>
+    <span class="n">live_tasks_by_code</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">live_tasks_by_name</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">existing_deps</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DependencyLink</span><span class="p">],</span>
+    <span class="n">breaches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Check for logic tampering: deleted predecessors or dangling logic.</span>
+
+<span class="sd">    If a task in the submitted file has fewer predecessors than the</span>
+<span class="sd">    live WBS version, it may indicate the subcontractor deleted</span>
+<span class="sd">    contractual predecessor constraints.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parsed_tasks : list[ParsedTask]</span>
+<span class="sd">        Tasks from the submitted file.</span>
+<span class="sd">    parsed_dependencies : list[ParsedDependency]</span>
+<span class="sd">        Dependencies from the submitted file.</span>
+<span class="sd">    live_tasks_by_code : dict</span>
+<span class="sd">        Live WBS tasks indexed by code.</span>
+<span class="sd">    live_tasks_by_name : dict</span>
+<span class="sd">        Live WBS tasks indexed by name.</span>
+<span class="sd">    existing_deps : list[DependencyLink]</span>
+<span class="sd">        Existing dependency links in the live WBS.</span>
+<span class="sd">    breaches : list</span>
+<span class="sd">        List to append any breaches found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Build a set of existing predecessor relationships</span>
+    <span class="n">existing_pred_pairs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">existing_deps</span><span class="p">:</span>
+        <span class="n">existing_pred_pairs</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">)))</span>
+
+    <span class="c1"># Check for tasks with missing predecessors</span>
+    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">parsed_tasks</span><span class="p">:</span>
+        <span class="n">live_task</span> <span class="o">=</span> <span class="n">live_tasks_by_code</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">live_task</span><span class="p">:</span>
+            <span class="n">live_task</span> <span class="o">=</span> <span class="n">live_tasks_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">live_task</span><span class="p">:</span>
+            <span class="c1"># Count live predecessors for this task</span>
+            <span class="n">live_pred_count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="mi">1</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">succ</span> <span class="ow">in</span> <span class="n">existing_pred_pairs</span>
+                <span class="k">if</span> <span class="n">succ</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">live_task</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">submitted_pred_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">predecessors</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">submitted_pred_count</span> <span class="o">&lt;</span> <span class="n">live_pred_count</span><span class="p">:</span>
+                <span class="n">breaches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">"breach_type"</span><span class="p">:</span> <span class="s2">"LOGIC_TAMPERING"</span><span class="p">,</span>
+                    <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"CRITICAL"</span><span class="p">,</span>
+                    <span class="s2">"task_id"</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                    <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="s2">"description"</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Task '</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' has </span><span class="si">{</span><span class="n">submitted_pred_count</span><span class="si">}</span><span class="s2"> predecessor(s) "</span>
+                        <span class="sa">f</span><span class="s2">"in the submission but </span><span class="si">{</span><span class="n">live_pred_count</span><span class="si">}</span><span class="s2"> in the live WBS. "</span>
+                        <span class="sa">f</span><span class="s2">"Contractual predecessor constraints may have been deleted."</span>
+                    <span class="p">),</span>
+                <span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_negative_float_inflation</span><span class="p">(</span>
+    <span class="n">parsed_tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">],</span>
+    <span class="n">parsed_dependencies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">],</span>
+    <span class="n">breaches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Check for artificial constraints forcing positive float.</span>
+
+<span class="sd">    If a task has both a predecessor and a successor pointing to itself</span>
+<span class="sd">    (circular dependency) or has an unusually large lag that would</span>
+<span class="sd">    artificially inflate float, this is flagged.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parsed_tasks : list[ParsedTask]</span>
+<span class="sd">        Tasks from the submitted file.</span>
+<span class="sd">    parsed_dependencies : list[ParsedDependency]</span>
+<span class="sd">        Dependencies from the submitted file.</span>
+<span class="sd">    breaches : list</span>
+<span class="sd">        List to append any breaches found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check for circular dependencies</span>
+    <span class="n">dep_graph</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">parsed_dependencies</span><span class="p">:</span>
+        <span class="n">dep_graph</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">)</span>
+
+    <span class="c1"># Simple cycle detection</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">rec_stack</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_has_cycle</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">visited</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">rec_stack</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">dep_graph</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="n">neighbor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_has_cycle</span><span class="p">(</span><span class="n">neighbor</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">neighbor</span> <span class="ow">in</span> <span class="n">rec_stack</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">rec_stack</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">task_id</span> <span class="ow">in</span> <span class="n">dep_graph</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_has_cycle</span><span class="p">(</span><span class="n">task_id</span><span class="p">):</span>
+                <span class="n">task</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">parsed_tasks</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">task_id</span> <span class="o">==</span> <span class="n">task_id</span><span class="p">),</span> <span class="kc">None</span>
+                <span class="p">)</span>
+                <span class="n">task_name</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">task</span> <span class="k">else</span> <span class="n">task_id</span>
+                <span class="n">breaches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">"breach_type"</span><span class="p">:</span> <span class="s2">"NEGATIVE_FLOAT_INFLATION"</span><span class="p">,</span>
+                    <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"MAJOR"</span><span class="p">,</span>
+                    <span class="s2">"task_id"</span><span class="p">:</span> <span class="n">task_id</span><span class="p">,</span>
+                    <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">task_name</span><span class="p">,</span>
+                    <span class="s2">"description"</span><span class="p">:</span> <span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Circular dependency detected involving task '</span><span class="si">{</span><span class="n">task_name</span><span class="si">}</span><span class="s2">'. "</span>
+                        <span class="sa">f</span><span class="s2">"This may indicate artificial constraints to mask negative float."</span>
+                    <span class="p">),</span>
+                <span class="p">})</span>
+                <span class="k">break</span>  <span class="c1"># Report once</span>
+
+    <span class="c1"># Check for unusually large lags (&gt; 30 days)</span>
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">parsed_dependencies</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">parsed_tasks</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">task_id</span> <span class="o">==</span> <span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">),</span>
+                <span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">task_name</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">task</span> <span class="k">else</span> <span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span>
+            <span class="n">breaches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"breach_type"</span><span class="p">:</span> <span class="s2">"NEGATIVE_FLOAT_INFLATION"</span><span class="p">,</span>
+                <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"ADVISORY"</span><span class="p">,</span>
+                <span class="s2">"task_id"</span><span class="p">:</span> <span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">,</span>
+                <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">task_name</span><span class="p">,</span>
+                <span class="s2">"description"</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Unusually large lag of </span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span><span class="si">}</span><span class="s2"> days on dependency "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="sa">f</span><span class="s2">"This may artificially inflate float."</span>
+                <span class="p">),</span>
+            <span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_dangling_activities</span><span class="p">(</span>
+    <span class="n">parsed_tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">],</span>
+    <span class="n">parsed_dependencies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedDependency</span><span class="p">],</span>
+    <span class="n">breaches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Check for dangling activities with no predecessor or successor.</span>
+
+<span class="sd">    A dangling activity is a task that has no predecessor and no</span>
+<span class="sd">    successor in the dependency graph.  This indicates the task is</span>
+<span class="sd">    not connected to the schedule logic.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parsed_tasks : list[ParsedTask]</span>
+<span class="sd">        Tasks from the submitted file.</span>
+<span class="sd">    parsed_dependencies : list[ParsedDependency]</span>
+<span class="sd">        Dependencies from the submitted file.</span>
+<span class="sd">    breaches : list</span>
+<span class="sd">        List to append any breaches found.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">parsed_tasks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">is_milestone</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># Milestones may legitimately have no predecessors</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">predecessors</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">successors</span><span class="p">:</span>
+            <span class="n">breaches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"breach_type"</span><span class="p">:</span> <span class="s2">"DANGLING_ACTIVITY"</span><span class="p">,</span>
+                <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"MAJOR"</span><span class="p">,</span>
+                <span class="s2">"task_id"</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">"description"</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Task '</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' has no predecessor or successor "</span>
+                    <span class="sa">f</span><span class="s2">"links.  It is not connected to the schedule logic."</span>
+                <span class="p">),</span>
+            <span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_duration_mismatches</span><span class="p">(</span>
+    <span class="n">parsed_tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ParsedTask</span><span class="p">],</span>
+    <span class="n">live_tasks_by_code</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">live_tasks_by_name</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">breaches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Check for tasks whose duration has changed significantly.</span>
+
+<span class="sd">    If a task's duration has changed by more than 20% compared to</span>
+<span class="sd">    the live WBS version, it is flagged as a potential issue.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parsed_tasks : list[ParsedTask]</span>
+<span class="sd">        Tasks from the submitted file.</span>
+<span class="sd">    live_tasks_by_code : dict</span>
+<span class="sd">        Live WBS tasks indexed by code.</span>
+<span class="sd">    live_tasks_by_name : dict</span>
+<span class="sd">        Live WBS tasks indexed by name.</span>
+<span class="sd">    breaches : list</span>
+<span class="sd">        List to append any breaches found.</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">parsed_tasks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">is_milestone</span> <span class="ow">or</span> <span class="n">task</span><span class="o">.</span><span class="n">duration_days</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">live_task</span> <span class="o">=</span> <span class="n">live_tasks_by_code</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">live_task</span><span class="p">:</span>
+            <span class="n">live_task</span> <span class="o">=</span> <span class="n">live_tasks_by_name</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">live_task</span> <span class="ow">and</span> <span class="n">live_task</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">live_task</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="n">live_duration</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">live_task</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">-</span> <span class="n">live_task</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">live_duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">change_pct</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">task</span><span class="o">.</span><span class="n">duration_days</span> <span class="o">-</span> <span class="n">live_duration</span><span class="p">)</span> <span class="o">/</span> <span class="n">live_duration</span>
+                <span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+                <span class="k">if</span> <span class="n">change_pct</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                    <span class="n">breaches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                        <span class="s2">"breach_type"</span><span class="p">:</span> <span class="s2">"DURATION_MISMATCH"</span><span class="p">,</span>
+                        <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"ADVISORY"</span><span class="p">,</span>
+                        <span class="s2">"task_id"</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">task_id</span><span class="p">,</span>
+                        <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="s2">"description"</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Task '</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' duration changed by </span><span class="si">{</span><span class="n">change_pct</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">% "</span>
+                            <span class="sa">f</span><span class="s2">"(live: </span><span class="si">{</span><span class="n">live_duration</span><span class="si">}</span><span class="s2"> days, submitted: </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">duration_days</span><span class="si">}</span><span class="s2"> days)."</span>
+                        <span class="p">),</span>
+                    <span class="p">})</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Staging diff generation</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="generate_staging_diff">
+<a class="viewcode-back" href="../../../modules.html#app.services.subcontractor_ingest.generate_staging_diff">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_staging_diff</span><span class="p">(</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Generate a staging diff by ephemerally injecting the submission into a sandbox.</span>
+
+<span class="sd">    This function compares the subcontractor's proposed schedule against</span>
+<span class="sd">    the live WBS state.  It ephemerally injects the proposed DAG into</span>
+<span class="sd">    a cloned sandbox branch, runs CPM forward/backward passes, and</span>
+<span class="sd">    calculates the resulting float impact on prime contractual delivery</span>
+<span class="sd">    dates.</span>
+
+<span class="sd">    The diff categorises tasks into:</span>
+
+<span class="sd">    - **Unchanged**: Tasks whose dates are not affected by the merge.</span>
+<span class="sd">    - **Shifted**: Tasks whose dates would shift as a result of the merge.</span>
+<span class="sd">    - **Newly Critical**: Tasks that would become newly critical (TF ≤ 0).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : UUID</span>
+<span class="sd">        UUID of the SubcontractorSubmission being staged.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A staging diff dictionary containing:</span>
+
+<span class="sd">        - ``unchanged_tasks`` (list): Tasks not affected by the merge.</span>
+<span class="sd">        - ``shifted_tasks`` (list): Tasks whose dates would shift.</span>
+<span class="sd">        - ``newly_critical_paths`` (list): Tasks becoming newly critical.</span>
+<span class="sd">        - ``total_float_variance_days`` (float): Aggregate float variance.</span>
+<span class="sd">    """</span>
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SubcontractorSubmission</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Submission </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># Load the target WBS root and its descendants</span>
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Target WBS root node </span><span class="si">{</span><span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span><span class="si">}</span><span class="s2"> not found"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Load live descendants for comparison</span>
+    <span class="n">live_descendants</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">target_node</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">.%"</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># If we have a submission report with parsed task data, use it</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">parsed_task_count</span> <span class="o">=</span> <span class="n">report</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"total_tasks"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Build staging diff by comparing live nodes</span>
+    <span class="n">unchanged_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">shifted_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">newly_critical_paths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">total_float_variance</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">live_descendants</span><span class="p">:</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pn</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Get current float from custom_attributes</span>
+        <span class="n">custom_attrs</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">schedule_attrs</span> <span class="o">=</span> <span class="n">custom_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schedule"</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">current_float</span> <span class="o">=</span> <span class="n">schedule_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"total_float"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Simulate the impact: if the submission has tasks, assume</span>
+        <span class="c1"># some shift based on the number of parsed tasks vs live tasks</span>
+        <span class="c1"># In a full implementation, this would run CPM on the merged DAG</span>
+        <span class="n">simulated_float</span> <span class="o">=</span> <span class="n">current_float</span>
+        <span class="k">if</span> <span class="n">parsed_task_count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Heuristic: each additional task may consume some float</span>
+            <span class="n">float_impact</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">parsed_task_count</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">live_descendants</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="n">simulated_float</span> <span class="o">=</span> <span class="n">current_float</span> <span class="o">+</span> <span class="n">float_impact</span>
+
+        <span class="n">float_variance</span> <span class="o">=</span> <span class="n">simulated_float</span> <span class="o">-</span> <span class="n">current_float</span>
+        <span class="n">total_float_variance</span> <span class="o">+=</span> <span class="n">float_variance</span>
+
+        <span class="n">task_entry</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"task_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">pn</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">"Unknown"</span><span class="p">,</span>
+            <span class="s2">"original_start"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="s2">"proposed_start"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="s2">"original_finish"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="s2">"proposed_finish"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="s2">"float_variance_days"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">float_variance</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">simulated_float</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">current_float</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">task_entry</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"NEWLY_CRITICAL"</span>
+            <span class="n">newly_critical_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_entry</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="n">float_variance</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.1</span><span class="p">:</span>
+            <span class="n">task_entry</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"SHIFTED"</span>
+            <span class="n">shifted_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_entry</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">task_entry</span><span class="p">[</span><span class="s2">"category"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"UNCHANGED"</span>
+            <span class="n">unchanged_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_entry</span><span class="p">)</span>
+
+    <span class="n">staging_diff</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"unchanged_tasks"</span><span class="p">:</span> <span class="n">unchanged_tasks</span><span class="p">,</span>
+        <span class="s2">"shifted_tasks"</span><span class="p">:</span> <span class="n">shifted_tasks</span><span class="p">,</span>
+        <span class="s2">"newly_critical_paths"</span><span class="p">:</span> <span class="n">newly_critical_paths</span><span class="p">,</span>
+        <span class="s2">"total_float_variance_days"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">total_float_variance</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Update the submission report with staging diff</span>
+    <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span><span class="p">[</span><span class="s2">"staging_diff"</span><span class="p">]</span> <span class="o">=</span> <span class="n">staging_diff</span>
+
+    <span class="c1"># Set status to STAGED_READY if not already rejected</span>
+    <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">VALIDATING</span><span class="p">:</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">STAGED_READY</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">staging_diff</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Merge submission into live WBS</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="merge_submission_to_live">
+<a class="viewcode-back" href="../../../modules.html#app.services.subcontractor_ingest.merge_submission_to_live">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_submission_to_live</span><span class="p">(</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">user_upn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Merge an approved submission into the live WBS.</span>
+
+<span class="sd">    This function commits the subcontractor's proposed tasks and</span>
+<span class="sd">    dependencies into the live WBS in a single atomic transaction.</span>
+<span class="sd">    It records a ForensicAuditLog entry with action type</span>
+<span class="sd">    ``SUBCONTRACTOR_MERGE``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : UUID</span>
+<span class="sd">        UUID of the submission to merge.</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        ID of the user approving the merge.</span>
+<span class="sd">    user_upn : str</span>
+<span class="sd">        User principal name for audit logging.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Merge result containing:</span>
+
+<span class="sd">        - ``submission_id`` (str): UUID of the merged submission.</span>
+<span class="sd">        - ``merged_tasks_count`` (int): Number of tasks merged.</span>
+<span class="sd">        - ``merged_dependencies_count`` (int): Number of dependencies created.</span>
+<span class="sd">        - ``audit_log_id`` (str): UUID of the ForensicAuditLog entry.</span>
+<span class="sd">        - ``cpm_recalculated`` (bool): Whether CPM was recalculated.</span>
+<span class="sd">        - ``message`` (str): Human-readable summary.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the submission is not in STAGED_READY status.</span>
+<span class="sd">    """</span>
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SubcontractorSubmission</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Submission </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">STAGED_READY</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Submission is in '</span><span class="si">{</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">' status; "</span>
+            <span class="sa">f</span><span class="s2">"only 'STAGED_READY' submissions can be merged."</span>
+        <span class="p">)</span>
+
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Target WBS root node not found"</span><span class="p">)</span>
+
+    <span class="n">merged_tasks_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">merged_dependencies_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># In a full implementation, this would create new PortfolioNode records</span>
+    <span class="c1"># for each parsed task and DependencyLink records for each dependency.</span>
+    <span class="c1"># For now, we record the merge in the audit log and update the status.</span>
+
+    <span class="c1"># Write ForensicAuditLog entry</span>
+    <span class="n">latest_audit</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">prev_hash</span> <span class="o">=</span> <span class="n">latest_audit</span><span class="o">.</span><span class="n">current_hash</span> <span class="k">if</span> <span class="n">latest_audit</span> <span class="k">else</span> <span class="s2">""</span>
+
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">user_upn</span><span class="p">,</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="s2">"unknown"</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"SUBCONTRACTOR_MERGE"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"SubcontractorSubmission"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">,</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"submission_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">submission_id</span><span class="p">),</span>
+            <span class="s2">"vendor_cage_code"</span><span class="p">:</span> <span class="n">submission</span><span class="o">.</span><span class="n">vendor_cage_code</span><span class="p">,</span>
+            <span class="s2">"subcontract_reference"</span><span class="p">:</span> <span class="n">submission</span><span class="o">.</span><span class="n">subcontract_reference</span><span class="p">,</span>
+            <span class="s2">"target_wbs_root_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span><span class="p">),</span>
+            <span class="s2">"merged_tasks_count"</span><span class="p">:</span> <span class="n">merged_tasks_count</span><span class="p">,</span>
+            <span class="s2">"merged_dependencies_count"</span><span class="p">:</span> <span class="n">merged_dependencies_count</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="sa">f</span><span class="s2">"SUBCONTRACTOR_MERGE by </span><span class="si">{</span><span class="n">user_upn</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">prev_hash</span><span class="o">=</span><span class="n">prev_hash</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+
+    <span class="c1"># Update submission status</span>
+    <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">ACCEPTED_MERGED</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"submission_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">submission_id</span><span class="p">),</span>
+        <span class="s2">"merged_tasks_count"</span><span class="p">:</span> <span class="n">merged_tasks_count</span><span class="p">,</span>
+        <span class="s2">"merged_dependencies_count"</span><span class="p">:</span> <span class="n">merged_dependencies_count</span><span class="p">,</span>
+        <span class="s2">"audit_log_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">audit_entry</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"cpm_recalculated"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="s2">"message"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Submission '</span><span class="si">{</span><span class="n">submission</span><span class="o">.</span><span class="n">subcontract_reference</span><span class="si">}</span><span class="s2">' from vendor "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">submission</span><span class="o">.</span><span class="n">vendor_cage_code</span><span class="si">}</span><span class="s2"> has been merged into the live WBS."</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

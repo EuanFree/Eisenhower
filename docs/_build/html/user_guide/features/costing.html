@@ -1,0 +1,188 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cost Management &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Cost Management</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/costing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cost-management">
+<h1>Cost Management<a class="headerlink" href="#cost-management" title="Link to this heading"></a></h1>
+<p>Plan and track project costs. Set budgets, record actual costs, and roll up cost data across the project hierarchy.</p>
+<section id="costing">
+<h2>costing<a class="headerlink" href="#costing" title="Link to this heading"></a></h2>
+<p>Costing API router for the Cost Breakdown Structure (CBS) module.</p>
+<p>This router provides endpoints for managing the financial side of the
+portfolio management system.  It covers three areas:</p>
+<ol class="arabic simple">
+<li><p><strong>Cost Element Management</strong> — CRUD operations for the CBS taxonomy
+(the catalogue of cost types: labour, materials, subcontract, ODC).</p></li>
+<li><p><strong>Indirect Rate Structure Management</strong> — CRUD operations for FPRA
+(Forward Pricing Rate Agreement) rate structures that define the
+burdening cascade for each fiscal year.</p></li>
+<li><p><strong>Cost Queries</strong> — Endpoints to retrieve task-level cost breakdowns
+and multi-tier CBS financial rollups across the WBS hierarchy.</p></li>
+</ol>
+</section>
+<section id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Link to this heading"></a></h2>
+<p>All endpoints require a valid JWT token via the <code class="docutils literal notranslate"><span class="pre">get_current_user</span></code>
+dependency.  Only authenticated users can access costing data.</p>
+</section>
+<section id="url-structure">
+<h2>URL Structure<a class="headerlink" href="#url-structure" title="Link to this heading"></a></h2>
+<p>All endpoints are mounted under <code class="docutils literal notranslate"><span class="pre">/api/v1/costing</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span>&#160;&#160;&#160; <span class="pre">/elements</span></code> — List all cost elements.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span>&#160;&#160; <span class="pre">/elements</span></code> — Create a new cost element.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span>&#160;&#160;&#160; <span class="pre">/elements/{id}</span></code> — Get a single cost element.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PUT</span>&#160;&#160;&#160; <span class="pre">/elements/{id}</span></code> — Update a cost element.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DELETE</span> <span class="pre">/elements/{id}</span></code> — Delete a cost element.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span>&#160;&#160;&#160; <span class="pre">/rates</span></code> — List all indirect rate structures.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span>&#160;&#160; <span class="pre">/rates</span></code> — Create a new indirect rate structure.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span>&#160;&#160;&#160; <span class="pre">/rates/{id}</span></code> — Get a single rate structure.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PUT</span>&#160;&#160;&#160; <span class="pre">/rates/{id}</span></code> — Update a rate structure.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span>&#160;&#160;&#160; <span class="pre">/tasks/{id}/cost-breakdown</span></code> — Get task cost breakdown.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span>&#160;&#160;&#160; <span class="pre">/projects/{id}/cbs-rollup</span></code> — Get multi-tier CBS rollup.</p></li>
+</ul>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: List all cost elements in the CBS taxonomy.</p></li>
+<li><p><strong>View</strong>: Get a single cost element by ID.</p></li>
+<li><p><strong>View</strong>: List all indirect rate structures (FPRA records).</p></li>
+<li><p><strong>View</strong>: Get a single indirect rate structure by ID.</p></li>
+<li><p><strong>View</strong>: Return the unburdened vs. burdened cost tiers for a single task.</p></li>
+<li><p><strong>View</strong>: Return the multi-tier CBS financial rollup across cost elements.</p></li>
+</ul>
+<p><strong>Creating New Items</strong></p>
+<ul class="simple">
+<li><p><strong>Create</strong>: Create a new cost element in the CBS taxonomy.</p></li>
+<li><p><strong>Create</strong>: Create a new FPRA indirect rate structure.</p></li>
+</ul>
+<p><strong>Updating Information</strong></p>
+<ul class="simple">
+<li><p><strong>Update</strong>: Update an existing cost element.</p></li>
+<li><p><strong>Update</strong>: Update an existing indirect rate structure.</p></li>
+</ul>
+<p><strong>Removing Items</strong></p>
+<ul class="simple">
+<li><p><strong>Delete</strong>: Delete a cost element.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

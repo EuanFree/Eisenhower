@@ -1,0 +1,1458 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.mock_fixtures &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.mock_fixtures</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.mock_fixtures</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Developer mock fixtures — reproducible test scenarios for UI integration.</span>
+
+<span class="sd">This module provides seed data scenarios that populate the database with</span>
+<span class="sd">realistic, defence-domain test data for rapid frontend development and</span>
+<span class="sd">integration testing.  Each scenario is a self-contained programme with</span>
+<span class="sd">50+ nodes, PDM dependency links, 3-point Monte Carlo estimates, resource</span>
+<span class="sd">assignments, simulated clashes, and baseline snapshots.</span>
+
+<span class="sd">Scenarios are designed to exercise every UI component in the HMI catalog:</span>
+
+<span class="sd">- **Gantt chart**: Multi-level WBS with planned/actual dates, progress,</span>
+<span class="sd">  blockers, cross-hatch shading, and baseline comparisons.</span>
+<span class="sd">- **Jagged drop line**: Mix of ahead, on-track, behind, and complete tasks.</span>
+<span class="sd">- **Daily cockpit**: Active sprint load, blocked items, urgent tasks,</span>
+<span class="sd">  focus queue, and claimable placeholder tasks.</span>
+<span class="sd">- **Clash triage**: Resource double-bookings, clearance lapses, and</span>
+<span class="sd">  facility collisions with proposed leveling shifts.</span>
+<span class="sd">- **Display settings**: Server-side profile hydration on login.</span>
+
+<span class="sd">Available Scenarios</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">1. **avionics-radar** — Avionics radar development programme with 50 nodes</span>
+<span class="sd">   spanning requirements, design, development, integration, and test phases.</span>
+<span class="sd">   Includes PDM links (FS/SS/FF/SF), 3-point estimates, resource assignments,</span>
+<span class="sd">   and simulated clashes.</span>
+
+<span class="sd">2. **minimal** — Small 10-node scenario for quick smoke testing of the</span>
+<span class="sd">   Gantt chart and basic cockpit views.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">In development environments, call::</span>
+
+<span class="sd">    GET /api/v1/dev/fixtures/avionics-radar</span>
+
+<span class="sd">This clears and repopulates the database with the scenario data, returning</span>
+<span class="sd">a summary of what was seeded.  The endpoint is **only available when</span>
+<span class="sd">``ENVIRONMENT != 'production'``** to prevent accidental data loss.</span>
+
+<span class="sd">Security Warning</span>
+<span class="sd">~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">This endpoint is **DANGEROUS** — it clears existing data.  It is gated</span>
+<span class="sd">behind the ``ENVIRONMENT`` setting and will **not load** in production.</span>
+<span class="sd">Never expose this endpoint in a production deployment.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">ResourceNode</span><span class="p">,</span>
+    <span class="n">ResourceAssignment</span><span class="p">,</span>
+    <span class="n">DependencyLink</span><span class="p">,</span>
+    <span class="n">NodeBlocker</span><span class="p">,</span>
+    <span class="n">ActivityDurationDistribution</span><span class="p">,</span>
+    <span class="n">ScheduleClashIssue</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">TreeType</span><span class="p">,</span>
+    <span class="n">DependencyType</span><span class="p">,</span>
+    <span class="n">AssignmentStatus</span><span class="p">,</span>
+    <span class="n">BlockerCategory</span><span class="p">,</span>
+    <span class="n">BlockerSeverity</span><span class="p">,</span>
+    <span class="n">ClashCategory</span><span class="p">,</span>
+    <span class="n">ClashSeverity</span><span class="p">,</span>
+    <span class="n">DistributionType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.hmi_catalog</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">GanttBarPayload</span><span class="p">,</span>
+    <span class="n">BaselineBar</span><span class="p">,</span>
+    <span class="n">GanttChartPayload</span><span class="p">,</span>
+    <span class="n">DropLinePoint</span><span class="p">,</span>
+    <span class="n">JaggedDropLinePayload</span><span class="p">,</span>
+    <span class="n">SprintLoadGauge</span><span class="p">,</span>
+    <span class="n">FocusQueueItem</span><span class="p">,</span>
+    <span class="n">ClaimableTaskItem</span><span class="p">,</span>
+    <span class="n">DailyCockpitSummaryPayload</span><span class="p">,</span>
+    <span class="n">ClashTriageItemPayload</span><span class="p">,</span>
+    <span class="n">ClashTriagePayload</span><span class="p">,</span>
+    <span class="n">DisplaySettingsPayload</span><span class="p">,</span>
+    <span class="n">HMICatalogManifest</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"dev: mock fixtures"</span><span class="p">])</span>
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Scenario Data Generators</span>
+<span class="c1"># ============================================================================</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_generate_uuids</span><span class="p">(</span><span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Generate a list of deterministic UUID strings for reproducible data."""</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_days</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">days</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">date</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add calendar days to a date."""</span>
+    <span class="k">return</span> <span class="n">d</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_workday_add</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">workdays</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">date</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add workdays (Mon–Fri) to a date, skipping weekends."""</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">d</span>
+    <span class="n">added</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">added</span> <span class="o">&lt;</span> <span class="n">workdays</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># Mon=0 .. Fri=4</span>
+            <span class="n">added</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">current</span>
+
+
+<div class="viewcode-block" id="seed_avionics_radar">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.seed_avionics_radar">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">seed_avionics_radar</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Seed the avionics radar development programme scenario.</span>
+
+<span class="sd">    This scenario creates a realistic defence avionics radar programme</span>
+<span class="sd">    with 50 nodes spanning the full development lifecycle:</span>
+
+<span class="sd">    - **Level 1**: Programme root (RADAR-X Avionics Development)</span>
+<span class="sd">    - **Level 2**: 5 work packages (Requirements, Design, Development,</span>
+<span class="sd">      Integration, Test)</span>
+<span class="sd">    - **Level 3**: 15 sub-packages (3 per work package)</span>
+<span class="sd">    - **Level 4**: 30 tasks (2 per sub-package)</span>
+
+<span class="sd">    Each node includes:</span>
+
+<span class="sd">    - Planned start/end dates with realistic durations</span>
+<span class="sd">    - PDM dependency links (FS/SS/FF/SF with lags)</span>
+<span class="sd">    - 3-point Monte Carlo estimates (optimistic, most-likely, pessimistic)</span>
+<span class="sd">    - Resource assignments with rates</span>
+<span class="sd">    - Simulated clashes (resource overallocation, facility collisions)</span>
+<span class="sd">    - Baseline snapshots for B₀ comparison</span>
+<span class="sd">    - Blockers and procurement constraints</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Summary of seeded data (node count, link count, etc.).</span>
+<span class="sd">    """</span>
+    <span class="c1"># Clear existing data</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ActivityDurationDistribution</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">NodeBlocker</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+
+    <span class="c1"># Programme start date</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">node_order</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_node</span><span class="p">(</span>
+        <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">planned_start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+        <span class="n">duration_days</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">percent_complete</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">actual_start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">actual_end</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">classification</span><span class="p">:</span> <span class="n">SecurityClassification</span> <span class="o">=</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL_SENSITIVE</span><span class="p">,</span>
+        <span class="n">requires_vv</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Create a mock WBS node and store it in the database.</span>
+
+<span class="sd">        Args</span>
+<span class="sd">        ----\n        code : str</span>
+<span class="sd">            WBS code (e.g., ``"RADAR-X.REQ"``).</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Human-readable node name.</span>
+<span class="sd">        parent_id : str or None</span>
+<span class="sd">            Parent node UUID or ``None`` for root nodes.</span>
+<span class="sd">        path : str</span>
+<span class="sd">            ltree path string (e.g., ``"1.2"``).</span>
+<span class="sd">        planned_start : date</span>
+<span class="sd">            Planned start date.</span>
+<span class="sd">        duration_days : int</span>
+<span class="sd">            Duration in working days.</span>
+<span class="sd">        percent_complete : float, optional</span>
+<span class="sd">            Percent complete 0-100 (default ``0.0``).</span>
+<span class="sd">        actual_start : date, optional</span>
+<span class="sd">            Actual start date (default ``None``).</span>
+<span class="sd">        actual_end : date, optional</span>
+<span class="sd">            Actual end date (default ``None``).</span>
+<span class="sd">        classification : SecurityClassification, optional</span>
+<span class="sd">            Security classification (default ``OFFICIAL_SENSITIVE``).</span>
+<span class="sd">        requires_vv : bool, optional</span>
+<span class="sd">            Whether V&amp;V sign-off is required (default ``False``).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            The generated UUID string for the new node.</span>
+<span class="sd">        """</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="n">planned_end</span> <span class="o">=</span> <span class="n">_workday_add</span><span class="p">(</span><span class="n">planned_start</span><span class="p">,</span> <span class="n">duration_days</span><span class="p">)</span>
+
+        <span class="n">ubn</span> <span class="o">=</span> <span class="n">UniversalBreakdownNode</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+            <span class="n">parent_id</span><span class="o">=</span><span class="n">parent_id</span><span class="p">,</span>
+            <span class="n">tree_type</span><span class="o">=</span><span class="n">TreeType</span><span class="o">.</span><span class="n">WBS</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">classification</span><span class="p">,</span>
+            <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+            <span class="n">planned_start_date</span><span class="o">=</span><span class="n">planned_start</span><span class="p">,</span>
+            <span class="n">planned_end_date</span><span class="o">=</span><span class="n">planned_end</span><span class="p">,</span>
+            <span class="n">actual_start_date</span><span class="o">=</span><span class="n">actual_start</span><span class="p">,</span>
+            <span class="n">actual_end_date</span><span class="o">=</span><span class="n">actual_end</span><span class="p">,</span>
+            <span class="n">percent_complete</span><span class="o">=</span><span class="n">percent_complete</span><span class="p">,</span>
+            <span class="n">requires_vv_signoff</span><span class="o">=</span><span class="n">requires_vv</span><span class="p">,</span>
+            <span class="n">bac_cost</span><span class="o">=</span><span class="n">duration_days</span> <span class="o">*</span> <span class="mf">1000.0</span><span class="p">,</span>  <span class="c1"># £1000/day base rate</span>
+            <span class="n">evm_technique</span><span class="o">=</span><span class="s2">"PERCENT_COMPLETE"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ubn</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pn</span><span class="p">)</span>
+        <span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"code"</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+            <span class="s2">"planned_start"</span><span class="p">:</span> <span class="n">planned_start</span><span class="p">,</span>
+            <span class="s2">"planned_end"</span><span class="p">:</span> <span class="n">planned_end</span><span class="p">,</span>
+            <span class="s2">"duration_days"</span><span class="p">:</span> <span class="n">duration_days</span><span class="p">,</span>
+            <span class="s2">"percent_complete"</span><span class="p">:</span> <span class="n">percent_complete</span><span class="p">,</span>
+            <span class="s2">"actual_start"</span><span class="p">:</span> <span class="n">actual_start</span><span class="p">,</span>
+            <span class="s2">"actual_end"</span><span class="p">:</span> <span class="n">actual_end</span><span class="p">,</span>
+            <span class="s2">"classification"</span><span class="p">:</span> <span class="n">classification</span><span class="p">,</span>
+            <span class="s2">"requires_vv"</span><span class="p">:</span> <span class="n">requires_vv</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">node_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">node_id</span>
+
+    <span class="c1"># --- Level 1: Programme Root ---</span>
+    <span class="n">root_id</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span>
+        <span class="n">code</span><span class="o">=</span><span class="s2">"RADAR-X"</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"RADAR-X Avionics Development Programme"</span><span class="p">,</span>
+        <span class="n">parent_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">"1"</span><span class="p">,</span>
+        <span class="n">planned_start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+        <span class="n">duration_days</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+        <span class="n">percent_complete</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+        <span class="n">classification</span><span class="o">=</span><span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># --- Level 2: Work Packages ---</span>
+    <span class="n">wp_ids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">wp_data</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">"REQ"</span><span class="p">,</span> <span class="s2">"Requirements &amp; Analysis"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"DES"</span><span class="p">,</span> <span class="s2">"System Design"</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">120</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"DEV"</span><span class="p">,</span> <span class="s2">"Development &amp; Build"</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">240</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"INT"</span><span class="p">,</span> <span class="s2">"Integration &amp; Assembly"</span><span class="p">,</span> <span class="mi">360</span><span class="p">,</span> <span class="mi">150</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"TST"</span><span class="p">,</span> <span class="s2">"Test &amp; Evaluation"</span><span class="p">,</span> <span class="mi">420</span><span class="p">,</span> <span class="mi">180</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">dur</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">wp_data</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">wp_id</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span>
+            <span class="n">code</span><span class="o">=</span><span class="sa">f</span><span class="s2">"RADAR-X.</span><span class="si">{</span><span class="n">code</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">parent_id</span><span class="o">=</span><span class="n">root_id</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"1.</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">planned_start</span><span class="o">=</span><span class="n">_workday_add</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">offset</span><span class="p">),</span>
+            <span class="n">duration_days</span><span class="o">=</span><span class="n">dur</span><span class="p">,</span>
+            <span class="n">percent_complete</span><span class="o">=</span><span class="mf">15.0</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">actual_start</span><span class="o">=</span><span class="n">start</span> <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">classification</span><span class="o">=</span><span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="mi">3</span> <span class="k">else</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL_SENSITIVE</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">wp_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">wp_id</span><span class="p">)</span>
+
+    <span class="c1"># --- Level 3: Sub-packages ---</span>
+    <span class="n">sub_wp_data</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="c1"># Requirements sub-packages</span>
+        <span class="p">(</span><span class="s2">"REQ-01"</span><span class="p">,</span> <span class="s2">"Stakeholder Needs"</span><span class="p">,</span> <span class="s2">"RADAR-X.REQ"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"REQ-02"</span><span class="p">,</span> <span class="s2">"System Requirements Spec"</span><span class="p">,</span> <span class="s2">"RADAR-X.REQ"</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"REQ-03"</span><span class="p">,</span> <span class="s2">"Operational Concept"</span><span class="p">,</span> <span class="s2">"RADAR-X.REQ"</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+        <span class="c1"># Design sub-packages</span>
+        <span class="p">(</span><span class="s2">"DES-01"</span><span class="p">,</span> <span class="s2">"Architecture Definition"</span><span class="p">,</span> <span class="s2">"RADAR-X.DES"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"DES-02"</span><span class="p">,</span> <span class="s2">"Interface Control"</span><span class="p">,</span> <span class="s2">"RADAR-X.DES"</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"DES-03"</span><span class="p">,</span> <span class="s2">"Preliminary Design Review"</span><span class="p">,</span> <span class="s2">"RADAR-X.DES"</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+        <span class="c1"># Development sub-packages</span>
+        <span class="p">(</span><span class="s2">"DEV-01"</span><span class="p">,</span> <span class="s2">"RF Front-End"</span><span class="p">,</span> <span class="s2">"RADAR-X.DEV"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"DEV-02"</span><span class="p">,</span> <span class="s2">"Signal Processing"</span><span class="p">,</span> <span class="s2">"RADAR-X.DEV"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"DEV-03"</span><span class="p">,</span> <span class="s2">"Software Firmware"</span><span class="p">,</span> <span class="s2">"RADAR-X.DEV"</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">120</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"DEV-04"</span><span class="p">,</span> <span class="s2">"Mechanical Enclosure"</span><span class="p">,</span> <span class="s2">"RADAR-X.DEV"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"DEV-05"</span><span class="p">,</span> <span class="s2">"Power &amp; Cooling"</span><span class="p">,</span> <span class="s2">"RADAR-X.DEV"</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">80</span><span class="p">),</span>
+        <span class="c1"># Integration sub-packages</span>
+        <span class="p">(</span><span class="s2">"INT-01"</span><span class="p">,</span> <span class="s2">"Subsystem Integration"</span><span class="p">,</span> <span class="s2">"RADAR-X.INT"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"INT-02"</span><span class="p">,</span> <span class="s2">"System Integration"</span><span class="p">,</span> <span class="s2">"RADAR-X.INT"</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"INT-03"</span><span class="p">,</span> <span class="s2">"Environmental Qualification"</span><span class="p">,</span> <span class="s2">"RADAR-X.INT"</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+        <span class="c1"># Test sub-packages</span>
+        <span class="p">(</span><span class="s2">"TST-01"</span><span class="p">,</span> <span class="s2">"Factory Acceptance Test"</span><span class="p">,</span> <span class="s2">"RADAR-X.TST"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"TST-02"</span><span class="p">,</span> <span class="s2">"Range Trials"</span><span class="p">,</span> <span class="s2">"RADAR-X.TST"</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"TST-03"</span><span class="p">,</span> <span class="s2">"Operational Evaluation"</span><span class="p">,</span> <span class="s2">"RADAR-X.TST"</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">sub_ids</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">parent_code</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">dur</span> <span class="ow">in</span> <span class="n">sub_wp_data</span><span class="p">:</span>
+        <span class="n">parent_id</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+            <span class="n">nid</span> <span class="k">for</span> <span class="n">nid</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span><span class="p">[</span><span class="s2">"code"</span><span class="p">]</span> <span class="o">==</span> <span class="n">parent_code</span>
+        <span class="p">)</span>
+        <span class="n">wp_start</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">parent_id</span><span class="p">][</span><span class="s2">"planned_start"</span><span class="p">]</span>
+        <span class="n">sub_id</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> Sub-Package"</span><span class="p">,</span>
+            <span class="n">parent_id</span><span class="o">=</span><span class="n">parent_id</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">nodes</span><span class="p">[</span><span class="n">parent_id</span><span class="p">][</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="nb">len</span><span class="p">([</span><span class="n">s</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">sub_ids</span><span class="p">])</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">planned_start</span><span class="o">=</span><span class="n">_workday_add</span><span class="p">(</span><span class="n">wp_start</span><span class="p">,</span> <span class="n">offset</span><span class="p">),</span>
+            <span class="n">duration_days</span><span class="o">=</span><span class="n">dur</span><span class="p">,</span>
+            <span class="n">classification</span><span class="o">=</span><span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span> <span class="k">if</span> <span class="s2">"RF"</span> <span class="ow">in</span> <span class="n">name</span> <span class="ow">or</span> <span class="s2">"Signal"</span> <span class="ow">in</span> <span class="n">name</span> <span class="k">else</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL_SENSITIVE</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">sub_ids</span><span class="p">[</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="n">sub_id</span>
+
+    <span class="c1"># --- Level 4: Tasks ---</span>
+    <span class="n">task_templates</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">"Analysis"</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Implementation"</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">task_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">sub_code</span><span class="p">,</span> <span class="n">sub_id</span> <span class="ow">in</span> <span class="n">sub_ids</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">sub_start</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">sub_id</span><span class="p">][</span><span class="s2">"planned_start"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">tname</span><span class="p">,</span> <span class="n">tdur</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">task_templates</span><span class="p">):</span>
+            <span class="n">task_id</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span>
+                <span class="n">code</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">sub_code</span><span class="si">}</span><span class="s2">-T</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tname</span><span class="si">}</span><span class="s2"> - </span><span class="si">{</span><span class="n">nodes</span><span class="p">[</span><span class="n">sub_id</span><span class="p">][</span><span class="s1">'name'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">parent_id</span><span class="o">=</span><span class="n">sub_id</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">nodes</span><span class="p">[</span><span class="n">sub_id</span><span class="p">][</span><span class="s1">'path'</span><span class="p">]</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">planned_start</span><span class="o">=</span><span class="n">_workday_add</span><span class="p">(</span><span class="n">sub_start</span><span class="p">,</span> <span class="n">i</span> <span class="o">*</span> <span class="n">tdur</span><span class="p">),</span>
+                <span class="n">duration_days</span><span class="o">=</span><span class="n">tdur</span><span class="p">,</span>
+                <span class="n">percent_complete</span><span class="o">=</span><span class="mf">25.0</span> <span class="k">if</span> <span class="n">sub_code</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"REQ"</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">actual_start</span><span class="o">=</span><span class="n">sub_start</span> <span class="k">if</span> <span class="n">sub_code</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"REQ"</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">classification</span><span class="o">=</span><span class="n">nodes</span><span class="p">[</span><span class="n">sub_id</span><span class="p">][</span><span class="s2">"classification"</span><span class="p">],</span>
+                <span class="n">requires_vv</span><span class="o">=</span><span class="s2">"TST"</span> <span class="ow">in</span> <span class="n">sub_code</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">task_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># --- PDM Dependency Links ---</span>
+    <span class="n">deps</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="c1"># WP sequence</span>
+        <span class="p">(</span><span class="n">wp_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">wp_ids</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">wp_ids</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">wp_ids</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">wp_ids</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">wp_ids</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">wp_ids</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">wp_ids</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="c1"># SS links for parallel start</span>
+        <span class="p">(</span><span class="n">wp_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">wp_ids</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">SS</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+        <span class="c1"># FF link for finish alignment</span>
+        <span class="p">(</span><span class="n">wp_ids</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">wp_ids</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FF</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">pred</span><span class="p">,</span> <span class="n">succ</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">lag</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="n">dep</span> <span class="o">=</span> <span class="n">DependencyLink</span><span class="p">(</span>
+            <span class="n">predecessor_id</span><span class="o">=</span><span class="n">pred</span><span class="p">,</span>
+            <span class="n">successor_id</span><span class="o">=</span><span class="n">succ</span><span class="p">,</span>
+            <span class="n">dependency_type</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">lag_days</span><span class="o">=</span><span class="n">lag</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
+
+    <span class="c1"># --- 3-Point Monte Carlo Estimates ---</span>
+    <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">dur</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">"duration_days"</span><span class="p">]</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="n">ActivityDurationDistribution</span><span class="p">(</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+            <span class="n">optimistic_days</span><span class="o">=</span><span class="n">dur</span> <span class="o">*</span> <span class="mf">0.8</span><span class="p">,</span>
+            <span class="n">most_likely_days</span><span class="o">=</span><span class="n">dur</span><span class="p">,</span>
+            <span class="n">pessimistic_days</span><span class="o">=</span><span class="n">dur</span> <span class="o">*</span> <span class="mf">1.4</span><span class="p">,</span>
+            <span class="n">distribution_type</span><span class="o">=</span><span class="n">DistributionType</span><span class="o">.</span><span class="n">BETA_PERT</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span>
+
+    <span class="c1"># --- Resource Nodes &amp; Assignments ---</span>
+    <span class="n">resources</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">"RES-ENG-001"</span><span class="p">,</span> <span class="s2">"RF Hardware Engineer"</span><span class="p">,</span> <span class="s2">"PERSON"</span><span class="p">,</span> <span class="mf">150.0</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"RES-ENG-002"</span><span class="p">,</span> <span class="s2">"Signal Processing Engineer"</span><span class="p">,</span> <span class="s2">"PERSON"</span><span class="p">,</span> <span class="mf">145.0</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"RES-ENG-003"</span><span class="p">,</span> <span class="s2">"Systems Safety Assessor"</span><span class="p">,</span> <span class="s2">"PERSON"</span><span class="p">,</span> <span class="mf">140.0</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"RES-GEN-001"</span><span class="p">,</span> <span class="s2">"Generic Systems Engineer"</span><span class="p">,</span> <span class="s2">"PERSON"</span><span class="p">,</span> <span class="mf">130.0</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"RES-GEN-002"</span><span class="p">,</span> <span class="s2">"Generic Test Technician"</span><span class="p">,</span> <span class="s2">"PERSON"</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"LOC-SCIF-001"</span><span class="p">,</span> <span class="s2">"SCIF Lab Alpha"</span><span class="p">,</span> <span class="s2">"FACILITY"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">resource_ids</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">rtype</span><span class="p">,</span> <span class="n">rate</span><span class="p">,</span> <span class="n">is_generic</span> <span class="ow">in</span> <span class="n">resources</span><span class="p">:</span>
+        <span class="n">rid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="n">ubn</span> <span class="o">=</span> <span class="n">UniversalBreakdownNode</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">rid</span><span class="p">,</span>
+            <span class="n">tree_type</span><span class="o">=</span><span class="n">TreeType</span><span class="o">.</span><span class="n">RBS</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="sa">f</span><span class="s2">"RBS.1"</span><span class="p">,</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL_SENSITIVE</span><span class="p">,</span>
+            <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">rn</span> <span class="o">=</span> <span class="n">ResourceNode</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">rid</span><span class="p">,</span>
+            <span class="n">resource_type</span><span class="o">=</span><span class="n">rtype</span><span class="p">,</span>
+            <span class="n">standard_hourly_rate</span><span class="o">=</span><span class="n">rate</span><span class="p">,</span>
+            <span class="n">is_generic_placeholder</span><span class="o">=</span><span class="n">is_generic</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ubn</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">rn</span><span class="p">)</span>
+        <span class="n">resource_ids</span><span class="p">[</span><span class="n">code</span><span class="p">]</span> <span class="o">=</span> <span class="n">rid</span>
+
+    <span class="c1"># Assign resources to tasks</span>
+    <span class="n">eng_codes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"RES-ENG-001"</span><span class="p">,</span> <span class="s2">"RES-ENG-002"</span><span class="p">,</span> <span class="s2">"RES-ENG-003"</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">node_order</span><span class="p">[:</span><span class="mi">15</span><span class="p">]):</span>
+        <span class="n">res_code</span> <span class="o">=</span> <span class="n">eng_codes</span><span class="p">[</span><span class="n">idx</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">eng_codes</span><span class="p">)]</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">ResourceAssignment</span><span class="p">(</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+            <span class="n">resource_node_id</span><span class="o">=</span><span class="n">resource_ids</span><span class="p">[</span><span class="n">res_code</span><span class="p">],</span>
+            <span class="n">allocated_units</span><span class="o">=</span><span class="mf">0.5</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">planned_hours</span><span class="o">=</span><span class="n">info</span><span class="p">[</span><span class="s2">"duration_days"</span><span class="p">]</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="n">rate_snapshot</span><span class="o">=</span><span class="mf">150.0</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">AssignmentStatus</span><span class="o">.</span><span class="n">CONFIRMED</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+
+    <span class="c1"># --- Blockers ---</span>
+    <span class="n">blocker_target</span> <span class="o">=</span> <span class="n">node_order</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_order</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="k">else</span> <span class="n">node_order</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">blocker</span> <span class="o">=</span> <span class="n">NodeBlocker</span><span class="p">(</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">blocker_target</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">BlockerCategory</span><span class="o">.</span><span class="n">DEPENDENCY_OVERDUE</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="n">BlockerSeverity</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+        <span class="n">impacted_hours</span><span class="o">=</span><span class="mf">40.0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">blocker</span><span class="p">)</span>
+
+    <span class="c1"># --- Simulated Clashes ---</span>
+    <span class="n">clash_id_1</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">clash1</span> <span class="o">=</span> <span class="n">ScheduleClashIssue</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">clash_id_1</span><span class="p">,</span>
+        <span class="n">sweep_run_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">()),</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">RESOURCE_OVERALLOCATION</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node_order</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+        <span class="n">conflicting_node_id</span><span class="o">=</span><span class="n">node_order</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span>
+        <span class="n">conflicting_resource_id</span><span class="o">=</span><span class="n">resource_ids</span><span class="p">[</span><span class="s2">"RES-ENG-001"</span><span class="p">],</span>
+        <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span>
+        <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">_add_days</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"Resource Overallocation: RF Hardware Engineer"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"RES-ENG-001 is assigned 150</span><span class="si">% c</span><span class="s2">apacity during weeks 1-4."</span><span class="p">,</span>
+        <span class="n">recommended_action</span><span class="o">=</span><span class="s2">"Delay non-critical task by 15 workdays using available float."</span><span class="p">,</span>
+        <span class="n">is_resolved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">clash1</span><span class="p">)</span>
+
+    <span class="n">clash_id_2</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">clash2</span> <span class="o">=</span> <span class="n">ScheduleClashIssue</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">clash_id_2</span><span class="p">,</span>
+        <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">clash1</span><span class="o">.</span><span class="n">sweep_run_id</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">FACILITY_CONTRAVENTION</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node_order</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span>
+        <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">_add_days</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span>
+        <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">_add_days</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"SCIF Facility Collision"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Two SECRET tasks scheduled in SCIF Lab Alpha simultaneously."</span><span class="p">,</span>
+        <span class="n">recommended_action</span><span class="o">=</span><span class="s2">"Stagger facility bookings or allocate additional SCIF space."</span><span class="p">,</span>
+        <span class="n">is_resolved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">clash2</span><span class="p">)</span>
+
+    <span class="n">clash_id_3</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">clash3</span> <span class="o">=</span> <span class="n">ScheduleClashIssue</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">clash_id_3</span><span class="p">,</span>
+        <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">clash1</span><span class="o">.</span><span class="n">sweep_run_id</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">CALENDAR_EXCEPTION</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">ADVISORY</span><span class="p">,</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node_order</span><span class="p">[</span><span class="mi">12</span><span class="p">],</span>
+        <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">_add_days</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">120</span><span class="p">),</span>
+        <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">_add_days</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">130</span><span class="p">),</span>
+        <span class="n">title</span><span class="o">=</span><span class="s2">"Calendar Exception: Holiday Period"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Task spans Christmas/New Year holiday with no calendar exclusion."</span><span class="p">,</span>
+        <span class="n">recommended_action</span><span class="o">=</span><span class="s2">"Adjust planned dates to exclude holiday period."</span><span class="p">,</span>
+        <span class="n">is_resolved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">clash3</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"scenario"</span><span class="p">:</span> <span class="s2">"avionics-radar"</span><span class="p">,</span>
+        <span class="s2">"nodes_created"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">),</span>
+        <span class="s2">"tasks_created"</span><span class="p">:</span> <span class="n">task_count</span><span class="p">,</span>
+        <span class="s2">"dependencies_created"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">deps</span><span class="p">),</span>
+        <span class="s2">"resources_created"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">resources</span><span class="p">),</span>
+        <span class="s2">"blockers_created"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">"clashes_created"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">"monte_carlo_estimates"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="seed_minimal">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.seed_minimal">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">seed_minimal</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Seed a minimal 10-node scenario for quick smoke testing.</span>
+
+<span class="sd">    Creates a simple 3-level WBS with 10 nodes, 5 dependencies,</span>
+<span class="sd">    and basic resource assignments.  Ideal for rapid Gantt chart</span>
+<span class="sd">    and cockpit view testing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Summary of seeded data.</span>
+<span class="sd">    """</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ActivityDurationDistribution</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">NodeBlocker</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">nodes_created</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_node</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">parent_id</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">start_d</span><span class="p">,</span> <span class="n">dur</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Create a minimal mock WBS node for smoke testing.</span>
+
+<span class="sd">        Args</span>
+<span class="sd">        ----\n        code : str</span>
+<span class="sd">            WBS code.</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Node name.</span>
+<span class="sd">        parent_id : str or None</span>
+<span class="sd">            Parent node UUID.</span>
+<span class="sd">        path : str</span>
+<span class="sd">            ltree path.</span>
+<span class="sd">        start_d : date</span>
+<span class="sd">            Planned start date.</span>
+<span class="sd">        dur : int</span>
+<span class="sd">            Duration in working days.</span>
+<span class="sd">        pct : float, optional</span>
+<span class="sd">            Percent complete (default ``0.0``).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            The generated UUID string.</span>
+<span class="sd">        """</span>
+        <span class="n">nid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="n">end_d</span> <span class="o">=</span> <span class="n">_workday_add</span><span class="p">(</span><span class="n">start_d</span><span class="p">,</span> <span class="n">dur</span><span class="p">)</span>
+        <span class="n">ubn</span> <span class="o">=</span> <span class="n">UniversalBreakdownNode</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">nid</span><span class="p">,</span> <span class="n">parent_id</span><span class="o">=</span><span class="n">parent_id</span><span class="p">,</span> <span class="n">tree_type</span><span class="o">=</span><span class="n">TreeType</span><span class="o">.</span><span class="n">WBS</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">,</span>
+            <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">nid</span><span class="p">,</span> <span class="n">planned_start_date</span><span class="o">=</span><span class="n">start_d</span><span class="p">,</span> <span class="n">planned_end_date</span><span class="o">=</span><span class="n">end_d</span><span class="p">,</span>
+            <span class="n">percent_complete</span><span class="o">=</span><span class="n">pct</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ubn</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pn</span><span class="p">)</span>
+        <span class="n">nodes_created</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nid</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nid</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"PROJ"</span><span class="p">,</span> <span class="s2">"Minimal Test Project"</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="mi">120</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">10.0</span><span class="p">)</span>
+    <span class="n">wp1</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"WP-01"</span><span class="p">,</span> <span class="s2">"Design Phase"</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="s2">"1.1"</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">50.0</span><span class="p">)</span>
+    <span class="n">wp2</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"WP-02"</span><span class="p">,</span> <span class="s2">"Build Phase"</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="s2">"1.2"</span><span class="p">,</span> <span class="n">_workday_add</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="mi">50</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">wp3</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"WP-03"</span><span class="p">,</span> <span class="s2">"Test Phase"</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="s2">"1.3"</span><span class="p">,</span> <span class="n">_workday_add</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="mi">30</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"T-01"</span><span class="p">,</span> <span class="s2">"Requirements"</span><span class="p">,</span> <span class="n">wp1</span><span class="p">,</span> <span class="s2">"1.1.1"</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
+    <span class="n">t2</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"T-02"</span><span class="p">,</span> <span class="s2">"Architecture"</span><span class="p">,</span> <span class="n">wp1</span><span class="p">,</span> <span class="s2">"1.1.2"</span><span class="p">,</span> <span class="n">_workday_add</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="mi">20</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">25.0</span><span class="p">)</span>
+    <span class="n">t3</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"T-03"</span><span class="p">,</span> <span class="s2">"Implementation"</span><span class="p">,</span> <span class="n">wp2</span><span class="p">,</span> <span class="s2">"1.2.1"</span><span class="p">,</span> <span class="n">_workday_add</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="mi">30</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">t4</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"T-04"</span><span class="p">,</span> <span class="s2">"Code Review"</span><span class="p">,</span> <span class="n">wp2</span><span class="p">,</span> <span class="s2">"1.2.2"</span><span class="p">,</span> <span class="n">_workday_add</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">70</span><span class="p">),</span> <span class="mi">20</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">t5</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"T-05"</span><span class="p">,</span> <span class="s2">"Unit Testing"</span><span class="p">,</span> <span class="n">wp3</span><span class="p">,</span> <span class="s2">"1.3.1"</span><span class="p">,</span> <span class="n">_workday_add</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="mi">15</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">t6</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">(</span><span class="s2">"T-06"</span><span class="p">,</span> <span class="s2">"Acceptance"</span><span class="p">,</span> <span class="n">wp3</span><span class="p">,</span> <span class="s2">"1.3.2"</span><span class="p">,</span> <span class="n">_workday_add</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">105</span><span class="p">),</span> <span class="mi">15</span><span class="p">,</span> <span class="n">pct</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="n">deps</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">t2</span><span class="p">,</span> <span class="n">t3</span><span class="p">,</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">t3</span><span class="p">,</span> <span class="n">t4</span><span class="p">,</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">t4</span><span class="p">,</span> <span class="n">t5</span><span class="p">,</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">t5</span><span class="p">,</span> <span class="n">t6</span><span class="p">,</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">pred</span><span class="p">,</span> <span class="n">succ</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">lag</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">(</span><span class="n">predecessor_id</span><span class="o">=</span><span class="n">pred</span><span class="p">,</span> <span class="n">successor_id</span><span class="o">=</span><span class="n">succ</span><span class="p">,</span> <span class="n">dependency_type</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">lag_days</span><span class="o">=</span><span class="n">lag</span><span class="p">))</span>
+
+    <span class="c1"># Resource</span>
+    <span class="n">rid</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">rid</span><span class="p">,</span> <span class="n">tree_type</span><span class="o">=</span><span class="n">TreeType</span><span class="o">.</span><span class="n">RBS</span><span class="p">,</span> <span class="n">code</span><span class="o">=</span><span class="s2">"DEV-001"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Developer"</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="s2">"RBS.1"</span><span class="p">,</span> <span class="n">security_classification</span><span class="o">=</span><span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">,</span> <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">))</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">rid</span><span class="p">,</span> <span class="n">resource_type</span><span class="o">=</span><span class="s2">"PERSON"</span><span class="p">,</span> <span class="n">standard_hourly_rate</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span> <span class="n">is_generic_placeholder</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">nodes_created</span><span class="p">[</span><span class="mi">4</span><span class="p">:]:</span>  <span class="c1"># tasks only</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">(</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">nid</span><span class="p">,</span> <span class="n">resource_node_id</span><span class="o">=</span><span class="n">rid</span><span class="p">,</span>
+            <span class="n">allocated_units</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">planned_hours</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">rate_snapshot</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">AssignmentStatus</span><span class="o">.</span><span class="n">CONFIRMED</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"scenario"</span><span class="p">:</span> <span class="s2">"minimal"</span><span class="p">,</span>
+        <span class="s2">"nodes_created"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes_created</span><span class="p">),</span>
+        <span class="s2">"dependencies_created"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">deps</span><span class="p">),</span>
+        <span class="s2">"resources_created"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># HMI Payload Generators</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="generate_gantt_payload">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.generate_gantt_payload">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_gantt_payload</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GanttChartPayload</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate a Gantt chart payload from the current database state.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    GanttChartPayload</span>
+<span class="sd">        Complete Gantt chart data for frontend rendering.</span>
+<span class="sd">    """</span>
+    <span class="n">wbs_nodes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">tree_type</span> <span class="o">==</span> <span class="n">TreeType</span><span class="o">.</span><span class="n">WBS</span><span class="p">,</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">bars</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GanttBarPayload</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_starts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_ends</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">ubn</span> <span class="ow">in</span> <span class="n">wbs_nodes</span><span class="p">:</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">ubn</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pn</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">planned_start</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">or</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+        <span class="n">planned_end</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">or</span> <span class="n">planned_start</span>
+        <span class="n">all_starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">planned_start</span><span class="p">)</span>
+        <span class="n">all_ends</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">planned_end</span><span class="p">)</span>
+
+        <span class="c1"># Check for blockers</span>
+        <span class="n">blocker</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">NodeBlocker</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">NodeBlocker</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">ubn</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">NodeBlocker</span><span class="o">.</span><span class="n">resolved_at</span> <span class="o">==</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+        <span class="c1"># Baseline comparison (mock B₀ shifted by 10 days)</span>
+        <span class="n">b0_start</span> <span class="o">=</span> <span class="n">_add_days</span><span class="p">(</span><span class="n">planned_start</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">b0_end</span> <span class="o">=</span> <span class="n">_add_days</span><span class="p">(</span><span class="n">planned_end</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="c1"># Outline level from path depth</span>
+        <span class="n">outline_level</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ubn</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">))</span> <span class="k">if</span> <span class="n">ubn</span><span class="o">.</span><span class="n">path</span> <span class="k">else</span> <span class="mi">1</span>
+
+        <span class="n">bar</span> <span class="o">=</span> <span class="n">GanttBarPayload</span><span class="p">(</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ubn</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ubn</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">ubn</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">planned_start</span><span class="o">=</span><span class="n">planned_start</span><span class="p">,</span>
+            <span class="n">planned_end</span><span class="o">=</span><span class="n">planned_end</span><span class="p">,</span>
+            <span class="n">actual_start</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">actual_start_date</span><span class="p">,</span>
+            <span class="n">actual_end</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">actual_end_date</span><span class="p">,</span>
+            <span class="n">physical_percent_complete</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">percent_complete</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">is_blocked</span><span class="o">=</span><span class="n">blocker</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">cross_hatch_shading</span><span class="o">=</span><span class="n">ubn</span><span class="o">.</span><span class="n">export_control_regime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ubn</span><span class="o">.</span><span class="n">export_control_regime</span> <span class="o">!=</span> <span class="s2">"NOT_CONTROLLED"</span><span class="p">,</span>
+            <span class="n">baseline_b0</span><span class="o">=</span><span class="n">BaselineBar</span><span class="p">(</span>
+                <span class="n">start_date</span><span class="o">=</span><span class="n">b0_start</span><span class="p">,</span>
+                <span class="n">end_date</span><span class="o">=</span><span class="n">b0_end</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">"B0"</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">baseline_b_curr</span><span class="o">=</span><span class="n">BaselineBar</span><span class="p">(</span>
+                <span class="n">start_date</span><span class="o">=</span><span class="n">planned_start</span><span class="p">,</span>
+                <span class="n">end_date</span><span class="o">=</span><span class="n">planned_end</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">"B_curr"</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">ubn</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">ubn</span><span class="o">.</span><span class="n">security_classification</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">is_masked</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">node_type</span><span class="o">=</span><span class="s2">"milestone"</span> <span class="k">if</span> <span class="n">pn</span><span class="o">.</span><span class="n">percent_complete</span> <span class="o">==</span> <span class="mf">100.0</span> <span class="k">else</span> <span class="s2">"task"</span><span class="p">,</span>
+            <span class="n">outline_level</span><span class="o">=</span><span class="n">outline_level</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">bars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bar</span><span class="p">)</span>
+
+    <span class="c1"># Sort by planned start</span>
+    <span class="n">bars</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="o">.</span><span class="n">planned_start</span><span class="p">)</span>
+
+    <span class="n">chart_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">all_starts</span><span class="p">)</span> <span class="k">if</span> <span class="n">all_starts</span> <span class="k">else</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="n">chart_end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">all_ends</span><span class="p">)</span> <span class="k">if</span> <span class="n">all_ends</span> <span class="k">else</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">GanttChartPayload</span><span class="p">(</span>
+        <span class="n">bars</span><span class="o">=</span><span class="n">bars</span><span class="p">,</span>
+        <span class="n">status_date</span><span class="o">=</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span>
+        <span class="n">chart_start</span><span class="o">=</span><span class="n">chart_start</span><span class="p">,</span>
+        <span class="n">chart_end</span><span class="o">=</span><span class="n">chart_end</span><span class="p">,</span>
+        <span class="n">total_nodes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">bars</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generate_jagged_drop_line">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.generate_jagged_drop_line">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_jagged_drop_line</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JaggedDropLinePayload</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate a jagged drop line payload from the current database state.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    JaggedDropLinePayload</span>
+<span class="sd">        Jagged drop line data for frontend rendering.</span>
+<span class="sd">    """</span>
+    <span class="n">wbs_nodes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">tree_type</span> <span class="o">==</span> <span class="n">TreeType</span><span class="o">.</span><span class="n">WBS</span><span class="p">,</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">status_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="n">points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DropLinePoint</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"ahead"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"on-track"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"behind"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"complete"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">ubn</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">wbs_nodes</span><span class="p">):</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">ubn</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pn</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Calculate variance</span>
+        <span class="n">days_until_planned</span> <span class="o">=</span> <span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">-</span> <span class="n">status_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+        <span class="n">pct</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">percent_complete</span> <span class="ow">or</span> <span class="mf">0.0</span>
+
+        <span class="k">if</span> <span class="n">pct</span> <span class="o">&gt;=</span> <span class="mf">100.0</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">"complete"</span>
+            <span class="n">variance</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">elif</span> <span class="n">days_until_planned</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">pct</span> <span class="o">&lt;</span> <span class="mf">100.0</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">"behind"</span>
+            <span class="n">variance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">days_until_planned</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">days_until_planned</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">"ahead"</span>
+            <span class="n">variance</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">days_until_planned</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="s2">"on-track"</span>
+            <span class="n">variance</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">counts</span><span class="p">[</span><span class="n">status</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">point</span> <span class="o">=</span> <span class="n">DropLinePoint</span><span class="p">(</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ubn</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">label</span><span class="o">=</span><span class="n">ubn</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">x</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">days_until_planned</span><span class="p">),</span>
+            <span class="n">y</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">idx</span><span class="p">),</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">variance_days</span><span class="o">=</span><span class="n">variance</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">JaggedDropLinePayload</span><span class="p">(</span>
+        <span class="n">status_date</span><span class="o">=</span><span class="n">status_date</span><span class="p">,</span>
+        <span class="n">points</span><span class="o">=</span><span class="n">points</span><span class="p">,</span>
+        <span class="n">ahead_count</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ahead"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">on_track_count</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"on-track"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">behind_count</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"behind"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">complete_count</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"complete"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">summary</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"total_nodes"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span>
+            <span class="s2">"health_index"</span><span class="p">:</span> <span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ahead"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"on-track"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="p">},</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generate_cockpit_payload">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.generate_cockpit_payload">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_cockpit_payload</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DailyCockpitSummaryPayload</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate a Daily Cockpit summary payload from the current database state.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DailyCockpitSummaryPayload</span>
+<span class="sd">        Complete cockpit data for frontend rendering.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Count active assignments</span>
+    <span class="n">active_assignments</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">AssignmentStatus</span><span class="o">.</span><span class="n">CONFIRMED</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">total_hours</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">ra</span><span class="o">.</span><span class="n">planned_hours</span> <span class="k">for</span> <span class="n">ra</span> <span class="ow">in</span> <span class="n">active_assignments</span><span class="p">)</span>
+    <span class="n">capacity</span> <span class="o">=</span> <span class="mf">40.0</span>
+    <span class="n">utilization</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_hours</span> <span class="o">/</span> <span class="n">capacity</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">if</span> <span class="n">capacity</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+    <span class="k">if</span> <span class="n">utilization</span> <span class="o">&gt;</span> <span class="mi">120</span><span class="p">:</span>
+        <span class="n">load_status</span> <span class="o">=</span> <span class="s2">"overloaded"</span>
+    <span class="k">elif</span> <span class="n">utilization</span> <span class="o">&gt;</span> <span class="mi">90</span><span class="p">:</span>
+        <span class="n">load_status</span> <span class="o">=</span> <span class="s2">"busy"</span>
+    <span class="k">elif</span> <span class="n">utilization</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+        <span class="n">load_status</span> <span class="o">=</span> <span class="s2">"optimal"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">load_status</span> <span class="o">=</span> <span class="s2">"underloaded"</span>
+
+    <span class="n">sprint_load</span> <span class="o">=</span> <span class="n">SprintLoadGauge</span><span class="p">(</span>
+        <span class="n">active_task_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">active_assignments</span><span class="p">),</span>
+        <span class="n">total_planned_hours</span><span class="o">=</span><span class="n">total_hours</span><span class="p">,</span>
+        <span class="n">capacity_hours</span><span class="o">=</span><span class="n">capacity</span><span class="p">,</span>
+        <span class="n">utilization_percent</span><span class="o">=</span><span class="n">utilization</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">load_status</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Blocked count</span>
+    <span class="n">blocked_count</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">NodeBlocker</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">NodeBlocker</span><span class="o">.</span><span class="n">resolved_at</span> <span class="o">==</span> <span class="kc">None</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+
+    <span class="c1"># Focus queue (tasks with 0% complete, ordered by planned start)</span>
+    <span class="n">wbs_tasks</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">tree_type</span> <span class="o">==</span> <span class="n">TreeType</span><span class="o">.</span><span class="n">WBS</span><span class="p">,</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">percent_complete</span> <span class="o">&lt;</span> <span class="mf">100.0</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">focus_queue</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">FocusQueueItem</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ubn</span> <span class="ow">in</span> <span class="n">wbs_tasks</span><span class="p">:</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">ubn</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pn</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">days_due</span> <span class="o">=</span> <span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">-</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">())</span><span class="o">.</span><span class="n">days</span> <span class="k">if</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">focus_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FocusQueueItem</span><span class="p">(</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ubn</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ubn</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">ubn</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">is_critical_path</span><span class="o">=</span><span class="n">days_due</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">days_due</span> <span class="o">&lt;</span> <span class="mi">7</span><span class="p">,</span>
+            <span class="n">due_date</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+            <span class="n">days_until_due</span><span class="o">=</span><span class="n">days_due</span><span class="p">,</span>
+            <span class="n">percent_complete</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">percent_complete</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="s2">"in_progress"</span> <span class="k">if</span> <span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">percent_complete</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">"not_started"</span><span class="p">,</span>
+            <span class="n">parent_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="c1"># Claimable tasks (assigned to generic placeholders)</span>
+    <span class="n">generic_assignments</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">ResourceNode</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ResourceNode</span><span class="o">.</span><span class="n">is_generic_placeholder</span> <span class="o">==</span> <span class="kc">True</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">claimable_queue</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ClaimableTaskItem</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ra</span> <span class="ow">in</span> <span class="n">generic_assignments</span><span class="p">:</span>
+        <span class="n">rn</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">ra</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="n">ubn</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">ra</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">ra</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">rn</span> <span class="ow">and</span> <span class="n">ubn</span> <span class="ow">and</span> <span class="n">pn</span><span class="p">:</span>
+            <span class="n">claimable_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ClaimableTaskItem</span><span class="p">(</span>
+                <span class="n">node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ubn</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ubn</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">ubn</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">placeholder_role</span><span class="o">=</span><span class="n">rn</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">"Generic Role"</span><span class="p">,</span>
+                <span class="n">required_clearance</span><span class="o">=</span><span class="n">ubn</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">ubn</span><span class="o">.</span><span class="n">security_classification</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">planned_hours</span><span class="o">=</span><span class="n">ra</span><span class="o">.</span><span class="n">planned_hours</span><span class="p">,</span>
+                <span class="n">due_date</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+            <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">DailyCockpitSummaryPayload</span><span class="p">(</span>
+        <span class="n">sprint_load</span><span class="o">=</span><span class="n">sprint_load</span><span class="p">,</span>
+        <span class="n">blocked_count</span><span class="o">=</span><span class="n">blocked_count</span><span class="p">,</span>
+        <span class="n">urgent_count</span><span class="o">=</span><span class="nb">len</span><span class="p">([</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">focus_queue</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">days_until_due</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">days_until_due</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">]),</span>
+        <span class="n">focus_queue</span><span class="o">=</span><span class="n">focus_queue</span><span class="p">,</span>
+        <span class="n">claimable_queue</span><span class="o">=</span><span class="n">claimable_queue</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generate_clash_payload">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.generate_clash_payload">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_clash_payload</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClashTriagePayload</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate a clash triage payload from the current database state.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ClashTriagePayload</span>
+<span class="sd">        Clash triage data for frontend rendering.</span>
+<span class="sd">    """</span>
+    <span class="n">clashes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ScheduleClashIssue</span><span class="o">.</span><span class="n">is_resolved</span> <span class="o">==</span> <span class="kc">False</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ClashTriageItemPayload</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"CRITICAL"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"MAJOR"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"ADVISORY"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">clash</span> <span class="ow">in</span> <span class="n">clashes</span><span class="p">:</span>
+        <span class="n">entity_name</span> <span class="o">=</span> <span class="s2">"Unknown"</span>
+        <span class="n">conflicting_name</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="n">clash</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">clash</span><span class="o">.</span><span class="n">portfolio_node_id</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">entity_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="k">if</span> <span class="n">clash</span><span class="o">.</span><span class="n">conflicting_node_id</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">clash</span><span class="o">.</span><span class="n">conflicting_node_id</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">node</span><span class="p">:</span>
+                <span class="n">conflicting_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="n">ClashTriageItemPayload</span><span class="p">(</span>
+            <span class="n">clash_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">clash</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">severity</span><span class="o">=</span><span class="n">clash</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="n">clash</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">clash</span><span class="o">.</span><span class="n">conflict_window_start</span><span class="p">,</span>
+            <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">clash</span><span class="o">.</span><span class="n">conflict_window_end</span><span class="p">,</span>
+            <span class="n">entity_name</span><span class="o">=</span><span class="n">entity_name</span><span class="p">,</span>
+            <span class="n">conflicting_entity_name</span><span class="o">=</span><span class="n">conflicting_name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">clash</span><span class="o">.</span><span class="n">description</span> <span class="ow">or</span> <span class="n">clash</span><span class="o">.</span><span class="n">title</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="n">recommended_action</span><span class="o">=</span><span class="n">clash</span><span class="o">.</span><span class="n">recommended_action</span><span class="p">,</span>
+            <span class="n">leveling_shift_preview</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">clash</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+                <span class="s2">"original_start"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">clash</span><span class="o">.</span><span class="n">conflict_window_start</span><span class="p">),</span>
+                <span class="s2">"proposed_start"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">_add_days</span><span class="p">(</span><span class="n">clash</span><span class="o">.</span><span class="n">conflict_window_start</span><span class="p">,</span> <span class="mi">15</span><span class="p">)),</span>
+                <span class="s2">"consumed_float_days"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+            <span class="p">}</span> <span class="k">if</span> <span class="n">clash</span><span class="o">.</span><span class="n">severity</span> <span class="o">==</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">is_resolved</span><span class="o">=</span><span class="n">clash</span><span class="o">.</span><span class="n">is_resolved</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">counts</span><span class="p">[</span><span class="n">clash</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">clash</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">ClashTriagePayload</span><span class="p">(</span>
+        <span class="n">clashes</span><span class="o">=</span><span class="n">items</span><span class="p">,</span>
+        <span class="n">critical_count</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"CRITICAL"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">major_count</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"MAJOR"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">advisory_count</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ADVISORY"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">last_sweep</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="k">if</span> <span class="n">clashes</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generate_display_settings">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.generate_display_settings">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_display_settings</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DisplaySettingsPayload</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate a default display settings payload.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DisplaySettingsPayload</span>
+<span class="sd">        Default SCIF-optimised display profile.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">DisplaySettingsPayload</span><span class="p">(</span>
+        <span class="n">profile_name</span><span class="o">=</span><span class="s2">"DEFAULT"</span><span class="p">,</span>
+        <span class="n">density</span><span class="o">=</span><span class="s2">"BALANCED"</span><span class="p">,</span>
+        <span class="n">scale_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">row_height_px</span><span class="o">=</span><span class="mi">36</span><span class="p">,</span>
+        <span class="n">theme</span><span class="o">=</span><span class="s2">"SCIF_DARK"</span><span class="p">,</span>
+        <span class="n">color_accessibility</span><span class="o">=</span><span class="s2">"STANDARD_RAG"</span><span class="p">,</span>
+        <span class="n">view_state_overrides</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"gantt_column_widths"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">"start"</span><span class="p">:</span> <span class="mi">120</span><span class="p">,</span> <span class="s2">"end"</span><span class="p">:</span> <span class="mi">120</span><span class="p">,</span> <span class="s2">"duration"</span><span class="p">:</span> <span class="mi">80</span><span class="p">},</span>
+            <span class="s2">"hidden_columns"</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">"split_pane_ratio"</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">is_active_default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># API Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="seed_sovereign_defence_full">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.seed_sovereign_defence_full">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">seed_sovereign_defence_full</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Seed the full sovereign defence scenario — Project Chimera.</span>
+
+<span class="sd">    This scenario creates a complete 5-tier WBS with 250+ nodes:</span>
+
+<span class="sd">    - **Tier 1**: Programme root (PROG-CHIMERA)</span>
+<span class="sd">    - **Tier 2**: Subsystems (AVIONICS_SUITE, PROPULSION_TELEMETRY, TEST_ENVELOPE,</span>
+<span class="sd">      STRUCTURAL_INTEGRITY, GROUND_SUPPORT_EQUIPMENT)</span>
+<span class="sd">    - **Tier 3**: Control Accounts (CAM J. Smith, CAM R. Patel, etc.)</span>
+<span class="sd">    - **Tier 4**: Work Packages with PDM logic links (FS/SS/FF/SF) and lead/lag</span>
+<span class="sd">    - **Tier 5**: Tasks, Milestones, and statutory CDRL deliverables</span>
+
+<span class="sd">    Additionally includes:</span>
+<span class="sd">    - Mixed security tiers (OFFICIAL … TOP_SECRET // UK EYES ONLY)</span>
+<span class="sd">    - Systems safety DAL accreditations (DAL_A on flight software, DAL_B on radar DSP)</span>
+<span class="sd">    - Environmental chamber bookings with 2-hour thermal cooldown buffers</span>
+<span class="sd">    - Test equipment with active/expiring calibration dates</span>
+<span class="sd">    - Non-linear cost profiles (Weibull, Beta) on research WPs</span>
+<span class="sd">    - Active CAM check-out leases (SubTreeLock)</span>
+<span class="sd">    - Delegation records</span>
+<span class="sd">    - Intentional DCMA schedule clashes (out-of-sequence, negative float)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Summary of seeded data.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Import here to avoid circular imports</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.cli.seed</span><span class="w"> </span><span class="kn">import</span> <span class="n">SovereignDefenceSeeder</span>
+
+    <span class="n">seeder</span> <span class="o">=</span> <span class="n">SovereignDefenceSeeder</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="n">seeder</span><span class="o">.</span><span class="n">seed</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">summary</span></div>
+
+
+
+<span class="n">SCENARIOS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"avionics-radar"</span><span class="p">:</span> <span class="n">seed_avionics_radar</span><span class="p">,</span>
+    <span class="s2">"minimal"</span><span class="p">:</span> <span class="n">seed_minimal</span><span class="p">,</span>
+    <span class="s2">"sovereign-defence-full"</span><span class="p">:</span> <span class="n">seed_sovereign_defence_full</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="load_fixture">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.load_fixture">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/fixtures/</span><span class="si">{scenario_name}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_fixture</span><span class="p">(</span>
+    <span class="n">scenario_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Load a reproducible test scenario into the database.</span>
+
+<span class="sd">    This endpoint clears the existing data and seeds the database with</span>
+<span class="sd">    a predefined scenario.  It is intended for **development use only**</span>
+<span class="sd">    to rapidly populate test data for UI integration testing.</span>
+
+<span class="sd">    Available scenarios:</span>
+
+<span class="sd">    - **avionics-radar**: Full avionics radar development programme</span>
+<span class="sd">      with 50 nodes, PDM links, 3-point estimates, and simulated clashes.</span>
+<span class="sd">    - **minimal**: Small 10-node scenario for quick smoke testing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scenario_name : str</span>
+<span class="sd">        Name of the scenario to load (e.g., 'avionics-radar', 'minimal').</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Summary of seeded data including node counts, dependency counts,</span>
+<span class="sd">        and generated HMI payloads.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the scenario name is not recognised.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">scenario_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SCENARIOS</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Unknown scenario '</span><span class="si">{</span><span class="n">scenario_name</span><span class="si">}</span><span class="s2">'. Available: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">SCENARIOS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Seed the scenario</span>
+    <span class="n">summary</span> <span class="o">=</span> <span class="n">SCENARIOS</span><span class="p">[</span><span class="n">scenario_name</span><span class="p">](</span><span class="n">db</span><span class="p">)</span>
+
+    <span class="c1"># Generate HMI payloads</span>
+    <span class="n">gantt</span> <span class="o">=</span> <span class="n">generate_gantt_payload</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+    <span class="n">drop_line</span> <span class="o">=</span> <span class="n">generate_jagged_drop_line</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+    <span class="n">cockpit</span> <span class="o">=</span> <span class="n">generate_cockpit_payload</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+    <span class="n">clashes</span> <span class="o">=</span> <span class="n">generate_clash_payload</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+    <span class="n">display</span> <span class="o">=</span> <span class="n">generate_display_settings</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"scenario"</span><span class="p">:</span> <span class="n">summary</span><span class="p">,</span>
+        <span class="s2">"hmi_payloads"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"gantt_chart"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"bar_count"</span><span class="p">:</span> <span class="n">gantt</span><span class="o">.</span><span class="n">total_nodes</span><span class="p">,</span>
+                <span class="s2">"status_date"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">gantt</span><span class="o">.</span><span class="n">status_date</span><span class="p">),</span>
+                <span class="s2">"chart_range"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">gantt</span><span class="o">.</span><span class="n">chart_start</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">gantt</span><span class="o">.</span><span class="n">chart_end</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"jagged_drop_line"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"point_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">drop_line</span><span class="o">.</span><span class="n">points</span><span class="p">),</span>
+                <span class="s2">"ahead"</span><span class="p">:</span> <span class="n">drop_line</span><span class="o">.</span><span class="n">ahead_count</span><span class="p">,</span>
+                <span class="s2">"on_track"</span><span class="p">:</span> <span class="n">drop_line</span><span class="o">.</span><span class="n">on_track_count</span><span class="p">,</span>
+                <span class="s2">"behind"</span><span class="p">:</span> <span class="n">drop_line</span><span class="o">.</span><span class="n">behind_count</span><span class="p">,</span>
+                <span class="s2">"complete"</span><span class="p">:</span> <span class="n">drop_line</span><span class="o">.</span><span class="n">complete_count</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">"daily_cockpit"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"sprint_load"</span><span class="p">:</span> <span class="n">cockpit</span><span class="o">.</span><span class="n">sprint_load</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                <span class="s2">"blocked"</span><span class="p">:</span> <span class="n">cockpit</span><span class="o">.</span><span class="n">blocked_count</span><span class="p">,</span>
+                <span class="s2">"urgent"</span><span class="p">:</span> <span class="n">cockpit</span><span class="o">.</span><span class="n">urgent_count</span><span class="p">,</span>
+                <span class="s2">"focus_queue_size"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">cockpit</span><span class="o">.</span><span class="n">focus_queue</span><span class="p">),</span>
+                <span class="s2">"claimable_queue_size"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">cockpit</span><span class="o">.</span><span class="n">claimable_queue</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">"clash_triage"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"critical"</span><span class="p">:</span> <span class="n">clashes</span><span class="o">.</span><span class="n">critical_count</span><span class="p">,</span>
+                <span class="s2">"major"</span><span class="p">:</span> <span class="n">clashes</span><span class="o">.</span><span class="n">major_count</span><span class="p">,</span>
+                <span class="s2">"advisory"</span><span class="p">:</span> <span class="n">clashes</span><span class="o">.</span><span class="n">advisory_count</span><span class="p">,</span>
+                <span class="s2">"total_active"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">clashes</span><span class="o">.</span><span class="n">clashes</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="s2">"display_settings"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"profile"</span><span class="p">:</span> <span class="n">display</span><span class="o">.</span><span class="n">profile_name</span><span class="p">,</span>
+                <span class="s2">"density"</span><span class="p">:</span> <span class="n">display</span><span class="o">.</span><span class="n">density</span><span class="p">,</span>
+                <span class="s2">"theme"</span><span class="p">:</span> <span class="n">display</span><span class="o">.</span><span class="n">theme</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="list_scenarios">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.list_scenarios">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/fixtures/list"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_scenarios</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""List available test scenarios.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary mapping scenario names to descriptions.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"scenarios"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"avionics-radar"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Avionics radar development programme with 50 nodes, PDM links, 3-point estimates, and simulated clashes."</span><span class="p">,</span>
+                <span class="s2">"node_count"</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+                <span class="s2">"includes"</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">"WBS hierarchy (5 levels)"</span><span class="p">,</span>
+                    <span class="s2">"PDM dependency links (FS/SS/FF/SF)"</span><span class="p">,</span>
+                    <span class="s2">"3-point Monte Carlo estimates"</span><span class="p">,</span>
+                    <span class="s2">"Resource assignments"</span><span class="p">,</span>
+                    <span class="s2">"Simulated clashes (3 types)"</span><span class="p">,</span>
+                    <span class="s2">"Blockers"</span><span class="p">,</span>
+                    <span class="s2">"Baseline comparisons"</span><span class="p">,</span>
+                <span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">"minimal"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Small 10-node scenario for quick smoke testing of Gantt chart and cockpit views."</span><span class="p">,</span>
+                <span class="s2">"node_count"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+                <span class="s2">"includes"</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">"Simple 3-level WBS"</span><span class="p">,</span>
+                    <span class="s2">"Sequential dependencies"</span><span class="p">,</span>
+                    <span class="s2">"Single resource assignment"</span><span class="p">,</span>
+                <span class="p">],</span>
+            <span class="p">},</span>
+            <span class="s2">"sovereign-defence-full"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Project Chimera — Next-Gen Avionics: 5-tier WBS with 250+ nodes, multi-domain capabilities, and DCMA clashes."</span><span class="p">,</span>
+                <span class="s2">"node_count"</span><span class="p">:</span> <span class="mi">250</span><span class="p">,</span>
+                <span class="s2">"includes"</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">"5-tier WBS (Programme → Subsystem → CA → WP → Task/Milestone)"</span><span class="p">,</span>
+                    <span class="s2">"Mixed security tiers (OFFICIAL to TOP_SECRET // UK EYES ONLY)"</span><span class="p">,</span>
+                    <span class="s2">"DAL safety accreditations (DAL_A, DAL_B)"</span><span class="p">,</span>
+                    <span class="s2">"Environmental chamber bookings with 2hr cooldown buffers"</span><span class="p">,</span>
+                    <span class="s2">"Test equipment with calibration dates"</span><span class="p">,</span>
+                    <span class="s2">"Non-linear cost profiles (Weibull, Beta)"</span><span class="p">,</span>
+                    <span class="s2">"CAM check-out leases (SubTreeLock)"</span><span class="p">,</span>
+                    <span class="s2">"Delegation records"</span><span class="p">,</span>
+                    <span class="s2">"DCMA schedule clashes (out-of-sequence, negative float)"</span><span class="p">,</span>
+                    <span class="s2">"PDM dependency links (FS/SS/FF/SF with lead/lag)"</span><span class="p">,</span>
+                    <span class="s2">"Statutory CDRL deliverables"</span><span class="p">,</span>
+                    <span class="s2">"3-point Monte Carlo estimates"</span><span class="p">,</span>
+                <span class="p">],</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="get_mock_gantt">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.get_mock_gantt">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hmi/gantt"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_mock_gantt</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a mock Gantt chart payload for UI testing.</span>
+
+<span class="sd">    Generates Gantt bar data from the current database state,</span>
+<span class="sd">    including baseline comparisons and blocker indicators.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    GanttChartPayload</span>
+<span class="sd">        Complete Gantt chart data.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">generate_gantt_payload</span><span class="p">(</span><span class="n">db</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_mock_drop_line">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.get_mock_drop_line">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hmi/drop-line"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_mock_drop_line</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a mock jagged drop line payload for UI testing.</span>
+
+<span class="sd">    Generates drop line coordinate points from the current database</span>
+<span class="sd">    state, showing ahead/behind/on-track status for each work package.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    JaggedDropLinePayload</span>
+<span class="sd">        Jagged drop line data.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">generate_jagged_drop_line</span><span class="p">(</span><span class="n">db</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_mock_cockpit">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.get_mock_cockpit">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hmi/cockpit"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_mock_cockpit</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a mock Daily Cockpit summary payload for UI testing.</span>
+
+<span class="sd">    Generates cockpit data from the current database state,</span>
+<span class="sd">    including sprint load, focus queue, and claimable tasks.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DailyCockpitSummaryPayload</span>
+<span class="sd">        Complete cockpit summary.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">generate_cockpit_payload</span><span class="p">(</span><span class="n">db</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_mock_clashes">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.get_mock_clashes">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hmi/clashes"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_mock_clashes</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a mock clash triage payload for UI testing.</span>
+
+<span class="sd">    Generates clash triage data from the current database state,</span>
+<span class="sd">    including severity badges and proposed leveling shifts.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ClashTriagePayload</span>
+<span class="sd">        Clash triage dashboard data.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">generate_clash_payload</span><span class="p">(</span><span class="n">db</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_mock_display_settings">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.get_mock_display_settings">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hmi/display-settings"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_mock_display_settings</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Return a mock display settings payload for UI testing.</span>
+
+<span class="sd">    Returns a default SCIF-optimised display profile with</span>
+<span class="sd">    balanced density, dark theme, and standard colour palette.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DisplaySettingsPayload</span>
+<span class="sd">        Default display settings.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">generate_display_settings</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="get_hmi_manifest">
+<a class="viewcode-back" href="../../../modules.html#app.routers.mock_fixtures.get_hmi_manifest">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hmi/manifest"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_hmi_manifest</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">"""Return the HMI Component Catalog JSON Schema manifest.</span>
+
+<span class="sd">    This endpoint provides a machine-readable inventory of all</span>
+<span class="sd">    HMI component payloads, enabling the frontend build system</span>
+<span class="sd">    to validate API contracts and generate TypeScript types.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        The complete JSON schema for all HMI payload types.</span>
+<span class="sd">    """</span>
+    <span class="n">manifest</span> <span class="o">=</span> <span class="n">HMICatalogManifest</span><span class="p">()</span>
+
+    <span class="c1"># Include full JSON schemas for each component</span>
+    <span class="n">schemas</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"GanttBarPayload"</span><span class="p">:</span> <span class="n">GanttBarPayload</span><span class="o">.</span><span class="n">model_json_schema</span><span class="p">(),</span>
+        <span class="s2">"GanttChartPayload"</span><span class="p">:</span> <span class="n">GanttChartPayload</span><span class="o">.</span><span class="n">model_json_schema</span><span class="p">(),</span>
+        <span class="s2">"JaggedDropLinePayload"</span><span class="p">:</span> <span class="n">JaggedDropLinePayload</span><span class="o">.</span><span class="n">model_json_schema</span><span class="p">(),</span>
+        <span class="s2">"DailyCockpitSummaryPayload"</span><span class="p">:</span> <span class="n">DailyCockpitSummaryPayload</span><span class="o">.</span><span class="n">model_json_schema</span><span class="p">(),</span>
+        <span class="s2">"ClashTriageItemPayload"</span><span class="p">:</span> <span class="n">ClashTriageItemPayload</span><span class="o">.</span><span class="n">model_json_schema</span><span class="p">(),</span>
+        <span class="s2">"ClashTriagePayload"</span><span class="p">:</span> <span class="n">ClashTriagePayload</span><span class="o">.</span><span class="n">model_json_schema</span><span class="p">(),</span>
+        <span class="s2">"DisplaySettingsPayload"</span><span class="p">:</span> <span class="n">DisplaySettingsPayload</span><span class="o">.</span><span class="n">model_json_schema</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"manifest"</span><span class="p">:</span> <span class="n">manifest</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span>
+        <span class="s2">"schemas"</span><span class="p">:</span> <span class="n">schemas</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

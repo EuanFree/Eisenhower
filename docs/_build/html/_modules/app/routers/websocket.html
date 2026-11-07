@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.websocket &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.websocket</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.websocket</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""WebSocket endpoint for real-time project collaboration.</span>
+
+<span class="sd">This module provides the WebSocket endpoint that clients connect to for</span>
+<span class="sd">real-time presence tracking and cache invalidation.</span>
+
+<span class="sd">Endpoint</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">``GET /ws/projects/{project_id}``</span>
+
+<span class="sd">The client connects using a WebSocket URL with a JWT token in the query</span>
+<span class="sd">string.  In production, use **WSS** (secure WebSocket) instead of WS:</span>
+
+<span class="sd">.. code-block:: text</span>
+
+<span class="sd">    wss://localhost:8080/ws/projects/{project_id}?token={jwt_token}</span>
+
+<span class="sd">Authentication</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">The JWT token is extracted from the ``token`` query parameter and validated</span>
+<span class="sd">using the same ``decode_access_token`` function used by HTTP endpoints.</span>
+<span class="sd">If the token is invalid or expired, the connection is closed with code</span>
+<span class="sd">1008 (Policy Violation).</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">- **WSS (Secure WebSocket)** — In production, all WebSocket connections</span>
+<span class="sd">  must use WSS (WebSocket over TLS).  The Nginx reverse proxy handles</span>
+<span class="sd">  TLS termination and forwards the connection to the backend.</span>
+<span class="sd">- **JWT Authentication** — Every WebSocket connection requires a valid</span>
+<span class="sd">  JWT token.  Tokens are validated on connection establishment.</span>
+<span class="sd">- **Rate Limiting** — WebSocket connections are rate-limited to 5/second</span>
+<span class="sd">  per client IP via Nginx.</span>
+
+<span class="sd">Message Protocol</span>
+<span class="sd">~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Once connected, the client subscribes to the project channel by sending</span>
+<span class="sd">a ``SUBSCRIBE`` message.  The server then sends a ``WELCOME`` message</span>
+<span class="sd">containing the current presence state of all other users in the project.</span>
+
+<span class="sd">The client should send ``HEARTBEAT`` messages every 15 seconds to maintain</span>
+<span class="sd">the connection and update its focus state.  If no heartbeat is received</span>
+<span class="sd">within 30 seconds, the connection is considered stale.</span>
+
+<span class="sd">Example Client Flow</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">1. Connect: ``new WebSocket('/ws/projects/{id}?token={token}')``</span>
+<span class="sd">2. Subscribe: ``ws.send(JSON.stringify({type: 'SUBSCRIBE', project_id: id}))``</span>
+<span class="sd">3. Receive ``WELCOME`` with current presence state.</span>
+<span class="sd">4. Send ``HEARTBEAT`` every 15 seconds with current focus state.</span>
+<span class="sd">5. Handle incoming events (``NODE_MUTATED``, ``USER_FOCUS_CHANGED``, etc.).</span>
+<span class="sd">6. On disconnect, send ``UNSUBSCRIBE`` or let the server detect stale state.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">WebSocket</span><span class="p">,</span> <span class="n">WebSocketDisconnect</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.security</span><span class="w"> </span><span class="kn">import</span> <span class="n">decode_access_token</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.ws_presence</span><span class="w"> </span><span class="kn">import</span> <span class="n">manager</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span>
+    <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"WebSocket"</span><span class="p">],</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="project_websocket">
+<a class="viewcode-back" href="../../../modules.html#app.routers.websocket.project_websocket">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">websocket</span><span class="p">(</span><span class="s2">"/ws/projects/</span><span class="si">{project_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">project_websocket</span><span class="p">(</span>
+    <span class="n">websocket</span><span class="p">:</span> <span class="n">WebSocket</span><span class="p">,</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">token</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"JWT access token"</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""WebSocket endpoint for real-time project collaboration.</span>
+
+<span class="sd">    When a client connects, the JWT token is validated and the user is</span>
+<span class="sd">    registered in the connection manager.  The client then subscribes</span>
+<span class="sd">    to the project channel and receives real-time events:</span>
+
+<span class="sd">    - **USER_FOCUS_CHANGED** — A colleague's focus position updated.</span>
+<span class="sd">    - **NODE_MUTATED** — A node was modified; update the local cache.</span>
+<span class="sd">    - **NODE_CREATED** — A new node was added to the tree.</span>
+<span class="sd">    - **NODE_DELETED** — A node was removed from the tree.</span>
+<span class="sd">    - **BLOCKER_CREATED** — A new blocker was logged.</span>
+<span class="sd">    - **BLOCKER_RESOLVED** — A blocker was resolved.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    websocket : WebSocket</span>
+<span class="sd">        The incoming WebSocket connection.</span>
+<span class="sd">    project_id : str</span>
+<span class="sd">        The UUID of the project the client wants to collaborate on.</span>
+<span class="sd">    token : str or None</span>
+<span class="sd">        JWT access token passed in the query string.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    WebSocketDisconnect</span>
+<span class="sd">        If the token is invalid or the user is not found, the connection</span>
+<span class="sd">        is closed with code 1008 (Policy Violation).</span>
+<span class="sd">    """</span>
+    <span class="c1"># Authenticate the user via JWT token</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">token</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">code</span><span class="o">=</span><span class="mi">1008</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"Missing authentication token"</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="n">decode_access_token</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+        <span class="n">user_upn</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"sub"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user_upn</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">code</span><span class="o">=</span><span class="mi">1008</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"Invalid token payload"</span><span class="p">)</span>
+            <span class="k">return</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"WebSocket auth failed: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">code</span><span class="o">=</span><span class="mi">1008</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"Invalid or expired token"</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Accept the WebSocket connection</span>
+    <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+
+    <span class="c1"># Look up the user in the database</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">get_db</span><span class="p">())</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">user_upn</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="p">:</span>
+            <span class="c1"># Also try username</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">username</span> <span class="o">==</span> <span class="n">user_upn</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">close</span><span class="p">(</span>
+                <span class="n">code</span><span class="o">=</span><span class="mi">1008</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"User not found for token"</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="n">user_id</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">user_upn</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="ow">or</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="c1"># Register the connection with the manager</span>
+    <span class="n">connection</span> <span class="o">=</span> <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">websocket</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">user_upn</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"WebSocket accepted: user=</span><span class="si">%s</span><span class="s2">, project=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">user_upn</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="c1"># Receive raw text message from the client</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="k">await</span> <span class="n">websocket</span><span class="o">.</span><span class="n">receive_text</span><span class="p">()</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">message</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">"Invalid JSON from user_id=</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">user_id</span><span class="p">,</span> <span class="n">data</span><span class="p">[:</span><span class="mi">100</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Handle SUBSCRIBE on first message if not already subscribed</span>
+            <span class="n">msg_type</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="s2">"SUBSCRIBE"</span><span class="p">:</span>
+                <span class="n">sub_project_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_id"</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">sub_project_id</span> <span class="ow">and</span> <span class="n">sub_project_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">connection</span><span class="o">.</span><span class="n">project_ids</span><span class="p">:</span>
+                    <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">sub_project_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Route the message through the connection manager</span>
+                <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">handle_message</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="n">WebSocketDisconnect</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"WebSocket disconnected: user=</span><span class="si">%s</span><span class="s2">, project=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">user_upn</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s2">"WebSocket error for user=</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">user_upn</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span>
+            <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># Clean up the connection on disconnect</span>
+        <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">disconnect</span><span class="p">(</span><span class="n">connection</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

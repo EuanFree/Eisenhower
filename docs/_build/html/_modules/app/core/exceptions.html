@@ -1,0 +1,685 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.core.exceptions &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.core.exceptions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.core.exceptions</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Optimistic concurrency control, sub-tree locking, and conflict handling.</span>
+
+<span class="sd">This module provides the custom exception types and FastAPI exception handlers</span>
+<span class="sd">that detect, report, and manage mid-air collisions when multiple users edit</span>
+<span class="sd">the same database rows concurrently. It also blocks mutations while</span>
+<span class="sd">long-running schedule operations (such as CPM recalculation or resource</span>
+<span class="sd">leveling) are in progress on a sub-tree.</span>
+
+<span class="sd">The module addresses two distinct concurrency problems:</span>
+
+<span class="sd">1. **Optimistic Concurrency Conflicts** — When two users independently load</span>
+<span class="sd">   the same entity, make changes, and attempt to save, the second save will</span>
+<span class="sd">   fail because the entity's version has changed. This is detected via</span>
+<span class="sd">   SQLAlchemy's mapper versioning and handled by translating the</span>
+<span class="sd">   ``StaleDataError`` into a structured HTTP 409 Conflict response.</span>
+
+<span class="sd">2. **Sub-Tree Locking** — When a long-running operation (CPM recalculation,</span>
+<span class="sd">   resource leveling, baseline freeze, airgap import) begins, it acquires</span>
+<span class="sd">   a database-level lock on the affected ltree sub-tree. Any concurrent</span>
+<span class="sd">   mutation request targeting a node within the locked sub-tree is blocked</span>
+<span class="sd">   with an HTTP 423 Locked response.</span>
+
+<span class="sd">Optimistic Concurrency Control</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">SQLAlchemy's mapper versioning is configured via the ``version_id_col``</span>
+<span class="sd">parameter on models such as :class:`UniversalBreakdownNode`,</span>
+<span class="sd">:class:`DependencyLink`, and :class:`ResourceAssignment`. This mechanism</span>
+<span class="sd">works as follows:</span>
+
+<span class="sd">1. When an entity is loaded, SQLAlchemy records its current ``version_id``.</span>
+<span class="sd">2. On ``commit()``, SQLAlchemy includes ``WHERE version_id = &lt;old_version&gt;``</span>
+<span class="sd">   in the UPDATE statement.</span>
+<span class="sd">3. If another session has already incremented the version, the UPDATE affects</span>
+<span class="sd">   zero rows, and SQLAlchemy raises ``StaleDataError``.</span>
+<span class="sd">4. The :func:`stale_data_exception_handler` catches this error and returns</span>
+<span class="sd">   a structured HTTP 409 response with conflict details.</span>
+
+<span class="sd">The frontend uses this structured response to display a conflict resolution</span>
+<span class="sd">dialog that offers the user three strategies:</span>
+
+<span class="sd">1. **Overwrite (Force Take)** — Re-submit the changes using the latest</span>
+<span class="sd">   ``version_id``, effectively overwriting the other user's changes.</span>
+<span class="sd">2. **Discard &amp; Reload** — Abandon local changes and reload the current</span>
+<span class="sd">   database state.</span>
+<span class="sd">3. **Keep Both / Fork** — Create a parallel branch or sandbox to preserve</span>
+<span class="sd">   both sets of changes for later reconciliation.</span>
+
+<span class="sd">Sub-Tree Locking Protocol</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">When a long-running operation begins, it acquires a lock on the affected</span>
+<span class="sd">ltree sub-tree. The lock includes:</span>
+
+<span class="sd">- **Operation type** — Identifies the blocking operation (e.g.,</span>
+<span class="sd">  ``CPM_RECALCULATION``, ``RESOURCE_LEVELING``, ``BASELINE_FREEZE``).</span>
+<span class="sd">- **Lock owner** — User principal name of the user who initiated the operation.</span>
+<span class="sd">- **Time-to-live (TTL)** — Estimated seconds remaining before the lock</span>
+<span class="sd">  expires, providing a safety cutoff to prevent indefinite locks.</span>
+<span class="sd">- **Locked path** — The ltree path of the root node being locked.</span>
+
+<span class="sd">If another request tries to mutate a node within the locked sub-tree,</span>
+<span class="sd">:class:`LockedException` (HTTP 423) is raised with full details about</span>
+<span class="sd">the blocking operation, allowing the frontend to inform the user and</span>
+<span class="sd">provide a retry mechanism.</span>
+
+<span class="sd">See :class:`LockedException` and ``app/services/lock_manager.py`` for</span>
+<span class="sd">the complete locking protocol implementation.</span>
+
+<span class="sd">Exception Hierarchy</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- :class:`ConflictException` (HTTP 409) — Concurrent modification conflict.</span>
+<span class="sd">- :class:`LockedException` (HTTP 423) — Sub-tree locked by long-running operation.</span>
+
+<span class="sd">Exception Handlers</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- :func:`stale_data_exception_handler` — Translates SQLAlchemy's</span>
+<span class="sd">  ``StaleDataError`` into HTTP 409 responses.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">Register the exception handler in your FastAPI app:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    from fastapi import FastAPI</span>
+<span class="sd">    from sqlalchemy.orm.exc import StaleDataError</span>
+<span class="sd">    from app.core.exceptions import stale_data_exception_handler</span>
+
+<span class="sd">    app = FastAPI()</span>
+<span class="sd">    app.add_exception_handler(StaleDataError, stale_data_exception_handler)</span>
+
+<span class="sd">Then raise exceptions as needed:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    from app.core.exceptions import ConflictException, LockedException</span>
+
+<span class="sd">    # On concurrent modification</span>
+<span class="sd">    raise ConflictException(</span>
+<span class="sd">        entity_id=str(node.id),</span>
+<span class="sd">        expected_version=old_version,</span>
+<span class="sd">        current_database_version=new_version,</span>
+<span class="sd">        conflicting_user_upn="user@example.com",</span>
+<span class="sd">    )</span>
+
+<span class="sd">    # On locked sub-tree</span>
+<span class="sd">    raise LockedException(</span>
+<span class="sd">        operation_type="CPM_RECALCULATION",</span>
+<span class="sd">        locked_by_user="user@example.com",</span>
+<span class="sd">        remaining_seconds=45,</span>
+<span class="sd">        locked_path="1.2.3",</span>
+<span class="sd">    )</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Request</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm.exc</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaleDataError</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ConflictException">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.ConflictException">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConflictException</span><span class="p">(</span><span class="n">HTTPException</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Exception raised when a concurrent modification conflict is detected.</span>
+
+<span class="sd">    This exception is triggered when two or more users attempt to modify</span>
+<span class="sd">    the same database entity simultaneously. It extends FastAPI's</span>
+<span class="sd">    ``HTTPException`` with a structured JSON payload that provides the</span>
+<span class="sd">    frontend with all the information needed to display a conflict</span>
+<span class="sd">    resolution dialog.</span>
+
+<span class="sd">    The exception uses HTTP status code 409 (Conflict), which allows HTTP</span>
+<span class="sd">    clients and intermediaries to distinguish it from other error types</span>
+<span class="sd">    such as 400 (Bad Request) or 500 (Internal Server Error).</span>
+
+<span class="sd">    The structured payload includes:</span>
+
+<span class="sd">    - **entity_id**: The UUID of the entity that was modified concurrently.</span>
+<span class="sd">    - **expected_version**: The version number the client expected based on</span>
+<span class="sd">      its local copy.</span>
+<span class="sd">    - **current_database_version**: The version number currently stored in</span>
+<span class="sd">      the database (higher than expected).</span>
+<span class="sd">    - **conflicting_user_upn**: The user principal name (UPN) of the user</span>
+<span class="sd">      who made the conflicting change, if available from the audit log.</span>
+<span class="sd">    - **current_state**: A snapshot of the current database state for the</span>
+<span class="sd">      entity, enabling the frontend to show a side-by-side diff.</span>
+<span class="sd">    - **message**: A human-readable error message for display to the user.</span>
+
+<span class="sd">    Frontend Integration</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    The frontend catches this exception and displays a</span>
+<span class="sd">    ``ConflictResolutionModal`` that offers three resolution strategies:</span>
+
+<span class="sd">    1. **Overwrite (Force Take)** — Re-submit the user's changes using the</span>
+<span class="sd">       latest ``version_id``, effectively overwriting the other user's</span>
+<span class="sd">       changes. This should be used with caution.</span>
+<span class="sd">    2. **Discard &amp; Reload** — Abandon the user's local changes and reload</span>
+<span class="sd">       the current database state. This is the safest option.</span>
+<span class="sd">    3. **Keep Both / Fork** — Create a parallel branch or sandbox to</span>
+<span class="sd">       preserve both sets of changes for later manual reconciliation.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        entity_id: The UUID of the entity that was concurrently modified.</span>
+<span class="sd">            This is used by the frontend to identify which entity has the</span>
+<span class="sd">            conflict and to fetch the latest state for comparison.</span>
+<span class="sd">        expected_version: The ``version_id`` the client expected based on</span>
+<span class="sd">            its local copy of the entity. This is the version number that</span>
+<span class="sd">            was loaded when the user started editing.</span>
+<span class="sd">        current_database_version: The ``version_id`` currently stored in</span>
+<span class="sd">            the database. This is always higher than ``expected_version``</span>
+<span class="sd">            when a conflict occurs.</span>
+<span class="sd">        conflicting_user_upn: The user principal name (UPN) of the user</span>
+<span class="sd">            who made the conflicting change. If the audit log does not</span>
+<span class="sd">            contain this information, it defaults to ``"unknown"``.</span>
+<span class="sd">        current_state: A dictionary containing a snapshot of the current</span>
+<span class="sd">            database state for the entity. This allows the frontend to</span>
+<span class="sd">            display a side-by-side diff between the user's local changes</span>
+<span class="sd">            and the current database state.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from app.core.exceptions import ConflictException</span>
+
+<span class="sd">            raise ConflictException(</span>
+<span class="sd">                entity_id="550e8400-e29b-41d4-a716-446655440000",</span>
+<span class="sd">                expected_version=3,</span>
+<span class="sd">                current_database_version=5,</span>
+<span class="sd">                conflicting_user_upn="john.doe@example.com",</span>
+<span class="sd">                current_state={"name": "Updated Name", "status": "active"},</span>
+<span class="sd">            )</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="ConflictException.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.ConflictException.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">expected_version</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">current_database_version</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">conflicting_user_upn</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"unknown"</span><span class="p">,</span>
+        <span class="n">current_state</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialise a concurrent modification conflict exception.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            entity_id: The UUID of the entity that was concurrently modified.</span>
+<span class="sd">                This identifies which database row has the version conflict.</span>
+<span class="sd">            expected_version: The ``version_id`` the client expected based on</span>
+<span class="sd">                its local copy. This is the version number that was loaded</span>
+<span class="sd">                when the user started editing.</span>
+<span class="sd">            current_database_version: The ``version_id`` currently stored in</span>
+<span class="sd">                the database. This will be higher than ``expected_version``</span>
+<span class="sd">                when a conflict is detected.</span>
+<span class="sd">            conflicting_user_upn: The user principal name (UPN) of the user</span>
+<span class="sd">                who made the conflicting change. Defaults to ``"unknown"``</span>
+<span class="sd">                if the audit log does not provide this information.</span>
+<span class="sd">            current_state: A dictionary containing a snapshot of the current</span>
+<span class="sd">                database state for the entity. Defaults to an empty dictionary</span>
+<span class="sd">                if not provided. Used by the frontend for side-by-side diff.</span>
+<span class="sd">        """</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"error_code"</span><span class="p">:</span> <span class="s2">"CONCURRENT_MODIFICATION_CONFLICT"</span><span class="p">,</span>
+            <span class="s2">"entity_id"</span><span class="p">:</span> <span class="n">entity_id</span><span class="p">,</span>
+            <span class="s2">"expected_version"</span><span class="p">:</span> <span class="n">expected_version</span><span class="p">,</span>
+            <span class="s2">"current_database_version"</span><span class="p">:</span> <span class="n">current_database_version</span><span class="p">,</span>
+            <span class="s2">"conflicting_user_upn"</span><span class="p">:</span> <span class="n">conflicting_user_upn</span><span class="p">,</span>
+            <span class="s2">"current_state"</span><span class="p">:</span> <span class="n">current_state</span> <span class="ow">or</span> <span class="p">{},</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"This record was modified by another user "</span>
+                <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">conflicting_user_upn</span><span class="si">}</span><span class="s2">) while you were editing."</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="n">detail</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="stale_data_exception_handler">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.stale_data_exception_handler">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">stale_data_exception_handler</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
+    <span class="n">exc</span><span class="p">:</span> <span class="n">StaleDataError</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JSONResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""FastAPI exception handler that translates SQLAlchemy StaleDataError into HTTP 409.</span>
+
+<span class="sd">    When SQLAlchemy's mapper versioning detects that a row's ``version_id`` has</span>
+<span class="sd">    changed since it was loaded into the current session, it raises</span>
+<span class="sd">    ``StaleDataError`` on ``commit()``. This async exception handler intercepts</span>
+<span class="sd">    that error and converts it into a structured HTTP 409 (Conflict) JSON</span>
+<span class="sd">    response that the frontend can use to display a conflict resolution dialog.</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. Log the conflict at WARNING level with full exception details for</span>
+<span class="sd">       debugging and audit purposes.</span>
+<span class="sd">    2. Extract the entity ID from the request URL path by scanning for a</span>
+<span class="sd">       UUID pattern (36 characters with 4 hyphens).</span>
+<span class="sd">    3. Construct a structured JSON response with:</span>
+
+<span class="sd">       - ``error_code``: Fixed string ``"CONCURRENT_MODIFICATION_CONFLICT"``</span>
+<span class="sd">         for frontend error handling.</span>
+<span class="sd">       - ``entity_id``: The UUID extracted from the URL path, or ``"unknown"``</span>
+<span class="sd">         if not found.</span>
+<span class="sd">       - ``expected_version`` / ``current_database_version``: Set to ``None``</span>
+<span class="sd">         as these are not directly available from the StaleDataError exception.</span>
+<span class="sd">       - ``conflicting_user_upn``: Set to ``"unknown"`` as the user information</span>
+<span class="sd">         is not available at this level.</span>
+<span class="sd">       - ``current_state``: Empty dictionary as the current state is not</span>
+<span class="sd">         available at this level.</span>
+<span class="sd">       - ``message``: Human-readable error message for the user.</span>
+<span class="sd">    4. Return the JSON response with HTTP 409 status code.</span>
+
+<span class="sd">    Limitations</span>
+<span class="sd">    ~~~~~~~~~~~</span>
+
+<span class="sd">    This handler cannot extract the exact version numbers or the conflicting</span>
+<span class="sd">    user's identity from the ``StaleDataError`` exception alone. These fields</span>
+<span class="sd">    are set to ``None`` / ``"unknown"``. For more detailed conflict information,</span>
+<span class="sd">    use :class:`ConflictException` directly in your code where you have access</span>
+<span class="sd">    to the version and user context.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        request: The incoming FastAPI :class:`Request` object. This provides</span>
+<span class="sd">            access to the request URL, from which the entity ID is extracted.</span>
+<span class="sd">            The URL path is expected to contain the entity UUID (e.g.,</span>
+<span class="sd">            ``/api/nodes/550e8400-e29b-41d4-a716-446655440000``).</span>
+<span class="sd">        exc: The SQLAlchemy :class:`StaleDataError` exception instance that</span>
+<span class="sd">            was raised during the database commit. This indicates that the</span>
+<span class="sd">            row's version has changed since it was loaded.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A :class:`JSONResponse` object with HTTP status code 409 (Conflict)</span>
+<span class="sd">        and a structured JSON body containing conflict details. The frontend</span>
+<span class="sd">        uses this response to display the conflict resolution modal.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        Registering the handler in your FastAPI app:</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from fastapi import FastAPI</span>
+<span class="sd">            from sqlalchemy.orm.exc import StaleDataError</span>
+<span class="sd">            from app.core.exceptions import stale_data_exception_handler</span>
+
+<span class="sd">            app = FastAPI()</span>
+<span class="sd">            app.add_exception_handler(StaleDataError, stale_data_exception_handler)</span>
+<span class="sd">    """</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+        <span class="s2">"Concurrent modification conflict detected: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+        <span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+        <span class="n">exc_info</span><span class="o">=</span><span class="n">exc</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Try to extract entity info from the request path</span>
+    <span class="c1"># The path typically contains the entity UUID</span>
+    <span class="n">path_parts</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="n">entity_id</span> <span class="o">=</span> <span class="s2">"unknown"</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">path_parts</span><span class="p">:</span>
+        <span class="c1"># UUIDs in paths look like: 550e8400-e29b-41d4-a716-446655440000</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="o">==</span> <span class="mi">36</span> <span class="ow">and</span> <span class="n">part</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">entity_id</span> <span class="o">=</span> <span class="n">part</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">JSONResponse</span><span class="p">(</span>
+        <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+        <span class="n">content</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"error_code"</span><span class="p">:</span> <span class="s2">"CONCURRENT_MODIFICATION_CONFLICT"</span><span class="p">,</span>
+            <span class="s2">"entity_id"</span><span class="p">:</span> <span class="n">entity_id</span><span class="p">,</span>
+            <span class="s2">"expected_version"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"current_database_version"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"conflicting_user_upn"</span><span class="p">:</span> <span class="s2">"unknown"</span><span class="p">,</span>
+            <span class="s2">"current_state"</span><span class="p">:</span> <span class="p">{},</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">"This record was modified by another user while you were "</span>
+                <span class="s2">"editing. Please reload and re-apply your changes."</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SubTreeLockedException">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.SubTreeLockedException">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SubTreeLockedException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raised when a mutation targets a node locked under a CAM checkout lease.</span>
+
+<span class="sd">    This exception is used by the MCP error recovery envelope to signal</span>
+<span class="sd">    that a sub-tree is locked and the agent should not retry the mutation.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        locked_path: The ltree path of the locked sub-tree root.</span>
+<span class="sd">        locked_by_user: The user principal who holds the lease.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="SubTreeLockedException.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.SubTreeLockedException.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">locked_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">locked_by_user</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locked_path</span> <span class="o">=</span> <span class="n">locked_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">locked_by_user</span> <span class="o">=</span> <span class="n">locked_by_user</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Sub-tree '</span><span class="si">{</span><span class="n">locked_path</span><span class="si">}</span><span class="s2">' is locked under CAM checkout lease "</span>
+            <span class="sa">f</span><span class="s2">"held by </span><span class="si">{</span><span class="n">locked_by_user</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'unknown'</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CycleDetectedException">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.CycleDetectedException">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CycleDetectedException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raised when a proposed dependency link would create a closed loop.</span>
+
+<span class="sd">    This exception is used by the MCP error recovery envelope to signal</span>
+<span class="sd">    that the agent should inspect quarantine cycles or query predecessors</span>
+<span class="sd">    before retrying.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        target_node_id: The node that would complete the cycle.</span>
+<span class="sd">        cycle_path: The list of node IDs forming the detected cycle.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="CycleDetectedException.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.CycleDetectedException.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_node_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">cycle_path</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_node_id</span> <span class="o">=</span> <span class="n">target_node_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cycle_path</span> <span class="o">=</span> <span class="n">cycle_path</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Proposed link creates a closed loop involving node </span><span class="si">{</span><span class="n">target_node_id</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ClearanceCeilingExceeded">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.ClearanceCeilingExceeded">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClearanceCeilingExceeded</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raised when a node's classification exceeds the caller's token clearance.</span>
+
+<span class="sd">    This exception is used by the MCP error recovery envelope to signal</span>
+<span class="sd">    that the agent must halt inspection of this sub-tree branch.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        node_classification: The classification level of the restricted node.</span>
+<span class="sd">        user_clearance: The clearance level of the calling user.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="ClearanceCeilingExceeded.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.ClearanceCeilingExceeded.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">node_classification</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">user_clearance</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_classification</span> <span class="o">=</span> <span class="n">node_classification</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_clearance</span> <span class="o">=</span> <span class="n">user_clearance</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Node classification '</span><span class="si">{</span><span class="n">node_classification</span><span class="si">}</span><span class="s2">' exceeds token "</span>
+            <span class="sa">f</span><span class="s2">"clearance '</span><span class="si">{</span><span class="n">user_clearance</span><span class="si">}</span><span class="s2">'."</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LockedException">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.LockedException">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LockedException</span><span class="p">(</span><span class="n">HTTPException</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Exception raised when a sub-tree is locked by a long-running operation.</span>
+
+<span class="sd">    When a long-running schedule operation (such as CPM recalculation,</span>
+<span class="sd">    resource leveling, baseline freeze, or airgap import) is in progress</span>
+<span class="sd">    on an ltree sub-tree, this exception blocks any concurrent mutation</span>
+<span class="sd">    request that targets a node within the locked sub-tree.</span>
+
+<span class="sd">    The exception uses HTTP status code 423 (Locked), which tells the</span>
+<span class="sd">    frontend that the resource is temporarily unavailable due to an</span>
+<span class="sd">    active operation. The user should wait for the operation to complete</span>
+<span class="sd">    and then retry their request.</span>
+
+<span class="sd">    The structured payload includes:</span>
+
+<span class="sd">    - **operation_type**: Identifies the type of operation holding the lock</span>
+<span class="sd">      (e.g., ``"CPM_RECALCULATION"``, ``"RESOURCE_LEVELING"``,</span>
+<span class="sd">      ``"BASELINE_FREEZE"``, ``"AIRGAP_IMPORT"``).</span>
+<span class="sd">    - **locked_by_user**: The user principal name (UPN) of the user who</span>
+<span class="sd">      initiated the blocking operation.</span>
+<span class="sd">    - **remaining_seconds**: Estimated seconds remaining before the lock</span>
+<span class="sd">      expires (TTL safety cutoff). This helps the frontend decide whether</span>
+<span class="sd">      to show a progress spinner or a retry button.</span>
+<span class="sd">    - **locked_path**: The ltree path of the root node being locked</span>
+<span class="sd">      (e.g., ``"1.2.3"``).</span>
+<span class="sd">    - **message**: A human-readable error message for display to the user.</span>
+
+<span class="sd">    Lock Types</span>
+<span class="sd">    ~~~~~~~~~~</span>
+
+<span class="sd">    The following operations can acquire sub-tree locks:</span>
+
+<span class="sd">    - **CPM_RECALCULATION** — Critical Path Method schedule recalculation.</span>
+<span class="sd">      This traverses the entire dependency network and updates early/late</span>
+<span class="sd">      start/finish dates for all affected nodes.</span>
+<span class="sd">    - **RESOURCE_LEVELING** — Resource constraint resolution. This adjusts</span>
+<span class="sd">      task schedules to eliminate resource over-allocation.</span>
+<span class="sd">    - **BASELINE_FREEZE** — PMB baseline snapshot creation. This captures</span>
+<span class="sd">      the current schedule state as a baseline for variance tracking.</span>
+<span class="sd">    - **AIRGAP_IMPORT** — Air-gapped data import. This ingests schedule</span>
+<span class="sd">      data from an air-gapped environment via secure file transfer.</span>
+
+<span class="sd">    Frontend Integration</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    The frontend catches this exception and displays a notification that</span>
+<span class="sd">    includes:</span>
+
+<span class="sd">    1. The operation type and who initiated it.</span>
+<span class="sd">    2. An estimated wait time based on ``remaining_seconds``.</span>
+<span class="sd">    3. A retry button that becomes available after the estimated wait time.</span>
+<span class="sd">    4. Optionally, a link to the operation status page where the user can</span>
+<span class="sd">       monitor progress.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        operation_type: The type of operation holding the lock. Common values</span>
+<span class="sd">            include ``"CPM_RECALCULATION"``, ``"RESOURCE_LEVELING"``,</span>
+<span class="sd">            ``"BASELINE_FREEZE"``, and ``"AIRGAP_IMPORT"``. This helps the</span>
+<span class="sd">            frontend provide context-specific messaging to the user.</span>
+<span class="sd">        locked_by_user: The user principal name (UPN) of the user who</span>
+<span class="sd">            initiated the blocking operation. This allows the frontend to</span>
+<span class="sd">            show who is performing the operation.</span>
+<span class="sd">        remaining_seconds: Estimated seconds remaining before the lock</span>
+<span class="sd">            expires. This is a time-to-live (TTL) safety cutoff that prevents</span>
+<span class="sd">            indefinite locks. The frontend uses this to show a countdown or</span>
+<span class="sd">            decide when to enable a retry button.</span>
+<span class="sd">        locked_path: The ltree path of the root node being locked. This</span>
+<span class="sd">            identifies which sub-tree is affected and allows the frontend to</span>
+<span class="sd">            visually indicate the locked area (e.g., greyed out nodes).</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            from app.core.exceptions import LockedException</span>
+
+<span class="sd">            raise LockedException(</span>
+<span class="sd">                operation_type="CPM_RECALCULATION",</span>
+<span class="sd">                locked_by_user="john.doe@example.com",</span>
+<span class="sd">                remaining_seconds=45,</span>
+<span class="sd">                locked_path="1.2.3",</span>
+<span class="sd">            )</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="LockedException.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.core.exceptions.LockedException.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">operation_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">locked_by_user</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">remaining_seconds</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">locked_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialise a sub-tree locked exception.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            operation_type: The type of operation holding the lock. Common</span>
+<span class="sd">                values include ``"CPM_RECALCULATION"``, ``"RESOURCE_LEVELING"``,</span>
+<span class="sd">                ``"BASELINE_FREEZE"``, and ``"AIRGAP_IMPORT"``.</span>
+<span class="sd">            locked_by_user: The user principal name (UPN) of the user who</span>
+<span class="sd">                initiated the blocking operation. This identifies who is</span>
+<span class="sd">                performing the long-running operation.</span>
+<span class="sd">            remaining_seconds: Estimated seconds remaining before the lock</span>
+<span class="sd">                expires. This is a time-to-live (TTL) safety cutoff that</span>
+<span class="sd">                prevents indefinite locks. Used by the frontend to show</span>
+<span class="sd">                estimated wait time.</span>
+<span class="sd">            locked_path: The ltree path of the root node being locked</span>
+<span class="sd">                (e.g., ``"1.2.3"``). This identifies which sub-tree is</span>
+<span class="sd">                affected by the lock.</span>
+<span class="sd">        """</span>
+        <span class="n">detail</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"error_code"</span><span class="p">:</span> <span class="s2">"SUB_TREE_LOCKED"</span><span class="p">,</span>
+            <span class="s2">"operation_type"</span><span class="p">:</span> <span class="n">operation_type</span><span class="p">,</span>
+            <span class="s2">"locked_by_user"</span><span class="p">:</span> <span class="n">locked_by_user</span><span class="p">,</span>
+            <span class="s2">"remaining_seconds"</span><span class="p">:</span> <span class="n">remaining_seconds</span><span class="p">,</span>
+            <span class="s2">"locked_path"</span><span class="p">:</span> <span class="n">locked_path</span><span class="p">,</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Schedule operation '</span><span class="si">{</span><span class="n">operation_type</span><span class="si">}</span><span class="s2">' in progress by "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">locked_by_user</span><span class="si">}</span><span class="s2"> on sub-tree '</span><span class="si">{</span><span class="n">locked_path</span><span class="si">}</span><span class="s2">'. "</span>
+                <span class="sa">f</span><span class="s2">"Please retry in ~</span><span class="si">{</span><span class="n">remaining_seconds</span><span class="si">}</span><span class="s2"> seconds."</span>
+            <span class="p">),</span>
+        <span class="p">}</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_423_LOCKED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="n">detail</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,925 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.db_maintenance &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.db_maintenance</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.db_maintenance</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Database maintenance and health monitoring service.</span>
+
+<span class="sd">This module provides periodic maintenance tasks for the PostgreSQL database,</span>
+<span class="sd">including VACUUM ANALYZE on high-churn tables, ltree GiST index re-indexing,</span>
+<span class="sd">and replication lag monitoring. It also exposes health metrics through the</span>
+<span class="sd">``/api/v1/admin/db-health`` endpoint.</span>
+
+<span class="sd">Maintenance Tasks</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The following maintenance tasks are performed on a scheduled basis:</span>
+
+<span class="sd">1. **VACUUM ANALYZE** — Updates table statistics and reclaims dead tuple space</span>
+<span class="sd">   on high-churn tables (``universal_breakdown_nodes``, ``forensic_audit_logs``,</span>
+<span class="sd">   ``node_blockers``, ``resource_assignments``).</span>
+
+<span class="sd">2. **GiST Index Re-indexing** — Rebuilds the ltree GiST path index</span>
+<span class="sd">   (``ix_ubn_path_gist``) to reduce index bloat and improve containment</span>
+<span class="sd">   query performance.</span>
+
+<span class="sd">3. **Replication Lag Monitoring** — Queries ``pg_stat_replication`` to</span>
+<span class="sd">   measure the replication lag in bytes for each synchronous standby.</span>
+
+<span class="sd">4. **Index Fragmentation Analysis** — Queries ``pg_stat_user_indexes`` to</span>
+<span class="sd">   compute the ratio of index scans to sequential scans, identifying indexes</span>
+<span class="sd">   that may need rebuilding.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">The maintenance daemon can be run as a standalone script or invoked via the</span>
+<span class="sd">``/api/v1/admin/db-health`` endpoint:</span>
+
+<span class="sd">.. code-block:: bash</span>
+
+<span class="sd">    # Run maintenance manually</span>
+<span class="sd">    python -m app.services.db_maintenance</span>
+
+<span class="sd">    # Query health metrics via API</span>
+<span class="sd">    curl http://localhost:8000/api/v1/admin/db-health</span>
+
+<span class="sd">Security Considerations</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The maintenance tasks require superuser privileges on the PostgreSQL database.</span>
+<span class="sd">In a Patroni HA cluster, maintenance should be run only on the primary node</span>
+<span class="sd">to avoid conflicts with replication.</span>
+
+<span class="sd">The ``/api/v1/admin/db-health`` endpoint is protected by JWT authentication</span>
+<span class="sd">and should be accessible only to administrators with clearance ≥ SECRET.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">SessionLocal</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Data Models</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="IndexHealth">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.IndexHealth">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">IndexHealth</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Health metrics for a single database index.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    index_name : str</span>
+<span class="sd">        Name of the index (e.g., ``'ix_ubn_path_gist'``).</span>
+<span class="sd">    table_name : str</span>
+<span class="sd">        Name of the table the index belongs to.</span>
+<span class="sd">    index_size_bytes : int</span>
+<span class="sd">        Current size of the index on disk in bytes.</span>
+<span class="sd">    index_scans : int</span>
+<span class="sd">        Number of index scans since last statistics reset.</span>
+<span class="sd">    seq_scans : int</span>
+<span class="sd">        Number of sequential scans on the table (high values may indicate</span>
+<span class="sd">        the index is not being used effectively).</span>
+<span class="sd">    idx_scan_ratio : float</span>
+<span class="sd">        Ratio of index scans to total scans (higher is better).</span>
+<span class="sd">    bloat_estimate_percent : float</span>
+<span class="sd">        Estimated index bloat percentage (0.0–100.0).</span>
+<span class="sd">    last_vacuum : Optional[datetime]</span>
+<span class="sd">        Timestamp of the last VACUUM operation on the table.</span>
+<span class="sd">    last_analyze : Optional[datetime]</span>
+<span class="sd">        Timestamp of the last ANALYZE operation on the table.</span>
+<span class="sd">    """</span>
+
+    <span class="n">index_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">index_size_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">index_scans</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">seq_scans</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">idx_scan_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">bloat_estimate_percent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">last_vacuum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last_analyze</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="ReplicationStatus">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.ReplicationStatus">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ReplicationStatus</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Replication status for a single standby node.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    standby_name : str</span>
+<span class="sd">        Name of the standby node (e.g., ``'patroni-2'``).</span>
+<span class="sd">    state : str</span>
+<span class="sd">        Current replication state (streaming, catchup, etc.).</span>
+<span class="sd">    sent_lsn : str</span>
+<span class="sd">        Last sent LSN (Log Sequence Number) to this standby.</span>
+<span class="sd">    write_lsn : str</span>
+<span class="sd">        Last write LSN acknowledged by this standby.</span>
+<span class="sd">    flush_lsn : str</span>
+<span class="sd">        Last flush LSN acknowledged by this standby.</span>
+<span class="sd">    replay_lsn : str</span>
+<span class="sd">        Last replay LSN on this standby.</span>
+<span class="sd">    write_lag_seconds : Optional[float]</span>
+<span class="sd">        Time difference between primary commit and standby write.</span>
+<span class="sd">    flush_lag_seconds : Optional[float]</span>
+<span class="sd">        Time difference between primary commit and standby flush.</span>
+<span class="sd">    replay_lag_seconds : Optional[float]</span>
+<span class="sd">        Time difference between primary commit and standby replay.</span>
+<span class="sd">    lag_bytes : int</span>
+<span class="sd">        Replication lag in bytes (primary LSN - standby replay LSN).</span>
+<span class="sd">    is_synchronous : bool</span>
+<span class="sd">        True if this standby is a synchronous replica.</span>
+<span class="sd">    """</span>
+
+    <span class="n">standby_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">state</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"unknown"</span>
+    <span class="n">sent_lsn</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0/0"</span>
+    <span class="n">write_lsn</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0/0"</span>
+    <span class="n">flush_lsn</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0/0"</span>
+    <span class="n">replay_lsn</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"0/0"</span>
+    <span class="n">write_lag_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">flush_lag_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">replay_lag_seconds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">lag_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">is_synchronous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="TableHealth">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.TableHealth">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TableHealth</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Health metrics for a single database table.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    table_name : str</span>
+<span class="sd">        Name of the table.</span>
+<span class="sd">    row_count : int</span>
+<span class="sd">        Estimated number of live rows.</span>
+<span class="sd">    dead_tuple_count : int</span>
+<span class="sd">        Number of dead tuples awaiting VACUUM.</span>
+<span class="sd">    dead_tuple_ratio : float</span>
+<span class="sd">        Ratio of dead tuples to live rows (0.0–1.0).</span>
+<span class="sd">    table_size_bytes : int</span>
+<span class="sd">        Size of the table on disk in bytes.</span>
+<span class="sd">    index_size_bytes : int</span>
+<span class="sd">        Total size of all indexes on the table.</span>
+<span class="sd">    last_vacuum : Optional[datetime]</span>
+<span class="sd">        Timestamp of the last VACUUM operation.</span>
+<span class="sd">    last_autovacuum : Optional[datetime]</span>
+<span class="sd">        Timestamp of the last autovacuum operation.</span>
+<span class="sd">    last_analyze : Optional[datetime]</span>
+<span class="sd">        Timestamp of the last ANALYZE operation.</span>
+<span class="sd">    last_autoanalyze : Optional[datetime]</span>
+<span class="sd">        Timestamp of the last autoanalyze operation.</span>
+<span class="sd">    """</span>
+
+    <span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">row_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dead_tuple_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dead_tuple_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">table_size_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">index_size_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">last_vacuum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last_autovacuum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last_analyze</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last_autoanalyze</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="DatabaseHealthMetrics">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.DatabaseHealthMetrics">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatabaseHealthMetrics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Comprehensive database health metrics.</span>
+
+<span class="sd">    This dataclass aggregates all health metrics collected by the</span>
+<span class="sd">    maintenance daemon. It is serialised to JSON and returned by the</span>
+<span class="sd">    ``/api/v1/admin/db-health`` endpoint.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    timestamp : datetime</span>
+<span class="sd">        When the metrics were collected (UTC).</span>
+<span class="sd">    is_primary : bool</span>
+<span class="sd">        True if this node is the primary (read/write) node in the Patroni</span>
+<span class="sd">        cluster. False if it is a read-only standby.</span>
+<span class="sd">    uptime_seconds : float</span>
+<span class="sd">        How long the PostgreSQL instance has been running.</span>
+<span class="sd">    total_connections : int</span>
+<span class="sd">        Current number of active client connections.</span>
+<span class="sd">    max_connections : int</span>
+<span class="sd">        Maximum allowed connections (from ``max_connections`` setting).</span>
+<span class="sd">    replication_statuses : list of ReplicationStatus</span>
+<span class="sd">        Replication status for each connected standby.</span>
+<span class="sd">    table_health : list of TableHealth</span>
+<span class="sd">        Health metrics for high-churn tables.</span>
+<span class="sd">    index_health : list of IndexHealth</span>
+<span class="sd">        Health metrics for critical indexes (especially ltree GiST).</span>
+<span class="sd">    last_maintenance : Optional[datetime]</span>
+<span class="sd">        When the last maintenance run completed.</span>
+<span class="sd">    maintenance_errors : list of str</span>
+<span class="sd">        List of errors encountered during the last maintenance run.</span>
+<span class="sd">    wal_archive_status : dict</span>
+<span class="sd">        WAL archiving status (archive_mode, last archived file, etc.).</span>
+<span class="sd">    """</span>
+
+    <span class="n">timestamp</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">))</span>
+    <span class="n">is_primary</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">uptime_seconds</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">total_connections</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">max_connections</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
+    <span class="n">replication_statuses</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ReplicationStatus</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">table_health</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">TableHealth</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">index_health</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">IndexHealth</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">last_maintenance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">maintenance_errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">wal_archive_status</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># High-Churn Tables</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="c1"># Tables that benefit from regular VACUUM ANALYZE due to high write frequency</span>
+<span class="n">HIGH_CHURN_TABLES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"universal_breakdown_nodes"</span><span class="p">,</span>
+    <span class="s2">"forensic_audit_logs"</span><span class="p">,</span>
+    <span class="s2">"node_blockers"</span><span class="p">,</span>
+    <span class="s2">"resource_assignments"</span><span class="p">,</span>
+    <span class="s2">"schedule_clash_issues"</span><span class="p">,</span>
+    <span class="s2">"management_reserve_transactions"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1"># Critical indexes that should be monitored for bloat</span>
+<span class="n">CRITICAL_INDEXES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"ix_ubn_path_gist"</span><span class="p">,</span>  <span class="c1"># ltree GiST index on path column</span>
+    <span class="s2">"ix_ubn_tree_type"</span><span class="p">,</span>
+    <span class="s2">"ix_ubn_security_classification"</span><span class="p">,</span>
+    <span class="s2">"ix_forensic_audit_log_entity"</span><span class="p">,</span>
+    <span class="s2">"ix_node_blocker_portfolio_node"</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Database Maintenance Engine</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="DatabaseMaintenance">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.DatabaseMaintenance">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DatabaseMaintenance</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Periodic database maintenance engine.</span>
+
+<span class="sd">    This class provides methods for running VACUUM ANALYZE, re-indexing</span>
+<span class="sd">    ltree GiST indexes, and collecting health metrics. It is designed</span>
+<span class="sd">    to be called from a background task or the ``/api/v1/admin/db-health``</span>
+<span class="sd">    endpoint.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Run all maintenance tasks:</span>
+
+<span class="sd">    &gt;&gt;&gt; maintenance = DatabaseMaintenance()</span>
+<span class="sd">    &gt;&gt;&gt; await maintenance.run_all_maintenance()</span>
+
+<span class="sd">    Collect health metrics only:</span>
+
+<span class="sd">    &gt;&gt;&gt; metrics = await maintenance.collect_health_metrics()</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="DatabaseMaintenance.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.DatabaseMaintenance.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Initialise the maintenance engine."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_maintenance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maintenance_errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+
+<div class="viewcode-block" id="DatabaseMaintenance.run_all_maintenance">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.DatabaseMaintenance.run_all_maintenance">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_all_maintenance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DatabaseHealthMetrics</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Run all maintenance tasks and collect health metrics.</span>
+
+<span class="sd">        This method executes the following tasks in order:</span>
+
+<span class="sd">        1. VACUUM ANALYZE on all high-churn tables.</span>
+<span class="sd">        2. Re-index the ltree GiST path index.</span>
+<span class="sd">        3. Collect comprehensive health metrics.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DatabaseHealthMetrics</span>
+<span class="sd">            Complete health metrics after maintenance.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        Exception</span>
+<span class="sd">            If a critical maintenance task fails, the error is logged</span>
+<span class="sd">            and included in the metrics, but the method continues.</span>
+<span class="sd">        """</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Starting database maintenance run..."</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maintenance_errors</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_vacuum_analyze_tables</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"VACUUM ANALYZE failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_maintenance_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reindex_ltree_gist</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">error_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Re-index failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_maintenance_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_maintenance</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+
+        <span class="c1"># Collect health metrics</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collect_health_metrics</span><span class="p">()</span>
+        <span class="n">metrics</span><span class="o">.</span><span class="n">last_maintenance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_maintenance</span>
+        <span class="n">metrics</span><span class="o">.</span><span class="n">maintenance_errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maintenance_errors</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Database maintenance completed. Errors: </span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span>
+            <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_maintenance_errors</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">metrics</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_vacuum_analyze_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Run VACUUM ANALYZE on all high-churn tables.</span>
+
+<span class="sd">        VACUUM reclaims dead tuple space and updates table statistics</span>
+<span class="sd">        for the query planner. ANALYZE collects statistics about the</span>
+<span class="sd">        contents of tables for the query optimiser.</span>
+
+<span class="sd">        This operation is run on each table individually to avoid</span>
+<span class="sd">        locking the entire database.</span>
+<span class="sd">        """</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">SessionLocal</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">HIGH_CHURN_TABLES</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"VACUUM ANALYZE on </span><span class="si">%s</span><span class="s2">..."</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+                    <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="sa">f</span><span class="s2">"VACUUM ANALYZE </span><span class="si">{</span><span class="n">table</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+                    <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"VACUUM ANALYZE on </span><span class="si">%s</span><span class="s2"> completed."</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"VACUUM ANALYZE on </span><span class="si">%s</span><span class="s2"> failed: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                    <span class="c1"># Continue with other tables</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reindex_ltree_gist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Re-index the ltree GiST path index.</span>
+
+<span class="sd">        The ltree GiST index (``ix_ubn_path_gist``) is critical for</span>
+<span class="sd">        containment queries (``@&gt;``) and ancestor/descendant lookups</span>
+<span class="sd">        (``&lt;@``). Over time, the index can become bloated due to</span>
+<span class="sd">        frequent INSERT/UPDATE operations on the path column.</span>
+
+<span class="sd">        This method uses ``REINDEX CONCURRENTLY`` to rebuild the index</span>
+<span class="sd">        without locking the table for writes.</span>
+<span class="sd">        """</span>
+        <span class="n">session</span> <span class="o">=</span> <span class="n">SessionLocal</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Re-indexing ltree GiST index..."</span><span class="p">)</span>
+                <span class="c1"># CONCURRENTLY avoids locking the table</span>
+                <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                    <span class="n">text</span><span class="p">(</span><span class="s2">"REINDEX INDEX CONCURRENTLY ix_ubn_path_gist"</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Re-indexing ltree GiST index completed."</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Re-index failed: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="c1"># Fallback to non-concurrent reindex if CONCURRENTLY fails</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Falling back to non-concurrent re-index..."</span><span class="p">)</span>
+                    <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                        <span class="n">text</span><span class="p">(</span><span class="s2">"REINDEX INDEX ix_ubn_path_gist"</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Non-concurrent re-index completed."</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">fallback_e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Non-concurrent re-index also failed: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">fallback_e</span><span class="p">)</span>
+                    <span class="k">raise</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="DatabaseMaintenance.collect_health_metrics">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.DatabaseMaintenance.collect_health_metrics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">collect_health_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DatabaseHealthMetrics</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Collect comprehensive database health metrics.</span>
+
+<span class="sd">        This method queries system catalogs and statistics views to</span>
+<span class="sd">        gather information about:</span>
+
+<span class="sd">        - Primary/standby status</span>
+<span class="sd">        - Uptime and connection count</span>
+<span class="sd">        - Replication lag for each standby</span>
+<span class="sd">        - Table health (dead tuples, size, last vacuum)</span>
+<span class="sd">        - Index health (scans, bloat estimate)</span>
+<span class="sd">        - WAL archiving status</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DatabaseHealthMetrics</span>
+<span class="sd">            Complete health metrics snapshot.</span>
+<span class="sd">        """</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">DatabaseHealthMetrics</span><span class="p">()</span>
+
+        <span class="n">session</span> <span class="o">=</span> <span class="n">SessionLocal</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">is_primary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_is_primary</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">uptime_seconds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_uptime</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+                <span class="p">(</span>
+                    <span class="n">metrics</span><span class="o">.</span><span class="n">total_connections</span><span class="p">,</span>
+                    <span class="n">metrics</span><span class="o">.</span><span class="n">max_connections</span><span class="p">,</span>
+                <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_connection_stats</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">replication_statuses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_replication_status</span><span class="p">(</span>
+                    <span class="n">session</span>
+                <span class="p">)</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">table_health</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_table_health</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">index_health</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_index_health</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+                <span class="n">metrics</span><span class="o">.</span><span class="n">wal_archive_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_wal_archive_status</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Failed to collect health metrics: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_maintenance_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Health collection failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">metrics</span></div>
+
+
+    <span class="c1"># -----------------------------------------------------------------------</span>
+    <span class="c1"># Individual metric collectors</span>
+    <span class="c1"># -----------------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_is_primary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Check if this node is the primary (read/write) node.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True if this is the primary node, False if it is a standby.</span>
+<span class="sd">        """</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">(</span><span class="s2">"SELECT NOT pg_is_in_recovery()"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_uptime</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Get PostgreSQL instance uptime in seconds.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Number of seconds since the instance started.</span>
+<span class="sd">        """</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">(</span>
+                <span class="s2">"SELECT EXTRACT(EPOCH FROM NOW() - pg_postmaster_start_time())"</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_connection_stats</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Get current and maximum connection counts.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple[int, int]</span>
+<span class="sd">            (total_connections, max_connections)</span>
+<span class="sd">        """</span>
+        <span class="c1"># Current connections</span>
+        <span class="n">conn_result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">(</span><span class="s2">"SELECT count(*) FROM pg_stat_activity"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">total_connections</span> <span class="o">=</span> <span class="n">conn_result</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span>
+
+        <span class="c1"># Max connections</span>
+        <span class="n">max_result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">(</span><span class="s2">"SHOW max_connections"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">max_connections</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_result</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span> <span class="ow">or</span> <span class="mi">100</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">total_connections</span><span class="p">,</span> <span class="n">max_connections</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_replication_status</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ReplicationStatus</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Get replication status for all connected standbys.</span>
+
+<span class="sd">        Queries ``pg_stat_replication`` to measure the replication lag</span>
+<span class="sd">        for each synchronous and asynchronous standby.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of ReplicationStatus</span>
+<span class="sd">            Replication status for each connected standby.</span>
+<span class="sd">        """</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">"""</span>
+<span class="sd">                SELECT</span>
+<span class="sd">                    usename AS standby_name,</span>
+<span class="sd">                    state,</span>
+<span class="sd">                    sent_lsn::text,</span>
+<span class="sd">                    write_lsn::text,</span>
+<span class="sd">                    flush_lsn::text,</span>
+<span class="sd">                    replay_lsn::text,</span>
+<span class="sd">                    write_lag,</span>
+<span class="sd">                    flush_lag,</span>
+<span class="sd">                    replay_lag,</span>
+<span class="sd">                    pg_wal_lsn_diff(sent_lsn, replay_lsn) AS lag_bytes,</span>
+<span class="sd">                    sync_priority &gt; 0 AND sync_state = 'sync' AS is_synchronous</span>
+<span class="sd">                FROM pg_stat_replication</span>
+<span class="sd">                ORDER BY sync_priority DESC, usename</span>
+<span class="sd">                """</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+        <span class="n">statuses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">ReplicationStatus</span><span class="p">(</span>
+                <span class="n">standby_name</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"unknown"</span><span class="p">,</span>
+                <span class="n">state</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"unknown"</span><span class="p">,</span>
+                <span class="n">sent_lsn</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"0/0"</span><span class="p">,</span>
+                <span class="n">write_lsn</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"0/0"</span><span class="p">,</span>
+                <span class="n">flush_lsn</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"0/0"</span><span class="p">,</span>
+                <span class="n">replay_lsn</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"0/0"</span><span class="p">,</span>
+                <span class="n">write_lag_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">flush_lag_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">replay_lag_seconds</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span> <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">lag_bytes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">is_synchronous</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">10</span><span class="p">]),</span>
+            <span class="p">)</span>
+            <span class="n">statuses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">statuses</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_table_health</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">TableHealth</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Get health metrics for high-churn tables.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of TableHealth</span>
+<span class="sd">            Health metrics for each high-churn table.</span>
+<span class="sd">        """</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">"""</span>
+<span class="sd">                SELECT</span>
+<span class="sd">                    relname AS table_name,</span>
+<span class="sd">                    n_live_tup AS row_count,</span>
+<span class="sd">                    n_dead_tup AS dead_tuple_count,</span>
+<span class="sd">                    CASE WHEN n_live_tup &gt; 0</span>
+<span class="sd">                        THEN n_dead_tup::float / n_live_tup</span>
+<span class="sd">                        ELSE 0.0</span>
+<span class="sd">                    END AS dead_tuple_ratio,</span>
+<span class="sd">                    pg_table_size(quote_ident(relname)::regclass) AS table_size_bytes,</span>
+<span class="sd">                    pg_indexes_size(quote_ident(relname)::regclass) AS index_size_bytes,</span>
+<span class="sd">                    last_vacuum,</span>
+<span class="sd">                    last_autovacuum,</span>
+<span class="sd">                    last_analyze,</span>
+<span class="sd">                    last_autoanalyze</span>
+<span class="sd">                FROM pg_stat_user_tables</span>
+<span class="sd">                WHERE relname = ANY(:tables)</span>
+<span class="sd">                ORDER BY relname</span>
+<span class="sd">                """</span>
+            <span class="p">),</span>
+            <span class="p">{</span><span class="s2">"tables"</span><span class="p">:</span> <span class="n">HIGH_CHURN_TABLES</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+        <span class="n">health</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">TableHealth</span><span class="p">(</span>
+                <span class="n">table_name</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">row_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">dead_tuple_count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">dead_tuple_ratio</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="n">table_size_bytes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">index_size_bytes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">last_vacuum</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span>
+                <span class="n">last_autovacuum</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span>
+                <span class="n">last_analyze</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span>
+                <span class="n">last_autoanalyze</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">health</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">health</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_index_health</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">IndexHealth</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Get health metrics for critical indexes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of IndexHealth</span>
+<span class="sd">            Health metrics for each critical index.</span>
+<span class="sd">        """</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">"""</span>
+<span class="sd">                SELECT</span>
+<span class="sd">                    si.indexrelname AS index_name,</span>
+<span class="sd">                    si.relname AS table_name,</span>
+<span class="sd">                    pg_relation_size(si.indexrelid) AS index_size_bytes,</span>
+<span class="sd">                    si.idx_scan AS index_scans,</span>
+<span class="sd">                    st.n_seq_scan AS seq_scans,</span>
+<span class="sd">                    CASE WHEN (si.idx_scan + st.n_seq_scan) &gt; 0</span>
+<span class="sd">                        THEN si.idx_scan::float / (si.idx_scan + st.n_seq_scan)</span>
+<span class="sd">                        ELSE 0.0</span>
+<span class="sd">                    END AS idx_scan_ratio,</span>
+<span class="sd">                    st.last_vacuum,</span>
+<span class="sd">                    st.last_analyze</span>
+<span class="sd">                FROM pg_stat_user_indexes si</span>
+<span class="sd">                LEFT JOIN pg_stat_user_tables st</span>
+<span class="sd">                    ON si.relid = st.relid</span>
+<span class="sd">                WHERE si.indexrelname = ANY(:indexes)</span>
+<span class="sd">                ORDER BY si.indexrelname</span>
+<span class="sd">                """</span>
+            <span class="p">),</span>
+            <span class="p">{</span><span class="s2">"indexes"</span><span class="p">:</span> <span class="n">CRITICAL_INDEXES</span><span class="p">},</span>
+        <span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+        <span class="n">health</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">IndexHealth</span><span class="p">(</span>
+                <span class="n">index_name</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">table_name</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">index_size_bytes</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">index_scans</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">seq_scans</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">idx_scan_ratio</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="ow">or</span> <span class="mf">0.0</span><span class="p">),</span>
+                <span class="n">last_vacuum</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span>
+                <span class="n">last_analyze</span><span class="o">=</span><span class="n">row</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="n">health</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">health</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_wal_archive_status</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">session</span><span class="p">:</span> <span class="n">Session</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Get WAL archiving status.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dictionary containing WAL archiving configuration and status.</span>
+<span class="sd">        """</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">text</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">"""</span>
+<span class="sd">                SELECT</span>
+<span class="sd">                    name,</span>
+<span class="sd">                    setting</span>
+<span class="sd">                FROM pg_settings</span>
+<span class="sd">                WHERE name IN (</span>
+<span class="sd">                    'archive_mode',</span>
+<span class="sd">                    'archive_command',</span>
+<span class="sd">                    'archive_timeout',</span>
+<span class="sd">                    'wal_level',</span>
+<span class="sd">                    'max_wal_senders'</span>
+<span class="sd">                )</span>
+<span class="sd">                """</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="p">{</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">}</span>
+
+        <span class="c1"># Add archive stats if available</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">stats_result</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                <span class="n">text</span><span class="p">(</span>
+<span class="w">                    </span><span class="sd">"""</span>
+<span class="sd">                    SELECT</span>
+<span class="sd">                        archived_count,</span>
+<span class="sd">                        failed_count,</span>
+<span class="sd">                        last_archived_wal,</span>
+<span class="sd">                        last_archived_time</span>
+<span class="sd">                    FROM pg_stat_archiver</span>
+<span class="sd">                    """</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">stats_row</span> <span class="o">=</span> <span class="n">stats_result</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">stats_row</span><span class="p">:</span>
+                <span class="n">status</span><span class="p">[</span><span class="s2">"archived_count"</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats_row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">status</span><span class="p">[</span><span class="s2">"failed_count"</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats_row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">status</span><span class="p">[</span><span class="s2">"last_archived_wal"</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats_row</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">status</span><span class="p">[</span><span class="s2">"last_archived_time"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">stats_row</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># pg_stat_archiver may not be available on all versions</span>
+            <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">status</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Module-level convenience functions</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="c1"># Singleton instance for use by the router</span>
+<span class="n">_maintenance_instance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DatabaseMaintenance</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="get_maintenance_engine">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.get_maintenance_engine">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_maintenance_engine</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DatabaseMaintenance</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the singleton database maintenance engine.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DatabaseMaintenance</span>
+<span class="sd">        The shared maintenance engine instance.</span>
+<span class="sd">    """</span>
+    <span class="k">global</span> <span class="n">_maintenance_instance</span>
+    <span class="k">if</span> <span class="n">_maintenance_instance</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_maintenance_instance</span> <span class="o">=</span> <span class="n">DatabaseMaintenance</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_maintenance_instance</span></div>
+
+
+
+<div class="viewcode-block" id="run_maintenance">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.run_maintenance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_maintenance</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DatabaseHealthMetrics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run all maintenance tasks and return health metrics.</span>
+
+<span class="sd">    This is a convenience function that calls the singleton engine's</span>
+<span class="sd">    ``run_all_maintenance`` method.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DatabaseHealthMetrics</span>
+<span class="sd">        Complete health metrics after maintenance.</span>
+<span class="sd">    """</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">get_maintenance_engine</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">engine</span><span class="o">.</span><span class="n">run_all_maintenance</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="get_health_metrics">
+<a class="viewcode-back" href="../../../modules.html#app.services.db_maintenance.get_health_metrics">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_health_metrics</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DatabaseHealthMetrics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Collect health metrics without running maintenance.</span>
+
+<span class="sd">    This is a convenience function that calls the singleton engine's</span>
+<span class="sd">    ``collect_health_metrics`` method.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DatabaseHealthMetrics</span>
+<span class="sd">        Current health metrics snapshot.</span>
+<span class="sd">    """</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">get_maintenance_engine</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">engine</span><span class="o">.</span><span class="n">collect_health_metrics</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

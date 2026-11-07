@@ -1,0 +1,994 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.cdrl &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.cdrl</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.cdrl</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Contract Deliverables (CDRL/SDRL) and Verification &amp; Validation (V&amp;V) API router.</span>
+
+<span class="sd">This module provides the API endpoints for managing contract deliverables</span>
+<span class="sd">and V&amp;V test cases within the Eisenhower Portfolio Manager.</span>
+
+<span class="sd">Contract Deliverables</span>
+<span class="sd">---------------------</span>
+
+<span class="sd">In defence contracting, every contract specifies a set of formal deliverables</span>
+<span class="sd">(CDRLs — Contract Data Requirements List, or SDRLs — Supplier Data Requirements</span>
+<span class="sd">List) that must be produced, submitted, reviewed, and accepted.  Each deliverable</span>
+<span class="sd">follows a lifecycle from DRAFTING through SUBMITTED, UNDER_REVIEW, and finally</span>
+<span class="sd">ACCEPTED (or REJECTED).</span>
+
+<span class="sd">The review window is a critical tracking metric: once a deliverable is submitted,</span>
+<span class="sd">the contracting authority has a defined number of days to review it.  These</span>
+<span class="sd">endpoints expose countdown queries so programme managers can see which reviews</span>
+<span class="sd">are approaching their deadline.</span>
+
+<span class="sd">Verification &amp; Validation</span>
+<span class="sd">-------------------------</span>
+
+<span class="sd">V&amp;V test cases provide objective, physical completion gates.  Before a work</span>
+<span class="sd">package can be marked as 100% complete, all mandatory test cases must be in</span>
+<span class="sd">either PASSED or WAIVED status.  The V&amp;V gate check endpoint is used by the</span>
+<span class="sd">progress update flow to enforce this interlock.</span>
+
+<span class="sd">Billing Milestone Interlock</span>
+<span class="sd">---------------------------</span>
+
+<span class="sd">Billing milestones linked to CDRLs cannot transition to complete while the</span>
+<span class="sd">CDRL status is REJECTED or UNDER_REVIEW.  This check is performed in the</span>
+<span class="sd">V&amp;V gate check endpoint.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">~~~~~~~~~</span>
+
+<span class="sd">CDRL Operations:</span>
+<span class="sd">    GET    /api/v1/cdrl/ — List all deliverables with optional filtering.</span>
+<span class="sd">    POST   /api/v1/cdrl/ — Create a new deliverable.</span>
+<span class="sd">    GET    /api/v1/cdrl/{id} — Get a single deliverable.</span>
+<span class="sd">    PUT    /api/v1/cdrl/{id} — Update a deliverable (status transitions, submission).</span>
+<span class="sd">    DELETE /api/v1/cdrl/{id} — Delete a deliverable.</span>
+<span class="sd">    GET    /api/v1/cdrl/countdown — List deliverables with review deadlines approaching.</span>
+
+<span class="sd">V&amp;V Test Case Operations:</span>
+<span class="sd">    GET    /api/v1/cdrl/node/{node_id}/vv-tests — List V&amp;V test cases for a node.</span>
+<span class="sd">    POST   /api/v1/cdrl/node/{node_id}/vv-tests — Create a V&amp;V test case.</span>
+<span class="sd">    PUT    /api/v1/cdrl/vv-tests/{id} — Update a V&amp;V test case status.</span>
+<span class="sd">    DELETE /api/v1/cdrl/vv-tests/{id} — Delete a V&amp;V test case.</span>
+
+<span class="sd">V&amp;V Gate Check:</span>
+<span class="sd">    GET    /api/v1/cdrl/node/{node_id}/vv-gate-check — Check if a node can complete.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span><span class="p">,</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ContractDeliverable</span><span class="p">,</span>
+    <span class="n">VerificationTestCase</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">CDRLStatus</span><span class="p">,</span>
+    <span class="n">VerificationTestCaseStatus</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CDRLCreate</span><span class="p">,</span>
+    <span class="n">CDRLUpdate</span><span class="p">,</span>
+    <span class="n">CDRLResponse</span><span class="p">,</span>
+    <span class="n">CDRLListResponse</span><span class="p">,</span>
+    <span class="n">VVCCreate</span><span class="p">,</span>
+    <span class="n">VVCUpdate</span><span class="p">,</span>
+    <span class="n">VVCResponse</span><span class="p">,</span>
+    <span class="n">VVCListResponse</span><span class="p">,</span>
+    <span class="n">VVCGateCheckResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.abac</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_node_visible</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Helper: Convert CDRL model to response schema</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cdrl_to_response</span><span class="p">(</span><span class="n">cdrl</span><span class="p">:</span> <span class="n">ContractDeliverable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CDRLResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert a ContractDeliverable model instance to a CDRLResponse schema.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cdrl : ContractDeliverable</span>
+<span class="sd">        The deliverable model instance.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CDRLResponse</span>
+<span class="sd">        The API response schema with computed review deadline countdown.</span>
+<span class="sd">    """</span>
+    <span class="n">days_until</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">cdrl</span><span class="o">.</span><span class="n">review_deadline_date</span><span class="p">:</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">cdrl</span><span class="o">.</span><span class="n">review_deadline_date</span> <span class="o">-</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+        <span class="n">days_until</span> <span class="o">=</span> <span class="n">delta</span><span class="o">.</span><span class="n">days</span>
+
+    <span class="k">return</span> <span class="n">CDRLResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+        <span class="n">cdrl_sequence_number</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">cdrl_sequence_number</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">did_reference</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">did_reference</span><span class="p">,</span>
+        <span class="n">revision</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">revision</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">contractual_due_date</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">contractual_due_date</span><span class="p">,</span>
+        <span class="n">actual_submission_date</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">actual_submission_date</span><span class="p">,</span>
+        <span class="n">review_window_days</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">review_window_days</span><span class="p">,</span>
+        <span class="n">review_deadline_date</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">review_deadline_date</span><span class="p">,</span>
+        <span class="n">days_until_review_deadline</span><span class="o">=</span><span class="n">days_until</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_vvc_to_response</span><span class="p">(</span><span class="n">vvc</span><span class="p">:</span> <span class="n">VerificationTestCase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VVCResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert a VerificationTestCase model instance to a VVCResponse schema.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vvc : VerificationTestCase</span>
+<span class="sd">        The test case model instance.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VVCResponse</span>
+<span class="sd">        The API response schema.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">VVCResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">vvc</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">vvc</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+        <span class="n">test_identifier</span><span class="o">=</span><span class="n">vvc</span><span class="o">.</span><span class="n">test_identifier</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">vvc</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">standard_reference</span><span class="o">=</span><span class="n">vvc</span><span class="o">.</span><span class="n">standard_reference</span><span class="p">,</span>
+        <span class="n">is_mandatory</span><span class="o">=</span><span class="n">vvc</span><span class="o">.</span><span class="n">is_mandatory</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">vvc</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">vvc</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">vvc</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># CDRL Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="list_cdrls">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.list_cdrls">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CDRLListResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_cdrls</span><span class="p">(</span>
+    <span class="n">portfolio_node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by portfolio node"</span><span class="p">),</span>
+    <span class="n">cdrl_status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CDRLStatus</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by status"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all contract deliverables with optional filtering.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    portfolio_node_id : str or None</span>
+<span class="sd">        Filter deliverables to a specific portfolio node.</span>
+<span class="sd">    cdrl_status : CDRLStatus or None</span>
+<span class="sd">        Filter deliverables by lifecycle status.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CDRLListResponse</span>
+<span class="sd">        List of deliverables matching the filters.</span>
+<span class="sd">    """</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">portfolio_node_id</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">node_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid portfolio_node_id format"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">cdrl_status</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">cdrl_status</span><span class="p">)</span>
+
+    <span class="n">deliverables</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">contractual_due_date</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">CDRLListResponse</span><span class="p">(</span>
+        <span class="n">deliverables</span><span class="o">=</span><span class="p">[</span><span class="n">_cdrl_to_response</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">deliverables</span><span class="p">],</span>
+        <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">deliverables</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_cdrl">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.create_cdrl">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CDRLResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_cdrl</span><span class="p">(</span>
+    <span class="n">cdrl_data</span><span class="p">:</span> <span class="n">CDRLCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new Contract Deliverable.</span>
+
+<span class="sd">    Registers a CDRL or SDRL linked to a portfolio node.  The deliverable</span>
+<span class="sd">    begins in DRAFTING status.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cdrl_data : CDRLCreate</span>
+<span class="sd">        The deliverable data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CDRLResponse</span>
+<span class="sd">        The newly created deliverable.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Verify the portfolio node exists and user has clearance</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cdrl_data</span><span class="o">.</span><span class="n">portfolio_node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Portfolio node </span><span class="si">{</span><span class="n">cdrl_data</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to create deliverable on this node"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">cdrl</span> <span class="o">=</span> <span class="n">ContractDeliverable</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">cdrl_data</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+        <span class="n">cdrl_sequence_number</span><span class="o">=</span><span class="n">cdrl_data</span><span class="o">.</span><span class="n">cdrl_sequence_number</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">cdrl_data</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">did_reference</span><span class="o">=</span><span class="n">cdrl_data</span><span class="o">.</span><span class="n">did_reference</span><span class="p">,</span>
+        <span class="n">revision</span><span class="o">=</span><span class="n">cdrl_data</span><span class="o">.</span><span class="n">revision</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">CDRLStatus</span><span class="o">.</span><span class="n">DRAFTING</span><span class="p">,</span>
+        <span class="n">contractual_due_date</span><span class="o">=</span><span class="n">cdrl_data</span><span class="o">.</span><span class="n">contractual_due_date</span><span class="p">,</span>
+        <span class="n">review_window_days</span><span class="o">=</span><span class="n">cdrl_data</span><span class="o">.</span><span class="n">review_window_days</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cdrl</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">cdrl</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_cdrl_to_response</span><span class="p">(</span><span class="n">cdrl</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_cdrl">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.get_cdrl">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/</span><span class="si">{cdrl_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CDRLResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cdrl</span><span class="p">(</span>
+    <span class="n">cdrl_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get a single contract deliverable by ID.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cdrl_id : str</span>
+<span class="sd">        The UUID of the deliverable.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CDRLResponse</span>
+<span class="sd">        The deliverable data.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cdrl_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">cdrl_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid cdrl_id format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">cdrl</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cdrl_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cdrl</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Deliverable </span><span class="si">{</span><span class="n">cdrl_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check clearance on the associated node</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cdrl</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to view this deliverable"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_cdrl_to_response</span><span class="p">(</span><span class="n">cdrl</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_cdrl">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.update_cdrl">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/</span><span class="si">{cdrl_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CDRLResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_cdrl</span><span class="p">(</span>
+    <span class="n">cdrl_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">cdrl_data</span><span class="p">:</span> <span class="n">CDRLUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update an existing contract deliverable.</span>
+
+<span class="sd">    Common updates include changing the status (e.g., DRAFTING -&gt; SUBMITTED),</span>
+<span class="sd">    setting the actual submission date, or updating the revision.</span>
+
+<span class="sd">    When status changes to SUBMITTED and actual_submission_date is set,</span>
+<span class="sd">    the review_deadline_date is automatically calculated.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cdrl_id : str</span>
+<span class="sd">        The UUID of the deliverable.</span>
+<span class="sd">    cdrl_data : CDRLUpdate</span>
+<span class="sd">        The fields to update.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CDRLResponse</span>
+<span class="sd">        The updated deliverable.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cdrl_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">cdrl_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid cdrl_id format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">cdrl</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cdrl_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cdrl</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Deliverable </span><span class="si">{</span><span class="n">cdrl_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check clearance on the associated node</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cdrl</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to update this deliverable"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Apply updates</span>
+    <span class="n">update_dict</span> <span class="o">=</span> <span class="n">cdrl_data</span><span class="o">.</span><span class="n">dict</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">"title"</span> <span class="ow">in</span> <span class="n">update_dict</span> <span class="ow">and</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cdrl</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">"revision"</span> <span class="ow">in</span> <span class="n">update_dict</span> <span class="ow">and</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"revision"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cdrl</span><span class="o">.</span><span class="n">revision</span> <span class="o">=</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"revision"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">"status"</span> <span class="ow">in</span> <span class="n">update_dict</span> <span class="ow">and</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cdrl</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">"actual_submission_date"</span> <span class="ow">in</span> <span class="n">update_dict</span><span class="p">:</span>
+        <span class="n">cdrl</span><span class="o">.</span><span class="n">actual_submission_date</span> <span class="o">=</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"actual_submission_date"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">"review_window_days"</span> <span class="ow">in</span> <span class="n">update_dict</span> <span class="ow">and</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"review_window_days"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cdrl</span><span class="o">.</span><span class="n">review_window_days</span> <span class="o">=</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"review_window_days"</span><span class="p">]</span>
+
+    <span class="c1"># Auto-calculate review_deadline_date when submission date is set</span>
+    <span class="k">if</span> <span class="n">cdrl</span><span class="o">.</span><span class="n">actual_submission_date</span> <span class="ow">and</span> <span class="n">cdrl</span><span class="o">.</span><span class="n">review_window_days</span><span class="p">:</span>
+        <span class="n">cdrl</span><span class="o">.</span><span class="n">review_deadline_date</span> <span class="o">=</span> <span class="n">cdrl</span><span class="o">.</span><span class="n">actual_submission_date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span>
+            <span class="n">days</span><span class="o">=</span><span class="n">cdrl</span><span class="o">.</span><span class="n">review_window_days</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">cdrl</span><span class="o">.</span><span class="n">actual_submission_date</span><span class="p">:</span>
+        <span class="n">cdrl</span><span class="o">.</span><span class="n">review_deadline_date</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">cdrl</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_cdrl_to_response</span><span class="p">(</span><span class="n">cdrl</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_cdrl">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.delete_cdrl">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/</span><span class="si">{cdrl_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_cdrl</span><span class="p">(</span>
+    <span class="n">cdrl_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete a contract deliverable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cdrl_id : str</span>
+<span class="sd">        The UUID of the deliverable.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Confirmation message.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">cdrl_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">cdrl_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid cdrl_id format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">cdrl</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cdrl_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cdrl</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Deliverable </span><span class="si">{</span><span class="n">cdrl_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check clearance on the associated node</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cdrl</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to delete this deliverable"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">cdrl</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Deliverable </span><span class="si">{</span><span class="n">cdrl_id</span><span class="si">}</span><span class="s2"> deleted"</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="cdrl_review_countdown">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.cdrl_review_countdown">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/countdown"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CDRLListResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">cdrl_review_countdown</span><span class="p">(</span>
+    <span class="n">days_threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Days until deadline threshold"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List deliverables with review deadlines approaching or overdue.</span>
+
+<span class="sd">    Returns deliverables that have been submitted and have a review deadline</span>
+<span class="sd">    within the specified number of days, or that are already overdue.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    days_threshold : int</span>
+<span class="sd">        Only return deliverables whose review deadline is within this many</span>
+<span class="sd">        days (or already overdue). Default is 14 days.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CDRLListResponse</span>
+<span class="sd">        List of deliverables with approaching or overdue review deadlines,</span>
+<span class="sd">        ordered by urgency (most overdue first).</span>
+<span class="sd">    """</span>
+    <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="n">threshold_date</span> <span class="o">=</span> <span class="n">today</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days_threshold</span><span class="p">)</span>
+
+    <span class="c1"># Find deliverables with review deadlines within the threshold or overdue</span>
+    <span class="n">deliverables</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">review_deadline_date</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">review_deadline_date</span> <span class="o">&lt;=</span> <span class="n">threshold_date</span><span class="p">,</span>
+            <span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
+                <span class="n">CDRLStatus</span><span class="o">.</span><span class="n">SUBMITTED</span><span class="p">,</span>
+                <span class="n">CDRLStatus</span><span class="o">.</span><span class="n">UNDER_REVIEW</span><span class="p">,</span>
+            <span class="p">]),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">review_deadline_date</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CDRLListResponse</span><span class="p">(</span>
+        <span class="n">deliverables</span><span class="o">=</span><span class="p">[</span><span class="n">_cdrl_to_response</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">deliverables</span><span class="p">],</span>
+        <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">deliverables</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># V&amp;V Test Case Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="list_vv_tests">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.list_vv_tests">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/node/</span><span class="si">{node_id}</span><span class="s2">/vv-tests"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">VVCListResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_vv_tests</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all V&amp;V test cases for a portfolio node.</span>
+
+<span class="sd">    Returns summary statistics including mandatory count, passed count,</span>
+<span class="sd">    and whether all mandatory tests are satisfied (can_complete).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        The UUID of the portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VVCListResponse</span>
+<span class="sd">        List of test cases with completion gate summary.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid node_id format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Verify node exists and user has clearance</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Portfolio node </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to view test cases for this node"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">test_cases</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">VerificationTestCase</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">test_identifier</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">mandatory_count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="n">test_cases</span> <span class="k">if</span> <span class="n">tc</span><span class="o">.</span><span class="n">is_mandatory</span><span class="p">)</span>
+    <span class="n">passed_count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="mi">1</span> <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="n">test_cases</span>
+        <span class="k">if</span> <span class="n">tc</span><span class="o">.</span><span class="n">is_mandatory</span> <span class="ow">and</span> <span class="n">tc</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">(</span>
+            <span class="n">VerificationTestCaseStatus</span><span class="o">.</span><span class="n">PASSED</span><span class="p">,</span>
+            <span class="n">VerificationTestCaseStatus</span><span class="o">.</span><span class="n">WAIVED</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">can_complete</span> <span class="o">=</span> <span class="n">mandatory_count</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mandatory_count</span> <span class="o">==</span> <span class="n">passed_count</span>
+
+    <span class="k">return</span> <span class="n">VVCListResponse</span><span class="p">(</span>
+        <span class="n">test_cases</span><span class="o">=</span><span class="p">[</span><span class="n">_vvc_to_response</span><span class="p">(</span><span class="n">tc</span><span class="p">)</span> <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="n">test_cases</span><span class="p">],</span>
+        <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">test_cases</span><span class="p">),</span>
+        <span class="n">mandatory_count</span><span class="o">=</span><span class="n">mandatory_count</span><span class="p">,</span>
+        <span class="n">passed_count</span><span class="o">=</span><span class="n">passed_count</span><span class="p">,</span>
+        <span class="n">can_complete</span><span class="o">=</span><span class="n">can_complete</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_vv_test">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.create_vv_test">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/node/</span><span class="si">{node_id}</span><span class="s2">/vv-tests"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">VVCResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_vv_test</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">vvc_data</span><span class="p">:</span> <span class="n">VVCCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new V&amp;V test case for a portfolio node.</span>
+
+<span class="sd">    The test case begins in NOT_RUN status.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        The UUID of the portfolio node.</span>
+<span class="sd">    vvc_data : VVCCreate</span>
+<span class="sd">        The test case data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VVCResponse</span>
+<span class="sd">        The newly created test case.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid node_id format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Verify node exists and user has clearance</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Portfolio node </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to create test case on this node"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Ensure portfolio_node_id matches the URL path</span>
+    <span class="k">if</span> <span class="n">vvc_data</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">!=</span> <span class="n">node_uuid</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"portfolio_node_id in request body must match the URL path"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">vvc</span> <span class="o">=</span> <span class="n">VerificationTestCase</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node_uuid</span><span class="p">,</span>
+        <span class="n">test_identifier</span><span class="o">=</span><span class="n">vvc_data</span><span class="o">.</span><span class="n">test_identifier</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">vvc_data</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">standard_reference</span><span class="o">=</span><span class="n">vvc_data</span><span class="o">.</span><span class="n">standard_reference</span><span class="p">,</span>
+        <span class="n">is_mandatory</span><span class="o">=</span><span class="n">vvc_data</span><span class="o">.</span><span class="n">is_mandatory</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">VerificationTestCaseStatus</span><span class="o">.</span><span class="n">NOT_RUN</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vvc</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">vvc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_vvc_to_response</span><span class="p">(</span><span class="n">vvc</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_vv_test">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.update_vv_test">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/vv-tests/</span><span class="si">{vvc_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">VVCResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_vv_test</span><span class="p">(</span>
+    <span class="n">vvc_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">vvc_data</span><span class="p">:</span> <span class="n">VVCUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update an existing V&amp;V test case.</span>
+
+<span class="sd">    The most common update is changing the status from NOT_RUN to PASSED,</span>
+<span class="sd">    FAILED, or WAIVED.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vvc_id : str</span>
+<span class="sd">        The UUID of the test case.</span>
+<span class="sd">    vvc_data : VVCUpdate</span>
+<span class="sd">        The fields to update.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VVCResponse</span>
+<span class="sd">        The updated test case.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">vvc_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">vvc_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid vvc_id format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">vvc</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">VerificationTestCase</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">vvc_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">vvc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"V&amp;V test case </span><span class="si">{</span><span class="n">vvc_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check clearance on the associated node</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">vvc</span><span class="o">.</span><span class="n">portfolio_node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to update this test case"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Apply updates</span>
+    <span class="n">update_dict</span> <span class="o">=</span> <span class="n">vvc_data</span><span class="o">.</span><span class="n">dict</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">"title"</span> <span class="ow">in</span> <span class="n">update_dict</span> <span class="ow">and</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vvc</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">"status"</span> <span class="ow">in</span> <span class="n">update_dict</span> <span class="ow">and</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vvc</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">"is_mandatory"</span> <span class="ow">in</span> <span class="n">update_dict</span> <span class="ow">and</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"is_mandatory"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">vvc</span><span class="o">.</span><span class="n">is_mandatory</span> <span class="o">=</span> <span class="n">update_dict</span><span class="p">[</span><span class="s2">"is_mandatory"</span><span class="p">]</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">vvc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_vvc_to_response</span><span class="p">(</span><span class="n">vvc</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_vv_test">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.delete_vv_test">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/vv-tests/</span><span class="si">{vvc_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_vv_test</span><span class="p">(</span>
+    <span class="n">vvc_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete a V&amp;V test case.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vvc_id : str</span>
+<span class="sd">        The UUID of the test case.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Confirmation message.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">vvc_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">vvc_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid vvc_id format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">vvc</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">VerificationTestCase</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">vvc_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">vvc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"V&amp;V test case </span><span class="si">{</span><span class="n">vvc_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check clearance on the associated node</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">vvc</span><span class="o">.</span><span class="n">portfolio_node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to delete this test case"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">vvc</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"V&amp;V test case </span><span class="si">{</span><span class="n">vvc_id</span><span class="si">}</span><span class="s2"> deleted"</span><span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># V&amp;V Gate Check Endpoint</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="vv_gate_check">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cdrl.vv_gate_check">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/node/</span><span class="si">{node_id}</span><span class="s2">/vv-gate-check"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">VVCGateCheckResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">vv_gate_check</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Check whether a portfolio node can be marked as 100% complete.</span>
+
+<span class="sd">    This endpoint enforces two completion interlocks:</span>
+
+<span class="sd">    1. **V&amp;V Signoff Gate**: If the node has ``requires_vv_signoff = True``,</span>
+<span class="sd">       all mandatory V&amp;V test cases must be PASSED or WAIVED.</span>
+
+<span class="sd">    2. **CDRL Billing Gate**: If the node has any linked CDRLs with status</span>
+<span class="sd">       REJECTED or UNDER_REVIEW, the node cannot be completed.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        The UUID of the portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VVCGateCheckResponse</span>
+<span class="sd">        Gate check result indicating whether the node can complete,</span>
+<span class="sd">        along with any blocking test cases.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid node_id format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Portfolio node </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to check this node"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">blocking_tests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VVCResponse</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">messages</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Check 1: V&amp;V signoff gate</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">requires_vv_signoff</span><span class="p">:</span>
+        <span class="n">mandatory_tests</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">VerificationTestCase</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">,</span>
+                <span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">is_mandatory</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">notin_</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">VerificationTestCaseStatus</span><span class="o">.</span><span class="n">PASSED</span><span class="p">,</span> <span class="n">VerificationTestCaseStatus</span><span class="o">.</span><span class="n">WAIVED</span><span class="p">]</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mandatory_tests</span><span class="p">:</span>
+            <span class="n">blocking_tests</span> <span class="o">=</span> <span class="p">[</span><span class="n">_vvc_to_response</span><span class="p">(</span><span class="n">tc</span><span class="p">)</span> <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="n">mandatory_tests</span><span class="p">]</span>
+            <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mandatory_tests</span><span class="p">)</span><span class="si">}</span><span class="s2"> mandatory V&amp;V test case(s) are not yet PASSED or WAIVED"</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Check 2: CDRL billing gate</span>
+    <span class="n">blocking_cdrls</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">,</span>
+            <span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
+                <span class="n">CDRLStatus</span><span class="o">.</span><span class="n">REJECTED</span><span class="p">,</span>
+                <span class="n">CDRLStatus</span><span class="o">.</span><span class="n">UNDER_REVIEW</span><span class="p">,</span>
+            <span class="p">]),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">blocking_cdrls</span><span class="p">:</span>
+        <span class="n">cdrl_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">cdrl_sequence_number</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">blocking_cdrls</span><span class="p">]</span>
+        <span class="n">messages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"CDRL(s) </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cdrl_names</span><span class="p">)</span><span class="si">}</span><span class="s2"> are REJECTED or UNDER_REVIEW — "</span>
+            <span class="s2">"cannot complete billing milestone"</span>
+        <span class="p">)</span>
+
+    <span class="n">can_complete</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocking_tests</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocking_cdrls</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">requires_vv_signoff</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">blocking_cdrls</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">"No completion gates configured — node can be marked complete"</span>
+    <span class="k">elif</span> <span class="n">can_complete</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">"All completion gates satisfied — node can be marked complete"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="s2">"Cannot complete: "</span> <span class="o">+</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">VVCGateCheckResponse</span><span class="p">(</span>
+        <span class="n">node_id</span><span class="o">=</span><span class="n">node_uuid</span><span class="p">,</span>
+        <span class="n">requires_vv_signoff</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">requires_vv_signoff</span><span class="p">,</span>
+        <span class="n">can_complete</span><span class="o">=</span><span class="n">can_complete</span><span class="p">,</span>
+        <span class="n">blocking_tests</span><span class="o">=</span><span class="n">blocking_tests</span><span class="p">,</span>
+        <span class="n">message</span><span class="o">=</span><span class="n">message</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

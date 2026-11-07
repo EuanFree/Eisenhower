@@ -1,0 +1,686 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.procurement &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.procurement</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.procurement</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Procurement tracking API router.</span>
+
+<span class="sd">This module provides endpoints for managing supply chain procurement items</span>
+<span class="sd">and binding them as hard early-start constraints to WBS tasks.</span>
+
+<span class="sd">Procurement Workflow</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">1. **Register a procurement item** — When a component is identified as a</span>
+<span class="sd">   procurement requirement, create a ``ProcurementItem`` record with the</span>
+<span class="sd">   part number, supplier CAGE code, and initial forecast delivery date.</span>
+
+<span class="sd">2. **Link to a WBS task** — Bind the procurement item to a ``PortfolioNode``</span>
+<span class="sd">   task using ``TaskProcurementConstraint``.  The task cannot start before</span>
+<span class="sd">   the procurement item's forecast delivery date.</span>
+
+<span class="sd">3. **Update lifecycle stage** — As the procurement progresses through the</span>
+<span class="sd">   pipeline (REQUISITION → RFQ_ISSUED → PO_PLACED → IN_MANUFACTURE →</span>
+<span class="sd">   CUSTOMS_TRANSIT → DELIVERED_STORES → ACCEPTED_INSPECTED), update the</span>
+<span class="sd">   lifecycle stage and forecast delivery date.  The CPM schedule is</span>
+<span class="sd">   automatically re-evaluated to reflect any date changes.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">~~~~~~~~~</span>
+
+<span class="sd">- ``POST /items`` — Register a new procurement line item.</span>
+<span class="sd">- ``GET /items`` — List all procurement items with optional filtering.</span>
+<span class="sd">- ``GET /items/{id}`` — Get a single procurement item.</span>
+<span class="sd">- ``PUT /items/{id}`` — Update a procurement item.</span>
+<span class="sd">- ``PUT /items/{id}/status`` — Update lifecycle stage and forecast date,</span>
+<span class="sd">  automatically updating affected schedule start dates.</span>
+<span class="sd">- ``DELETE /items/{id}`` — Delete a procurement item.</span>
+<span class="sd">- ``POST /tasks/{task_id}/link-part`` — Bind a procurement item to a WBS task.</span>
+<span class="sd">- ``GET /tasks/{task_id}/constraints`` — List procurement constraints on a task.</span>
+<span class="sd">- ``DELETE /tasks/{task_id}/constraints/{constraint_id}`` — Remove a constraint.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span> <span class="k">as</span> <span class="n">date_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ProcurementItem</span><span class="p">,</span> <span class="n">ProcurementLifecycleStage</span><span class="p">,</span>
+    <span class="n">TaskProcurementConstraint</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ProcurementItemCreate</span><span class="p">,</span> <span class="n">ProcurementItemUpdate</span><span class="p">,</span> <span class="n">ProcurementItemResponse</span><span class="p">,</span>
+    <span class="n">ProcurementListResponse</span><span class="p">,</span>
+    <span class="n">TaskProcurementConstraintCreate</span><span class="p">,</span> <span class="n">TaskProcurementConstraintResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="create_procurement_item">
+<a class="viewcode-back" href="../../../modules.html#app.routers.procurement.create_procurement_item">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/items"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ProcurementItemResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_procurement_item</span><span class="p">(</span>
+    <span class="n">item</span><span class="p">:</span> <span class="n">ProcurementItemCreate</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Register a new procurement line item.</span>
+
+<span class="sd">    Creates a new ``ProcurementItem`` record tracking a component through</span>
+<span class="sd">    the supply chain.  The item starts in the REQUISITION lifecycle stage</span>
+<span class="sd">    by default.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    item : ProcurementItemCreate</span>
+<span class="sd">        Procurement item data including part number, supplier CAGE code,</span>
+<span class="sd">        and optional forecast delivery date.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user creating the item.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ProcurementItemResponse</span>
+<span class="sd">        The created procurement item.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        409 if a procurement item with the same part_number already exists.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check for duplicate part number</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ProcurementItem</span><span class="o">.</span><span class="n">part_number</span> <span class="o">==</span> <span class="n">item</span><span class="o">.</span><span class="n">part_number</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">409</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Procurement item with part number '</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">part_number</span><span class="si">}</span><span class="s2">' already exists"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">db_item</span> <span class="o">=</span> <span class="n">ProcurementItem</span><span class="p">(</span>
+        <span class="n">part_number</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">part_number</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">supplier_cage_code</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">supplier_cage_code</span><span class="p">,</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">purchase_order_reference</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">purchase_order_reference</span><span class="p">,</span>
+        <span class="n">contractual_delivery_date</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">contractual_delivery_date</span><span class="p">,</span>
+        <span class="n">forecast_delivery_date</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">forecast_delivery_date</span><span class="p">,</span>
+        <span class="n">is_long_lead_item</span><span class="o">=</span><span class="n">item</span><span class="o">.</span><span class="n">is_long_lead_item</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_item</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">db_item</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">db_item</span></div>
+
+
+
+<div class="viewcode-block" id="list_procurement_items">
+<a class="viewcode-back" href="../../../modules.html#app.routers.procurement.list_procurement_items">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ProcurementListResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_procurement_items</span><span class="p">(</span>
+    <span class="n">lifecycle_stage</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ProcurementLifecycleStage</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+    <span class="n">is_long_lead</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List procurement items with optional filtering.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lifecycle_stage : ProcurementLifecycleStage or None</span>
+<span class="sd">        Filter by current lifecycle stage.</span>
+<span class="sd">    is_long_lead : bool or None</span>
+<span class="sd">        Filter by long-lead item flag.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ProcurementListResponse</span>
+<span class="sd">        List of procurement items matching the filters.</span>
+<span class="sd">    """</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">lifecycle_stage</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="o">.</span><span class="n">lifecycle_stage</span> <span class="o">==</span> <span class="n">lifecycle_stage</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_long_lead</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="o">.</span><span class="n">is_long_lead_item</span> <span class="o">==</span> <span class="n">is_long_lead</span><span class="p">)</span>
+
+    <span class="n">items</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ProcurementListResponse</span><span class="p">(</span>
+        <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">,</span>
+        <span class="n">total_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_procurement_item">
+<a class="viewcode-back" href="../../../modules.html#app.routers.procurement.get_procurement_item">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ProcurementItemResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_procurement_item</span><span class="p">(</span>
+    <span class="n">item_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get a single procurement item by ID.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    item_id : UUID</span>
+<span class="sd">        UUID of the procurement item.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ProcurementItemResponse</span>
+<span class="sd">        The procurement item.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the item is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">item</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">item_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Procurement item not found"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">item</span></div>
+
+
+
+<div class="viewcode-block" id="update_procurement_item">
+<a class="viewcode-back" href="../../../modules.html#app.routers.procurement.update_procurement_item">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ProcurementItemResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_procurement_item</span><span class="p">(</span>
+    <span class="n">item_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">update_data</span><span class="p">:</span> <span class="n">ProcurementItemUpdate</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update a procurement item.</span>
+
+<span class="sd">    All fields are optional.  Typically used to update forecast delivery</span>
+<span class="sd">    dates, purchase order references, or descriptions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    item_id : UUID</span>
+<span class="sd">        UUID of the procurement item.</span>
+<span class="sd">    update_data : ProcurementItemUpdate</span>
+<span class="sd">        Fields to update.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ProcurementItemResponse</span>
+<span class="sd">        The updated procurement item.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the item is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">item</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">item_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Procurement item not found"</span><span class="p">)</span>
+
+    <span class="n">update_dict</span> <span class="o">=</span> <span class="n">update_data</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">update_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">item</span></div>
+
+
+
+<div class="viewcode-block" id="update_procurement_status">
+<a class="viewcode-back" href="../../../modules.html#app.routers.procurement.update_procurement_status">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">/status"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ProcurementItemResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_procurement_status</span><span class="p">(</span>
+    <span class="n">item_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">lifecycle_stage</span><span class="p">:</span> <span class="n">ProcurementLifecycleStage</span><span class="p">,</span>
+    <span class="n">forecast_delivery_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date_type</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">actual_arrival_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date_type</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update procurement lifecycle stage and forecast arrival date.</span>
+
+<span class="sd">    Advances the procurement item through the lifecycle pipeline and</span>
+<span class="sd">    optionally updates the forecast delivery date.  When the forecast</span>
+<span class="sd">    date changes, affected CPM schedule start dates are automatically</span>
+<span class="sd">    updated on the next ``recalculate-cpm`` call.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    item_id : UUID</span>
+<span class="sd">        UUID of the procurement item.</span>
+<span class="sd">    lifecycle_stage : ProcurementLifecycleStage</span>
+<span class="sd">        New lifecycle stage.</span>
+<span class="sd">    forecast_delivery_date : date or None</span>
+<span class="sd">        Updated forecast delivery date.</span>
+<span class="sd">    actual_arrival_date : date or None</span>
+<span class="sd">        Actual arrival date (typically set when stage is DELIVERED_STORES).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ProcurementItemResponse</span>
+<span class="sd">        The updated procurement item.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the item is not found.</span>
+<span class="sd">        400 if the lifecycle stage transition is invalid.</span>
+<span class="sd">    """</span>
+    <span class="n">item</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">item_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Procurement item not found"</span><span class="p">)</span>
+
+    <span class="c1"># Validate lifecycle stage progression</span>
+    <span class="n">stage_order</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">ProcurementLifecycleStage</span><span class="o">.</span><span class="n">REQUISITION</span><span class="p">,</span>
+        <span class="n">ProcurementLifecycleStage</span><span class="o">.</span><span class="n">RFQ_ISSUED</span><span class="p">,</span>
+        <span class="n">ProcurementLifecycleStage</span><span class="o">.</span><span class="n">PO_PLACED</span><span class="p">,</span>
+        <span class="n">ProcurementLifecycleStage</span><span class="o">.</span><span class="n">IN_MANUFACTURE</span><span class="p">,</span>
+        <span class="n">ProcurementLifecycleStage</span><span class="o">.</span><span class="n">CUSTOMS_TRANSIT</span><span class="p">,</span>
+        <span class="n">ProcurementLifecycleStage</span><span class="o">.</span><span class="n">DELIVERED_STORES</span><span class="p">,</span>
+        <span class="n">ProcurementLifecycleStage</span><span class="o">.</span><span class="n">ACCEPTED_INSPECTED</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">current_index</span> <span class="o">=</span> <span class="n">stage_order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">lifecycle_stage</span><span class="p">)</span>
+    <span class="n">new_index</span> <span class="o">=</span> <span class="n">stage_order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">lifecycle_stage</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">new_index</span> <span class="o">&lt;</span> <span class="n">current_index</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Cannot regress from '</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">lifecycle_stage</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">' to '</span><span class="si">{</span><span class="n">lifecycle_stage</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">'. "</span>
+                   <span class="sa">f</span><span class="s2">"Procurement lifecycle stages can only advance forward."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">item</span><span class="o">.</span><span class="n">lifecycle_stage</span> <span class="o">=</span> <span class="n">lifecycle_stage</span>
+
+    <span class="k">if</span> <span class="n">forecast_delivery_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">forecast_delivery_date</span> <span class="o">=</span> <span class="n">forecast_delivery_date</span>
+
+    <span class="k">if</span> <span class="n">actual_arrival_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">actual_arrival_date</span> <span class="o">=</span> <span class="n">actual_arrival_date</span>
+
+    <span class="c1"># Auto-set actual_arrival_date when transitioning to DELIVERED_STORES</span>
+    <span class="k">if</span> <span class="n">lifecycle_stage</span> <span class="o">==</span> <span class="n">ProcurementLifecycleStage</span><span class="o">.</span><span class="n">DELIVERED_STORES</span> <span class="ow">and</span> <span class="n">actual_arrival_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span> <span class="k">as</span> <span class="n">date_today</span>
+        <span class="n">item</span><span class="o">.</span><span class="n">actual_arrival_date</span> <span class="o">=</span> <span class="n">date_today</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">item</span></div>
+
+
+
+<div class="viewcode-block" id="delete_procurement_item">
+<a class="viewcode-back" href="../../../modules.html#app.routers.procurement.delete_procurement_item">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/items/</span><span class="si">{item_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_procurement_item</span><span class="p">(</span>
+    <span class="n">item_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete a procurement item.</span>
+
+<span class="sd">    Also removes any associated ``TaskProcurementConstraint`` records</span>
+<span class="sd">    via cascade delete.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    item_id : UUID</span>
+<span class="sd">        UUID of the procurement item.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Confirmation message.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the item is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">item</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">item_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Procurement item not found"</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Procurement item '</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">part_number</span><span class="si">}</span><span class="s2">' deleted"</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="link_procurement_to_task">
+<a class="viewcode-back" href="../../../modules.html#app.routers.procurement.link_procurement_to_task">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/link-part"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">TaskProcurementConstraintResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">link_procurement_to_task</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">constraint</span><span class="p">:</span> <span class="n">TaskProcurementConstraintCreate</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Bind a procurement item to a WBS task as a hard early-start constraint.</span>
+
+<span class="sd">    Creates a ``TaskProcurementConstraint`` linking a procurement item to</span>
+<span class="sd">    a ``PortfolioNode`` task.  The task cannot start before the procurement</span>
+<span class="sd">    item's forecast delivery date — this is enforced during the CPM forward</span>
+<span class="sd">    pass.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : UUID</span>
+<span class="sd">        UUID of the PortfolioNode task to constrain.</span>
+<span class="sd">    constraint : TaskProcurementConstraintCreate</span>
+<span class="sd">        Procurement item ID and required-on-site date.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TaskProcurementConstraintResponse</span>
+<span class="sd">        The created constraint with nested procurement item details.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the task or procurement item is not found.</span>
+<span class="sd">        409 if this constraint already exists.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Verify task exists</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">task_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"PortfolioNode task not found"</span><span class="p">)</span>
+
+    <span class="c1"># Verify procurement item exists</span>
+    <span class="n">item</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ProcurementItem</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">constraint</span><span class="o">.</span><span class="n">procurement_item_id</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Procurement item not found"</span><span class="p">)</span>
+
+    <span class="c1"># Check for duplicate constraint</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TaskProcurementConstraint</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">TaskProcurementConstraint</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_id</span><span class="p">,</span>
+        <span class="n">TaskProcurementConstraint</span><span class="o">.</span><span class="n">procurement_item_id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">constraint</span><span class="o">.</span><span class="n">procurement_item_id</span><span class="p">),</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">409</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Task '</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' is already constrained by part '</span><span class="si">{</span><span class="n">item</span><span class="o">.</span><span class="n">part_number</span><span class="si">}</span><span class="s2">'"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">db_constraint</span> <span class="o">=</span> <span class="n">TaskProcurementConstraint</span><span class="p">(</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">task_id</span><span class="p">,</span>
+        <span class="n">procurement_item_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">constraint</span><span class="o">.</span><span class="n">procurement_item_id</span><span class="p">),</span>
+        <span class="n">required_on_site_date</span><span class="o">=</span><span class="n">constraint</span><span class="o">.</span><span class="n">required_on_site_date</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_constraint</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">db_constraint</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">TaskProcurementConstraintResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">db_constraint</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">db_constraint</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+        <span class="n">procurement_item_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">db_constraint</span><span class="o">.</span><span class="n">procurement_item_id</span><span class="p">),</span>
+        <span class="n">required_on_site_date</span><span class="o">=</span><span class="n">db_constraint</span><span class="o">.</span><span class="n">required_on_site_date</span><span class="p">,</span>
+        <span class="n">procurement_item</span><span class="o">=</span><span class="n">ProcurementItemResponse</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">item</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="list_task_constraints">
+<a class="viewcode-back" href="../../../modules.html#app.routers.procurement.list_task_constraints">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/constraints"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="nb">list</span><span class="p">[</span><span class="n">TaskProcurementConstraintResponse</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_task_constraints</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all procurement constraints on a specific task.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : UUID</span>
+<span class="sd">        UUID of the PortfolioNode task.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[TaskProcurementConstraintResponse]</span>
+<span class="sd">        List of procurement constraints with nested item details.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the task is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">task_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"PortfolioNode task not found"</span><span class="p">)</span>
+
+    <span class="n">constraints</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TaskProcurementConstraint</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">TaskProcurementConstraint</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">constraints</span><span class="p">:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">TaskProcurementConstraintResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+            <span class="n">procurement_item_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">procurement_item_id</span><span class="p">),</span>
+            <span class="n">required_on_site_date</span><span class="o">=</span><span class="n">c</span><span class="o">.</span><span class="n">required_on_site_date</span><span class="p">,</span>
+            <span class="n">procurement_item</span><span class="o">=</span><span class="n">ProcurementItemResponse</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">procurement_item</span><span class="p">),</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="remove_task_constraint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.procurement.remove_task_constraint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/constraints/</span><span class="si">{constraint_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">remove_task_constraint</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">constraint_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Remove a procurement constraint from a task.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : UUID</span>
+<span class="sd">        UUID of the PortfolioNode task.</span>
+<span class="sd">    constraint_id : UUID</span>
+<span class="sd">        UUID of the constraint to remove.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Confirmation message.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the constraint is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">constraint</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TaskProcurementConstraint</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">TaskProcurementConstraint</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">constraint_id</span><span class="p">,</span>
+            <span class="n">TaskProcurementConstraint</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_id</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">constraint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Constraint not found for this task"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Procurement constraint removed"</span><span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

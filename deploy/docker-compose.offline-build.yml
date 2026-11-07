@@ -1,0 +1,228 @@
+# ============================================================
+# Eisenhower Portfolio Manager — Offline Build Orchestration
+# ============================================================
+#
+# This Docker Compose file builds the production images using ONLY
+# local filesystem caches. It is designed for air-gapped environments
+# where the build host has zero outbound network connectivity.
+#
+# Prerequisites
+# ~~~~~~~~~~~~~
+#
+# 1. Run `python -m scripts.build_offline_bundle` on a connected host
+#    to download all Python wheels, npm packages, and web fonts.
+#
+# 2. Copy the entire `deploy/offline/` directory to the air-gapped
+#    build host via optical media or USB diode.
+#
+# 3. On the air-gapped host, run:
+#
+#    docker compose -f deploy/docker-compose.offline-build.yml up --build
+#
+# How It Works
+# ~~~~~~~~~~~~
+#
+# Backend (FastAPI):
+#   - Sets PIP_NO_INDEX=1 to disable PyPI lookups
+#   - Sets PIP_FIND_LINKS=/offline/wheelhouse to use local wheels
+#   - Installs all dependencies from pre-downloaded .whl files
+#
+# Frontend (React/Vite):
+#   - Mounts the npm cache from deploy/offline/npm_cache/
+#   - Uses --cache and --prefer-offline flags
+#   - Falls back to individual package tarballs if cache fails
+#
+# Security
+# ~~~~~~~~
+#
+# - All images run as non-root users
+# - No outbound network access required at build or runtime
+# - All dependencies are SHA-256 verified via manifest.json
+#
+# ============================================================
+
+version: "3.9"
+
+# ---------------------------------------------------------------------------
+# Volumes — Local offline caches
+# ---------------------------------------------------------------------------
+
+volumes:
+  postgres_data:
+    driver: local
+  minio_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ---------------------------------------------------------------------------
+# Networks — Isolated bridge network (no WAN access)
+# ---------------------------------------------------------------------------
+
+networks:
+  eisenhower:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ---------------------------------------------------------------------------
+# Services
+# ---------------------------------------------------------------------------
+
+services:
+
+  # -----------------------------------------------------------------------
+  # PostgreSQL 16 — Primary database with ltree extension
+  # -----------------------------------------------------------------------
+  postgres:
+    image: postgres:16-bookworm
+    container_name: eisenhower-postgres
+    restart: unless-stopped
+    networks:
+      eisenhower:
+        ipv4_address: 172.28.0.10
+    environment:
+      POSTGRES_DB: eisenhower
+      POSTGRES_USER: eisenhower
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eisenhower_secure_change_me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c effective_cache_size=1536MB
+      -c maintenance_work_mem=128MB
+      -c work_mem=16MB
+      -c wal_buffers=16MB
+      -c max_wal_size=1GB
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eisenhower -d eisenhower"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  # -----------------------------------------------------------------------
+  # MinIO — S3-compatible sovereign artifact vault
+  # -----------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: eisenhower-minio
+    restart: unless-stopped
+    networks:
+      eisenhower:
+        ipv4_address: 172.28.0.20
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_SERVER_URL: http://localhost:9000
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  # -----------------------------------------------------------------------
+  # Redis 7 — Message bus for WebSocket presence & background tasks
+  # -----------------------------------------------------------------------
+  redis:
+    image: redis:7-bookworm
+    container_name: eisenhower-redis
+    restart: unless-stopped
+    networks:
+      eisenhower:
+        ipv4_address: 172.28.0.30
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+
+  # -----------------------------------------------------------------------
+  # FastAPI Backend — Gunicorn + Uvicorn workers
+  # -----------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: deploy/docker/backend.Dockerfile.offline
+      args:
+        PIP_NO_INDEX: "1"
+        PIP_FIND_LINKS: "/offline/wheelhouse"
+    container_name: eisenhower-backend
+    restart: unless-stopped
+    networks:
+      eisenhower:
+        ipv4_address: 172.28.0.40
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      APP_ENVIRONMENT: production
+      APP_SECRET_KEY: ${APP_SECRET_KEY:-CHANGE_ME_IN_PRODUCTION}
+      DATABASE_URL: postgresql://eisenhower:${POSTGRES_PASSWORD:-eisenhower_secure_change_me}@postgres:5432/eisenhower
+      REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET_NAME: eisenhower-artifacts
+      S3_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRATION_MINUTES: "480"
+    volumes:
+      - ./deploy/offline/wheelhouse:/offline/wheelhouse:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    ports:
+      - "8000:8000"
+
+  # -----------------------------------------------------------------------
+  # Frontend Gateway — Hardened Nginx serving React SPA
+  # -----------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/docker/frontend.Dockerfile.offline
+      args:
+        NPM_CACHE_DIR: "/offline/npm_cache/npm-cache"
+    container_name: eisenhower-frontend
+    restart: unless-stopped
+    networks:
+      eisenhower:
+        ipv4_address: 172.28.0.50
+    depends_on:
+      - backend
+    volumes:
+      - ./deploy/offline/npm_cache:/offline/npm_cache:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    ports:
+      - "8080:8080"

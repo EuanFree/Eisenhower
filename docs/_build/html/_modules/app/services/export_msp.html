@@ -1,0 +1,729 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.export_msp &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.export_msp</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.export_msp</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Microsoft Project schedule export service with defence export sanitization.</span>
+
+<span class="sd">This module serialises the live PortfolioNode WBS (Work Breakdown Structure),</span>
+<span class="sd">activities, DependencyLink precedence records, and resource assignments into</span>
+<span class="sd">the standard Microsoft Project XML schema.</span>
+
+<span class="sd">What is the MS Project XML format?</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Microsoft Project can import/export schedules in an XML format rooted at::</span>
+
+<span class="sd">    &lt;Project xmlns="http://schemas.microsoft.com/project"&gt;</span>
+
+<span class="sd">The schema includes elements for:</span>
+
+<span class="sd">- **Calendar** — Working hours and exceptions.</span>
+<span class="sd">- **Tasks** — Each task with ID, name, outline level, dates, and progress.</span>
+<span class="sd">- **Predecessors** — Dependency links between tasks.</span>
+<span class="sd">- **Resources** — Resource definitions.</span>
+<span class="sd">- **Assignments** — Resource-to-task assignments with units and rates.</span>
+
+<span class="sd">This format is widely supported and can be opened directly in MS Project</span>
+<span class="sd">desktop or Project Online.</span>
+
+<span class="sd">Export-Control Sanitization</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">In defence environments, schedule exports may be shared with subcontractors</span>
+<span class="sd">or commercial partners who do not have the same security clearance as the</span>
+<span class="sd">programme team.  Two sanitization toggles are provided:</span>
+
+<span class="sd">1. **redact_classified_descriptions** — When enabled, any node whose</span>
+<span class="sd">   ``security_classification`` is SECRET or higher has its ``name`` and</span>
+<span class="sd">   ``code`` replaced with a generic placeholder (e.g., ``[RESTRICTED]``)</span>
+<span class="sd">   so that classified work package names do not leak into the export.</span>
+
+<span class="sd">2. **mask_commercial_labor_rates** — When enabled, all resource assignment</span>
+<span class="sd">   ``rate_snapshot`` values are set to ``0.00`` in the export output,</span>
+<span class="sd">   preventing proprietary rate information from reaching subcontractors.</span>
+
+<span class="sd">Dependencies</span>
+<span class="sd">~~~~~~~~~~~~</span>
+
+<span class="sd">This service requires a live PostgreSQL instance to query the PortfolioNode</span>
+<span class="sd">tree via ltree containment queries.  The CPM schedule should ideally be</span>
+<span class="sd">calculated first so that Early Start/Finish and Late Start/Finish dates</span>
+<span class="sd">are available in node ``custom_attributes``.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xml.etree.ElementTree</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ET</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">xml.dom</span><span class="w"> </span><span class="kn">import</span> <span class="n">minidom</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DependencyLink</span><span class="p">,</span>
+    <span class="n">DependencyType</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">ResourceAssignment</span><span class="p">,</span>
+    <span class="n">ResourceNode</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Security classification helpers</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="n">_SECURITY_RANK</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL_SENSITIVE</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">TOP_SECRET</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_classified_for_redaction</span><span class="p">(</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return True if a node's classification warrants redaction.</span>
+
+<span class="sd">    Nodes classified SECRET or above are redacted when</span>
+<span class="sd">    ``redact_classified_descriptions`` is enabled.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : UniversalBreakdownNode</span>
+<span class="sd">        The node to check.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the node should be redacted.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">_SECURITY_RANK</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">_SECURITY_RANK</span><span class="p">[</span>
+        <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the node name, potentially redacted.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        The original node name.</span>
+<span class="sd">    node : UniversalBreakdownNode</span>
+<span class="sd">        The node being exported.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The name, or ``[RESTRICTED]`` if the node is classified.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">_is_classified_for_redaction</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"[RESTRICTED]"</span>
+    <span class="k">return</span> <span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_code</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the node code, potentially redacted.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    code : str</span>
+<span class="sd">        The original node code.</span>
+<span class="sd">    node : UniversalBreakdownNode</span>
+<span class="sd">        The node being exported.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The code, or ``[RESTRICTED]`` if the node is classified.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">_is_classified_for_redaction</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"[RESTRICTED]"</span>
+    <span class="k">return</span> <span class="n">code</span> <span class="ow">or</span> <span class="s2">""</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Data collection (shared pattern with export_p6)</span>
+<span class="c1"># ============================================================================</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_project_data</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
+    <span class="n">Optional</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">List</span><span class="p">[</span><span class="n">DependencyLink</span><span class="p">],</span>
+    <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ResourceAssignment</span><span class="p">]],</span>
+<span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Collect all data needed for the export from the database.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        SQLAlchemy database session.</span>
+<span class="sd">    root_id : UUID</span>
+<span class="sd">        The root PortfolioNode ID for the project/programme.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        A 4-tuple of (root_node, nodes_dict, dependencies, assignments).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the root node is not found.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">sa_text</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">root_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># All descendants via ltree path prefix</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">sa_text</span><span class="p">(</span>
+            <span class="s2">"SELECT * FROM portfolio_nodes pn "</span>
+            <span class="s2">"JOIN universal_breakdown_nodes ubn ON pn.id = ubn.id "</span>
+            <span class="s2">"WHERE ubn.path &lt;@ :root_path AND ubn.is_active = true"</span>
+        <span class="p">),</span>
+        <span class="p">{</span><span class="s2">"root_path"</span><span class="p">:</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">row_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">row</span><span class="p">))</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span>
+
+    <span class="c1"># Dependencies within the tree</span>
+    <span class="n">node_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">dependencies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DependencyLink</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">node_ids</span><span class="p">:</span>
+        <span class="n">dependencies</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">),</span>
+                <span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Resource assignments for nodes in the tree</span>
+    <span class="n">assignments</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ResourceAssignment</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">node_ids</span><span class="p">:</span>
+        <span class="n">all_assignments</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">all_assignments</span><span class="p">:</span>
+            <span class="n">assignments</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">assignment</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">root</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">dependencies</span><span class="p">,</span> <span class="n">assignments</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># XML helpers</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="n">_NS</span> <span class="o">=</span> <span class="s2">"http://schemas.microsoft.com/project"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_text</span><span class="p">(</span><span class="n">parent</span><span class="p">:</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">,</span> <span class="n">tag</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a child element with text content.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    parent : ET.Element</span>
+<span class="sd">        The parent XML element.</span>
+<span class="sd">    tag : str</span>
+<span class="sd">        The child element tag name.</span>
+<span class="sd">    text : str</span>
+<span class="sd">        The text content.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ET.Element</span>
+<span class="sd">        The created child element.</span>
+<span class="sd">    """</span>
+    <span class="n">elem</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">elem</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span>
+    <span class="k">return</span> <span class="n">elem</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_msp_date</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Format a datetime or date object as an MS Project-compatible date string.</span>
+
+<span class="sd">    MS Project uses the format ``YYYY-MM-DDTHH:MM:SS``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dt : datetime or date or None</span>
+<span class="sd">        The date to format.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        The formatted date string or None.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">dt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">datetime</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T%H:%M:%S"</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">T00:00:00"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_outline_level</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute the outline level from the ltree path.</span>
+
+<span class="sd">    The outline level corresponds to the depth in the hierarchy.  A root</span>
+<span class="sd">    node with path ``'1'`` has level 1, its children with path ``'1.2'``</span>
+<span class="sd">    have level 2, and so on.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : UniversalBreakdownNode</span>
+<span class="sd">        The node to compute the level for.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        The outline level (1-based).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># XML generation</span>
+<span class="c1"># ============================================================================</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_generate_msp_xml</span><span class="p">(</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">dependencies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DependencyLink</span><span class="p">],</span>
+    <span class="n">assignments</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">ResourceAssignment</span><span class="p">]],</span>
+    <span class="n">redact_classified_descriptions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">mask_commercial_labor_rates</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate a complete Microsoft Project XML file content.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root : PortfolioNode</span>
+<span class="sd">        The root node of the project tree.</span>
+<span class="sd">    nodes : dict</span>
+<span class="sd">        All PortfolioNode descendants keyed by UUID.</span>
+<span class="sd">    dependencies : list</span>
+<span class="sd">        All DependencyLink records within the tree.</span>
+<span class="sd">    assignments : dict</span>
+<span class="sd">        Resource assignments keyed by portfolio_node_id.</span>
+<span class="sd">    redact_classified_descriptions : bool, optional</span>
+<span class="sd">        If True, redact names/codes of SECRET+ nodes.</span>
+<span class="sd">    mask_commercial_labor_rates : bool, optional</span>
+<span class="sd">        If True, set all rate_snapshot values to 0.00.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The complete MS Project XML content as a pretty-printed string.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Root element</span>
+    <span class="n">project</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s2">"Project"</span><span class="p">,</span> <span class="n">xmlns</span><span class="o">=</span><span class="n">_NS</span><span class="p">)</span>
+
+    <span class="c1"># --- Registered Name ---</span>
+    <span class="n">_set_text</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="s2">"RegisteredName"</span><span class="p">,</span> <span class="s2">"Eisenhower Portfolio Manager"</span><span class="p">)</span>
+
+    <span class="c1"># --- Calendar ---</span>
+    <span class="n">calendar</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Calendar"</span><span class="p">)</span>
+    <span class="n">_set_text</span><span class="p">(</span><span class="n">calendar</span><span class="p">,</span> <span class="s2">"UID"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">)</span>
+    <span class="n">_set_text</span><span class="p">(</span><span class="n">calendar</span><span class="p">,</span> <span class="s2">"Name"</span><span class="p">,</span> <span class="s2">"Standard"</span><span class="p">)</span>
+
+    <span class="n">weekdefs</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">calendar</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">WeekDefinitions"</span><span class="p">)</span>
+    <span class="n">weekdef</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">weekdefs</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">WeekDefinition"</span><span class="p">)</span>
+    <span class="n">_set_text</span><span class="p">(</span><span class="n">weekdef</span><span class="p">,</span> <span class="s2">"Name"</span><span class="p">,</span> <span class="s2">"Standard Week"</span><span class="p">)</span>
+
+    <span class="n">days</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">weekdef</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Days"</span><span class="p">)</span>
+
+    <span class="c1"># Monday–Friday: working days</span>
+    <span class="k">for</span> <span class="n">day_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"Monday"</span><span class="p">,</span> <span class="s2">"Tuesday"</span><span class="p">,</span> <span class="s2">"Wednesday"</span><span class="p">,</span> <span class="s2">"Thursday"</span><span class="p">,</span> <span class="s2">"Friday"</span><span class="p">]:</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Day"</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">day</span><span class="p">,</span> <span class="s2">"DayType"</span><span class="p">,</span> <span class="s2">"Working"</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">day</span><span class="p">,</span> <span class="s2">"DayWorking"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">)</span>
+        <span class="n">day_period</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">day</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">DayWorkingTimes"</span><span class="p">)</span>
+        <span class="n">period</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">day_period</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">WorkingTime"</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="s2">"FromTime"</span><span class="p">,</span> <span class="s2">"08:00:00"</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="s2">"ToTime"</span><span class="p">,</span> <span class="s2">"17:00:00"</span><span class="p">)</span>
+
+    <span class="c1"># Saturday and Sunday: non-working</span>
+    <span class="k">for</span> <span class="n">day_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"Saturday"</span><span class="p">,</span> <span class="s2">"Sunday"</span><span class="p">]:</span>
+        <span class="n">day</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Day"</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">day</span><span class="p">,</span> <span class="s2">"DayType"</span><span class="p">,</span> <span class="s2">"DayType_None"</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">day</span><span class="p">,</span> <span class="s2">"DayWorking"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">)</span>
+
+    <span class="n">_set_text</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="s2">"CalendarUID"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">)</span>
+
+    <span class="c1"># --- Tasks ---</span>
+    <span class="n">tasks_elem</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Tasks"</span><span class="p">)</span>
+
+    <span class="c1"># Sort nodes by path for proper hierarchy ordering</span>
+    <span class="n">sorted_nodes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">n</span><span class="o">.</span><span class="n">path</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">path</span> <span class="k">else</span> <span class="s2">""</span><span class="p">)</span>
+
+    <span class="c1"># Build a mapping from node_id to task_index for predecessor references</span>
+    <span class="n">node_to_task_index</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">task_index</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">sorted_nodes</span><span class="p">:</span>
+        <span class="n">task</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">tasks_elem</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Task"</span><span class="p">)</span>
+
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"UID"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"ID"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">task_index</span><span class="p">))</span>
+
+        <span class="n">task_name</span> <span class="o">=</span> <span class="n">_sanitize_name</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="k">if</span> <span class="n">redact_classified_descriptions</span> <span class="k">else</span> <span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"Name"</span><span class="p">,</span> <span class="n">task_name</span><span class="p">)</span>
+
+        <span class="c1"># Outline level based on path depth</span>
+        <span class="n">outline_level</span> <span class="o">=</span> <span class="n">_compute_outline_level</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"OutlineLevel"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">outline_level</span><span class="p">))</span>
+
+        <span class="c1"># Dates</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">_format_msp_date</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">)</span>
+        <span class="n">finish</span> <span class="o">=</span> <span class="n">_format_msp_date</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">start</span><span class="p">:</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"Start"</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">finish</span><span class="p">:</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"Finish"</span><span class="p">,</span> <span class="n">finish</span><span class="p">)</span>
+
+        <span class="n">actual_start</span> <span class="o">=</span> <span class="n">_format_msp_date</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">actual_start_date</span><span class="p">)</span>
+        <span class="n">actual_finish</span> <span class="o">=</span> <span class="n">_format_msp_date</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">actual_end_date</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">actual_start</span><span class="p">:</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"ActualStart"</span><span class="p">,</span> <span class="n">actual_start</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">actual_finish</span><span class="p">:</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"ActualFinish"</span><span class="p">,</span> <span class="n">actual_finish</span><span class="p">)</span>
+
+        <span class="c1"># Progress</span>
+        <span class="n">pct</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">percent_complete</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"PercentComplete"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">pct</span><span class="p">))</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"PercentWorkComplete"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">pct</span><span class="p">))</span>
+
+        <span class="c1"># Mark summary tasks (nodes with children in the tree)</span>
+        <span class="n">has_children</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+            <span class="n">n</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">==</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">sorted_nodes</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_children</span><span class="p">:</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"Summary"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"Summary"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">)</span>
+
+        <span class="c1"># EVM fields as custom fields</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">pv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"CV"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">pv</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">ev</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"EV"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ev</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">ac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="s2">"AC"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">ac</span><span class="p">))</span>
+
+        <span class="n">node_to_task_index</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">task_index</span>
+        <span class="n">task_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># --- Predecessors ---</span>
+    <span class="k">if</span> <span class="n">dependencies</span><span class="p">:</span>
+        <span class="c1"># We need to add Predecessors elements to the corresponding tasks</span>
+        <span class="c1"># Build a mapping from successor_id to predecessor info</span>
+        <span class="n">pred_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">dependencies</span><span class="p">:</span>
+            <span class="n">pred_task_id</span> <span class="o">=</span> <span class="n">node_to_task_index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">)</span>
+            <span class="n">succ_node_id</span> <span class="o">=</span> <span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span>
+            <span class="k">if</span> <span class="n">pred_task_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># MS Project predecessor format: ID[+/-lag][FS/SS/FF/SF]</span>
+                <span class="n">lag</span> <span class="o">=</span> <span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span> <span class="ow">or</span> <span class="mi">0</span>
+                <span class="n">dep_type</span> <span class="o">=</span> <span class="n">dep</span><span class="o">.</span><span class="n">dependency_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">dep</span><span class="o">.</span><span class="n">dependency_type</span> <span class="k">else</span> <span class="s2">"FS"</span>
+                <span class="k">if</span> <span class="n">lag</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">pred_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pred_task_id</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="n">lag</span><span class="si">}{</span><span class="n">dep_type</span><span class="si">}</span><span class="s2">"</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">pred_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">pred_task_id</span><span class="si">}{</span><span class="n">lag</span><span class="si">}{</span><span class="n">dep_type</span><span class="si">}</span><span class="s2">"</span>
+                <span class="n">pred_map</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">succ_node_id</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pred_str</span><span class="p">)</span>
+
+        <span class="c1"># Add predecessors to tasks</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">sorted_nodes</span><span class="p">:</span>
+            <span class="n">preds</span> <span class="o">=</span> <span class="n">pred_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="k">if</span> <span class="n">preds</span><span class="p">:</span>
+                <span class="c1"># Find the task element by UID</span>
+                <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks_elem</span><span class="p">:</span>
+                    <span class="n">uid_elem</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">UID"</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">uid_elem</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">uid_elem</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">):</span>
+                        <span class="n">pred_elem</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Predecessors"</span><span class="p">)</span>
+                        <span class="n">pred_elem</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
+                        <span class="k">break</span>
+
+    <span class="c1"># --- Resources ---</span>
+    <span class="n">resources_elem</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Resources"</span><span class="p">)</span>
+
+    <span class="c1"># Collect unique resources from assignments</span>
+    <span class="n">resource_ids</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node_assignments</span> <span class="ow">in</span> <span class="n">assignments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">node_assignments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">resource_ids</span><span class="p">:</span>
+                <span class="n">resource_ids</span><span class="p">[</span><span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">assignment</span>
+
+    <span class="n">resource_index</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">resource_ids</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">resource</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">resources_elem</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Resource"</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="s2">"UID"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">resource_id</span><span class="p">))</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="s2">"ID"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">resource_index</span><span class="p">))</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="s2">"Name"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Resource-</span><span class="si">{</span><span class="n">resource_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="s2">"Type"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">)</span>  <span class="c1"># 1 = Work resource</span>
+
+        <span class="c1"># Rate</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="mf">0.00</span> <span class="k">if</span> <span class="n">mask_commercial_labor_rates</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">rate_snapshot</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="s2">"StandardRate"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">rate</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="n">_set_text</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="s2">"StandardRateFormat"</span><span class="p">,</span> <span class="s2">"2"</span><span class="p">)</span>  <span class="c1"># 2 = Hour</span>
+
+        <span class="n">resource_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># --- Assignments ---</span>
+    <span class="n">assignments_elem</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Assignments"</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node_assignments</span> <span class="ow">in</span> <span class="n">assignments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">task_uid</span> <span class="o">=</span> <span class="n">node_to_task_index</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">task_uid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">node_assignments</span><span class="p">:</span>
+            <span class="n">assignment_elem</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">SubElement</span><span class="p">(</span><span class="n">assignments_elem</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="se">{{</span><span class="si">{</span><span class="n">_NS</span><span class="si">}</span><span class="se">}}</span><span class="s2">Assignment"</span><span class="p">)</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">assignment_elem</span><span class="p">,</span> <span class="s2">"UID"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">assignment_elem</span><span class="p">,</span> <span class="s2">"TaskUID"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_id</span><span class="p">))</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">assignment_elem</span><span class="p">,</span> <span class="s2">"ResourceUID"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">))</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">assignment_elem</span><span class="p">,</span> <span class="s2">"PercentWorkComplete"</span><span class="p">,</span> <span class="s2">"0"</span><span class="p">)</span>
+
+            <span class="c1"># Units (as percentage)</span>
+            <span class="n">units</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">assignment</span><span class="o">.</span><span class="n">allocated_units</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+            <span class="n">_set_text</span><span class="p">(</span><span class="n">assignment_elem</span><span class="p">,</span> <span class="s2">"Units"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">units</span><span class="p">))</span>
+
+    <span class="c1"># Pretty-print the XML</span>
+    <span class="n">rough_string</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">project</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"unicode"</span><span class="p">,</span> <span class="n">xml_declaration</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">dom</span> <span class="o">=</span> <span class="n">minidom</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="n">rough_string</span><span class="p">)</span>
+    <span class="n">pretty_xml</span> <span class="o">=</span> <span class="n">dom</span><span class="o">.</span><span class="n">toprettyxml</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="s2">"  "</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># Add XML declaration</span>
+    <span class="n">xml_output</span> <span class="o">=</span> <span class="s1">'&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span><span class="se">\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">pretty_xml</span>
+
+    <span class="k">return</span> <span class="n">xml_output</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Public API</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="export_to_msp_xml">
+<a class="viewcode-back" href="../../../modules.html#app.services.export_msp.export_to_msp_xml">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_to_msp_xml</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">user_upn</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"system"</span><span class="p">,</span>
+    <span class="n">redact_classified_descriptions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">mask_commercial_labor_rates</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Export a project tree to Microsoft Project XML format.</span>
+
+<span class="sd">    This is the main entry point for generating a Microsoft Project-compatible</span>
+<span class="sd">    schedule export.  It collects all PortfolioNode descendants, their</span>
+<span class="sd">    dependencies, and resource assignments, then serialises them into</span>
+<span class="sd">    the MS Project XML schema.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        SQLAlchemy database session.</span>
+<span class="sd">    root_id : UUID</span>
+<span class="sd">        The root PortfolioNode ID for the project/programme to export.</span>
+<span class="sd">    user_upn : str, optional</span>
+<span class="sd">        User Principal Name for the audit log entry.</span>
+<span class="sd">    redact_classified_descriptions : bool, optional</span>
+<span class="sd">        If True, replace names and codes of nodes classified SECRET or</span>
+<span class="sd">        higher with ``[RESTRICTED]``.</span>
+<span class="sd">    mask_commercial_labor_rates : bool, optional</span>
+<span class="sd">        If True, set all resource rate_snapshot values to ``0.00`` in</span>
+<span class="sd">        the export.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The complete MS Project XML content as a pretty-printed string.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the root node is not found.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    An entry is written to :class:`ForensicAuditLog` with action type</span>
+<span class="sd">    ``EXPORT`` to record the export event in the tamper-evident audit trail.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Collect all project data</span>
+    <span class="n">root</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">dependencies</span><span class="p">,</span> <span class="n">assignments</span> <span class="o">=</span> <span class="n">_collect_project_data</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_id</span><span class="p">)</span>
+
+    <span class="c1"># Generate the MS Project XML content</span>
+    <span class="n">msp_xml</span> <span class="o">=</span> <span class="n">_generate_msp_xml</span><span class="p">(</span>
+        <span class="n">root</span><span class="p">,</span>
+        <span class="n">nodes</span><span class="p">,</span>
+        <span class="n">dependencies</span><span class="p">,</span>
+        <span class="n">assignments</span><span class="p">,</span>
+        <span class="n">redact_classified_descriptions</span><span class="o">=</span><span class="n">redact_classified_descriptions</span><span class="p">,</span>
+        <span class="n">mask_commercial_labor_rates</span><span class="o">=</span><span class="n">mask_commercial_labor_rates</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Record audit log entry</span>
+    <span class="n">transaction_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span>
+    <span class="n">prev_hash_entry</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">prev_hash</span> <span class="o">=</span> <span class="n">prev_hash_entry</span><span class="o">.</span><span class="n">current_hash</span> <span class="k">if</span> <span class="n">prev_hash_entry</span> <span class="k">else</span> <span class="s2">""</span>
+
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">transaction_id</span><span class="p">,</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">user_upn</span><span class="p">,</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"EXPORT"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"PortfolioNode"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">root_id</span><span class="p">,</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"export_format"</span><span class="p">:</span> <span class="s2">"MSP_XML"</span><span class="p">,</span>
+            <span class="s2">"node_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">),</span>
+            <span class="s2">"dependency_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">dependencies</span><span class="p">),</span>
+            <span class="s2">"redact_classified"</span><span class="p">:</span> <span class="n">redact_classified_descriptions</span><span class="p">,</span>
+            <span class="s2">"mask_rates"</span><span class="p">:</span> <span class="n">mask_commercial_labor_rates</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">prev_hash</span><span class="o">=</span><span class="n">prev_hash</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">msp_xml</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,184 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Currency Exchange &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Currency Exchange</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/currency.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="currency-exchange">
+<h1>Currency Exchange<a class="headerlink" href="#currency-exchange" title="Link to this heading"></a></h1>
+<p>Manage multi-currency cost tracking with exchange rate conversions.</p>
+<section id="currency">
+<h2>currency<a class="headerlink" href="#currency" title="Link to this heading"></a></h2>
+<p>Currency exchange rate management API endpoints.</p>
+<p>This module provides the REST API for managing foreign currency exchange
+rates and performing currency conversions in the Eisenhower Portfolio Manager.</p>
+</section>
+<section id="why-currency-endpoints">
+<h2>Why Currency Endpoints?<a class="headerlink" href="#why-currency-endpoints" title="Link to this heading"></a></h2>
+<p>International defence programmes involve multi-currency procurement.  These
+endpoints allow financial managers to:</p>
+<ul class="simple">
+<li><p><strong>Maintain Exchange Rates</strong> — Record contractual fixed rates, floating
+spot rates, and forward hedge rates with effective date ranges.</p></li>
+<li><p><strong>Test Conversions</strong> — Validate that the correct rate is being applied
+for a given currency pair and valuation date.</p></li>
+<li><p><strong>Analyse FX Variance</strong> — Separate standard Cost Variance from currency
+fluctuation impact for accurate financial reporting.</p></li>
+</ul>
+</section>
+<section id="api-endpoints">
+<h2>API Endpoints<a class="headerlink" href="#api-endpoints" title="Link to this heading"></a></h2>
+<p>All endpoints are mounted under <code class="docutils literal notranslate"><span class="pre">/api/v1/currency</span></code>:</p>
+<ul class="simple">
+<li><p><strong>POST /rates</strong> — Create a new exchange rate record.</p></li>
+<li><p><strong>GET /rates</strong> — List all exchange rates (with optional filtering).</p></li>
+<li><p><strong>GET /rates/{id}</strong> — Get a specific exchange rate.</p></li>
+<li><p><strong>PUT /rates/{id}</strong> — Update an existing exchange rate.</p></li>
+<li><p><strong>DELETE /rates/{id}</strong> — Delete an exchange rate record.</p></li>
+<li><p><strong>POST /convert</strong> — Convert an amount between currencies.</p></li>
+<li><p><strong>GET /tasks/{task_id}/fx-variance</strong> — Analyse currency variance for a task.</p></li>
+</ul>
+</section>
+<section id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Link to this heading"></a></h2>
+<p>All endpoints require a valid JWT token via the <code class="docutils literal notranslate"><span class="pre">Authorization</span></code> header.
+Only authenticated users can access currency data.</p>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: List all currency exchange rate records.</p></li>
+<li><p><strong>View</strong>: Get a specific currency exchange rate record.</p></li>
+<li><p><strong>View</strong>: Analyse currency variance for a task.</p></li>
+</ul>
+<p><strong>Creating New Items</strong></p>
+<ul class="simple">
+<li><p><strong>Create</strong>: Create a new currency exchange rate record.</p></li>
+<li><p><strong>Create</strong>: Convert an amount from one currency to another.</p></li>
+</ul>
+<p><strong>Updating Information</strong></p>
+<ul class="simple">
+<li><p><strong>Update</strong>: Update an existing currency exchange rate record.</p></li>
+</ul>
+<p><strong>Removing Items</strong></p>
+<ul class="simple">
+<li><p><strong>Delete</strong>: Delete a currency exchange rate record.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

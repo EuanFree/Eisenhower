@@ -1,0 +1,910 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.costing &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.costing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.costing</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Costing engine for the Cost Breakdown Structure (CBS), indirect rate burdening,</span>
+<span class="sd">and non-linear time-phased cost distribution.</span>
+
+<span class="sd">This module implements the financial calculation layer for the Eisenhower Portfolio</span>
+<span class="sd">Manager.  It converts direct labour costs into fully-burdened costs using the</span>
+<span class="sd">Forward Pricing Rate Agreement (FPRA) burdening cascade and provides multi-tier</span>
+<span class="sd">financial rollups across the WBS hierarchy.</span>
+
+<span class="sd">Core Concepts</span>
+<span class="sd">-------------</span>
+
+<span class="sd">1. **Direct Labour Cost** — The raw cost of labour before any indirect rates</span>
+<span class="sd">   are applied.  Calculated as hours × hourly rate from ResourceAssignment</span>
+<span class="sd">   records.</span>
+
+<span class="sd">2. **FPRA Burdening Cascade** — A four-step multiplicative formula that</span>
+<span class="sd">   converts direct labour into fully-burdened cost::</span>
+
+<span class="sd">       Labor_Burdened = Direct × (1 + Fringe) × (1 + Overhead) × (1 + G&amp;A) × (1 + Fee)</span>
+
+<span class="sd">   Each layer builds on the previous one, so the final amount includes</span>
+<span class="sd">   all indirect costs plus the contractor's fee/profit margin.</span>
+
+<span class="sd">3. **Cost Elements** — The CBS taxonomy defines cost types (LABOR_DIRECT,</span>
+<span class="sd">   SUBCONTRACT, MATERIAL_RAW, ODC_TRAVEL, etc.).  Only LABOR category</span>
+<span class="sd">   elements receive the full burdening cascade; other categories pass</span>
+<span class="sd">   through at their direct value.</span>
+
+<span class="sd">4. **Task Cost Ledger** — The transactional record of each cost element's</span>
+<span class="sd">   contribution to each task.  The ledger stores both the direct (unburdened)</span>
+<span class="sd">   and fully-burdened amounts for audit and reporting.</span>
+
+<span class="sd">5. **CBS Rollup** — Using ltree parent-path containment queries, the engine</span>
+<span class="sd">   recursively aggregates TaskCostLedger entries from leaf-level tasks up</span>
+<span class="sd">   through Work Package, Project, and Programme levels.</span>
+
+<span class="sd">6. **Non-linear Time-phased Cost Distribution** — Instead of flat linear</span>
+<span class="sd">   spending across a task's duration, cost is distributed using statistical</span>
+<span class="sd">   curves (Beta, Weibull, Rayleigh) that model real-world spend patterns</span>
+<span class="sd">   such as ramp-up, peak, and tail-off phases.</span>
+
+<span class="sd">Functions</span>
+<span class="sd">---------</span>
+
+<span class="sd">- :func:`apply_burden` — Apply the FPRA burdening cascade to a direct labour amount.</span>
+<span class="sd">- :func:`calculate_task_burden` — Compute the full cost breakdown for a single task.</span>
+<span class="sd">- :func:`cbs_rollup` — Recursively roll up costs across the WBS hierarchy.</span>
+<span class="sd">- :func:`calculate_time_phased_cost` — Distribute a budget across days using</span>
+<span class="sd">  non-linear statistical curves.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span><span class="p">,</span> <span class="n">ROUND_HALF_UP</span><span class="p">,</span> <span class="n">ROUND_HALF_EVEN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span><span class="p">,</span> <span class="n">func</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span><span class="p">,</span> <span class="n">joinedload</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="p">,</span> <span class="n">CostElement</span><span class="p">,</span> <span class="n">CostElementCategory</span><span class="p">,</span>
+    <span class="n">IndirectRateStructure</span><span class="p">,</span> <span class="n">TaskCostLedger</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.currency</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_ledger_to_base_currency</span>
+
+
+<div class="viewcode-block" id="CostSpreadMethod">
+<a class="viewcode-back" href="../../../modules.html#app.services.costing.CostSpreadMethod">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CostSpreadMethod</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Non-linear cost distribution profiles for time-phased spending.</span>
+
+<span class="sd">    Replaces flat linear time-phasing with statistical curves that model</span>
+<span class="sd">    real-world expenditure patterns across a task's lifecycle.</span>
+
+<span class="sd">    Members</span>
+<span class="sd">    -------</span>
+<span class="sd">    LINEAR</span>
+<span class="sd">        Flat rate per day.  The deprecated default; retained for backward</span>
+<span class="sd">        compatibility.</span>
+
+<span class="sd">    BETA_DISTRIBUTION</span>
+<span class="sd">        Standard NASA/DoD S-curve.  Models programmes that start slowly,</span>
+<span class="sd">        accelerate through a peak, then taper off.  The probability density</span>
+<span class="sd">        function is::</span>
+
+<span class="sd">            f(t) = C · t^(α-1) · (1-t)^(β-1)</span>
+
+<span class="sd">        where ``α`` and ``β`` are derived from ``shape_factor`` and ``C``</span>
+<span class="sd">        is the normalising constant (1/Beta(α, β)).</span>
+
+<span class="sd">    WEIBULL_CURVE</span>
+<span class="sd">        Models engineering research and build ramp-up with rapid tail-off.</span>
+<span class="sd">        The PDF is::</span>
+
+<span class="sd">            f(t) = (k/λ) · (t/λ)^(k-1) · exp(-(t/λ)^k)</span>
+
+<span class="sd">        where ``k`` (shape) is derived from ``shape_factor`` and ``λ``</span>
+<span class="sd">        (scale) normalises the support to [0, 1].</span>
+
+<span class="sd">    RAYLEIGH</span>
+<span class="sd">        Early-peaked distribution for high-concurrency systems design</span>
+<span class="sd">        phases.  The PDF is::</span>
+
+<span class="sd">            f(t) = t/σ² · exp(-t²/(2σ²))</span>
+
+<span class="sd">        where ``σ`` (scale) is derived from ``shape_factor``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">LINEAR</span> <span class="o">=</span> <span class="s2">"LINEAR"</span>
+    <span class="n">BETA_DISTRIBUTION</span> <span class="o">=</span> <span class="s2">"BETA_DISTRIBUTION"</span>
+    <span class="n">WEIBULL_CURVE</span> <span class="o">=</span> <span class="s2">"WEIBULL_CURVE"</span>
+    <span class="n">RAYLEIGH</span> <span class="o">=</span> <span class="s2">"RAYLEIGH"</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_beta_function</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute the Beta function B(a, b) using logarithms for numerical stability.</span>
+
+<span class="sd">    B(a, b) = Γ(a)·Γ(b) / Γ(a+b)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a, b : float</span>
+<span class="sd">        Shape parameters (must be positive).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The Beta function value.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">lgamma</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">lgamma</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">lgamma</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_beta_pdf</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Evaluate the Beta probability density at normalised time ``t`` in [0, 1].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    t : float</span>
+<span class="sd">        Normalised time position in [0, 1].</span>
+<span class="sd">    alpha, beta : float</span>
+<span class="sd">        Shape parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The un-normalised PDF value at ``t``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="mf">1e-15</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="mf">1e-15</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">t</span> <span class="o">**</span> <span class="p">(</span><span class="n">alpha</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span> <span class="o">*</span> <span class="p">((</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">beta</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span> <span class="o">/</span> <span class="n">_beta_function</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_weibull_pdf</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">lam</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Evaluate the Weibull probability density at normalised time ``t`` in [0, 1].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    t : float</span>
+<span class="sd">        Normalised time position in [0, 1].</span>
+<span class="sd">    k : float</span>
+<span class="sd">        Shape parameter (must be positive).</span>
+<span class="sd">    lam : float</span>
+<span class="sd">        Scale parameter (must be positive).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The PDF value at ``t``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="n">ratio</span> <span class="o">=</span> <span class="n">t</span> <span class="o">/</span> <span class="n">lam</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">k</span> <span class="o">/</span> <span class="n">lam</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">ratio</span> <span class="o">**</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">ratio</span> <span class="o">**</span> <span class="n">k</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rayleigh_pdf</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Evaluate the Rayleigh probability density at normalised time ``t`` in [0, 1].</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    t : float</span>
+<span class="sd">        Normalised time position in [0, 1].</span>
+<span class="sd">    sigma : float</span>
+<span class="sd">        Scale parameter (must be positive).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        The PDF value at ``t``.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">t</span> <span class="o">/</span> <span class="p">(</span><span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">t</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="calculate_time_phased_cost">
+<a class="viewcode-back" href="../../../modules.html#app.services.costing.calculate_time_phased_cost">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_time_phased_cost</span><span class="p">(</span>
+    <span class="n">total_budget</span><span class="p">:</span> <span class="n">Decimal</span><span class="p">,</span>
+    <span class="n">duration_days</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">method</span><span class="p">:</span> <span class="n">CostSpreadMethod</span><span class="p">,</span>
+    <span class="n">shape_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Decimal</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Distribute a total budget across individual days using a non-linear curve.</span>
+
+<span class="sd">    Replaces flat linear time-phasing with statistical distributions that</span>
+<span class="sd">    model real-world spend patterns.  The returned list has exactly</span>
+<span class="sd">    ``duration_days`` elements whose sum equals ``total_budget`` to cent</span>
+<span class="sd">    precision (no rounding drift).</span>
+
+<span class="sd">    Algorithm</span>
+<span class="sd">    ---------</span>
+
+<span class="sd">    1. Evaluate the chosen PDF at each day's normalised position</span>
+<span class="sd">       ``t = (i + 0.5) / duration_days`` for ``i`` in ``0 .. duration_days-1``.</span>
+<span class="sd">       The midpoint rule avoids zero-density at the boundaries.</span>
+
+<span class="sd">    2. Compute raw daily fractions as ``pdf(t_i) / sum(pdf(t_j))`` so the</span>
+<span class="sd">       fractions sum to exactly 1.0.</span>
+
+<span class="sd">    3. Multiply each fraction by ``total_budget`` and round to two decimal</span>
+<span class="sd">       places using ``ROUND_HALF_UP``.</span>
+
+<span class="sd">    4. Distribute any remaining rounding residual (at most ±1 cent) to the</span>
+<span class="sd">       day with the largest unrounded remainder, guaranteeing the integral</span>
+<span class="sd">       sum matches 100.00 % of BAC without drift.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    total_budget : Decimal</span>
+<span class="sd">        The Budget at Completion (BAC) to distribute.</span>
+<span class="sd">    duration_days : int</span>
+<span class="sd">        Number of calendar days spanning the task.</span>
+<span class="sd">    method : CostSpreadMethod</span>
+<span class="sd">        The distribution curve to use.</span>
+<span class="sd">    shape_factor : float</span>
+<span class="sd">        Curve shape parameter.  Interpretation depends on the method:</span>
+
+<span class="sd">        - **BETA_DISTRIBUTION**: Both α and β are set to ``shape_factor``,</span>
+<span class="sd">          producing a symmetric S-curve when ``shape_factor &gt; 1``.</span>
+<span class="sd">        - **WEIBULL_CURVE**: ``k = shape_factor``, ``λ = 1.0``.</span>
+<span class="sd">        - **RAYLEIGH**: ``σ = 1.0 / shape_factor``.</span>
+<span class="sd">        - **LINEAR**: Ignored.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[Decimal]</span>
+<span class="sd">        A list of length ``duration_days`` containing the daily cost allocation.</span>
+<span class="sd">        The sum of all elements equals ``total_budget`` exactly.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``duration_days`` is less than 1 or ``total_budget`` is negative.</span>
+<span class="sd">    """</span>
+    <span class="n">budget</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">total_budget</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">budget</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"total_budget must be non-negative"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">duration_days</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"duration_days must be at least 1"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">duration_days</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">budget</span><span class="p">]</span>
+
+    <span class="c1"># Step 1: Evaluate PDF at each day midpoint</span>
+    <span class="n">pdf_values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">duration_days</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">/</span> <span class="n">duration_days</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="n">CostSpreadMethod</span><span class="o">.</span><span class="n">LINEAR</span><span class="p">:</span>
+            <span class="n">pdf_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="n">CostSpreadMethod</span><span class="o">.</span><span class="n">BETA_DISTRIBUTION</span><span class="p">:</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="n">shape_factor</span>
+            <span class="n">beta_param</span> <span class="o">=</span> <span class="n">shape_factor</span>
+            <span class="n">pdf_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_beta_pdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta_param</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="n">CostSpreadMethod</span><span class="o">.</span><span class="n">WEIBULL_CURVE</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">shape_factor</span>
+            <span class="n">lam</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">pdf_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_weibull_pdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">lam</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="n">CostSpreadMethod</span><span class="o">.</span><span class="n">RAYLEIGH</span><span class="p">:</span>
+            <span class="n">sigma</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">shape_factor</span>
+            <span class="n">pdf_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_rayleigh_pdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">sigma</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pdf_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="c1"># Step 2: Normalise so fractions sum to 1.0</span>
+    <span class="n">pdf_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">pdf_values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pdf_sum</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+        <span class="c1"># Fallback to uniform if all PDF values are zero</span>
+        <span class="n">fractions</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">duration_days</span><span class="p">]</span> <span class="o">*</span> <span class="n">duration_days</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fractions</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="o">/</span> <span class="n">pdf_sum</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">pdf_values</span><span class="p">]</span>
+
+    <span class="c1"># Step 3: Compute unrounded daily amounts using high-precision Decimal</span>
+    <span class="c1"># Convert fractions to Decimal with full float precision to minimise drift</span>
+    <span class="n">unrounded</span> <span class="o">=</span> <span class="p">[</span><span class="n">Decimal</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="o">*</span> <span class="n">budget</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fractions</span><span class="p">]</span>
+
+    <span class="c1"># Step 4: Round to cents</span>
+    <span class="n">rounded</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">u</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">unrounded</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Step 5: Fix rounding drift — distribute residual cent-by-cent to the</span>
+    <span class="c1"># days with the largest remainders, so the sum matches exactly.</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">budget</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+    <span class="n">current_sum</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rounded</span><span class="p">)</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">target</span> <span class="o">-</span> <span class="n">current_sum</span>
+
+    <span class="k">if</span> <span class="n">residual</span> <span class="o">!=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">):</span>
+        <span class="c1"># Build (remainder, index) pairs sorted by remainder descending</span>
+        <span class="n">remainders</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">u</span> <span class="o">-</span> <span class="n">r</span><span class="p">),</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">unrounded</span><span class="p">,</span> <span class="n">rounded</span><span class="p">))</span>
+        <span class="p">]</span>
+        <span class="n">remainders</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">one_cent</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">)</span>
+        <span class="c1"># Distribute the residual one cent at a time</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span> <span class="o">/</span> <span class="n">one_cent</span><span class="p">)</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">residual</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">remainders</span><span class="p">[</span><span class="n">step</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">remainders</span><span class="p">)][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">rounded</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+=</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">one_cent</span>
+
+    <span class="k">return</span> <span class="n">rounded</span></div>
+
+
+
+<div class="viewcode-block" id="apply_burden">
+<a class="viewcode-back" href="../../../modules.html#app.services.costing.apply_burden">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_burden</span><span class="p">(</span>
+    <span class="n">direct_amount</span><span class="p">:</span> <span class="n">Decimal</span><span class="p">,</span>
+    <span class="n">fringe_rate</span><span class="p">:</span> <span class="n">Decimal</span><span class="p">,</span>
+    <span class="n">overhead_rate</span><span class="p">:</span> <span class="n">Decimal</span><span class="p">,</span>
+    <span class="n">ga_rate</span><span class="p">:</span> <span class="n">Decimal</span><span class="p">,</span>
+    <span class="n">fee_rate</span><span class="p">:</span> <span class="n">Decimal</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Decimal</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Apply the FPRA burdening cascade to a direct labour amount.</span>
+
+<span class="sd">    The burdening formula converts direct labour cost into fully-burdened</span>
+<span class="sd">    cost by applying four multiplicative layers:</span>
+
+<span class="sd">    1. Fringe benefits (employer-paid pension, health insurance, holiday pay)</span>
+<span class="sd">    2. Overhead (department-level indirect costs)</span>
+<span class="sd">    3. General &amp; Administrative (corporate-level indirect costs)</span>
+<span class="sd">    4. Fee / Profit (contractor's negotiated margin)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    direct_amount : Decimal</span>
+<span class="sd">        The raw direct labour cost before any indirect rates.</span>
+<span class="sd">    fringe_rate : Decimal</span>
+<span class="sd">        Fringe benefit rate as a percentage (e.g., 35.0 for 35%).</span>
+<span class="sd">    overhead_rate : Decimal</span>
+<span class="sd">        Overhead rate as a percentage (e.g., 50.0 for 50%).</span>
+<span class="sd">    ga_rate : Decimal</span>
+<span class="sd">        General &amp; Administrative rate as a percentage (e.g., 12.0 for 12%).</span>
+<span class="sd">    fee_rate : Decimal</span>
+<span class="sd">        Fee / profit margin as a percentage (e.g., 10.0 for 10%).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Decimal</span>
+<span class="sd">        The fully-burdened labour cost.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    &gt;&gt;&gt; apply_burden(Decimal("100000"), Decimal("35.0"), Decimal("50.0"), Decimal("12.0"), Decimal("10.0"))</span>
+<span class="sd">    Decimal('249480.000000')</span>
+
+<span class="sd">    Step-by-step::</span>
+
+<span class="sd">        Step 1: 100,000 × 1.35 = 135,000  (after fringe)</span>
+<span class="sd">        Step 2: 135,000 × 1.50 = 202,500  (after overhead)</span>
+<span class="sd">        Step 3: 202,500 × 1.12 = 226,800  (after G&amp;A)</span>
+<span class="sd">        Step 4: 226,800 × 1.10 = 249,480  (fully burdened)</span>
+<span class="sd">    """</span>
+    <span class="n">amount</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">direct_amount</span><span class="p">))</span>
+    <span class="n">amount</span> <span class="o">*=</span> <span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"1"</span><span class="p">)</span> <span class="o">+</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fringe_rate</span><span class="p">))</span> <span class="o">/</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"100"</span><span class="p">))</span>
+    <span class="n">amount</span> <span class="o">*=</span> <span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"1"</span><span class="p">)</span> <span class="o">+</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">overhead_rate</span><span class="p">))</span> <span class="o">/</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"100"</span><span class="p">))</span>
+    <span class="n">amount</span> <span class="o">*=</span> <span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"1"</span><span class="p">)</span> <span class="o">+</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ga_rate</span><span class="p">))</span> <span class="o">/</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"100"</span><span class="p">))</span>
+    <span class="n">amount</span> <span class="o">*=</span> <span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"1"</span><span class="p">)</span> <span class="o">+</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">fee_rate</span><span class="p">))</span> <span class="o">/</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"100"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">amount</span></div>
+
+
+
+<div class="viewcode-block" id="get_active_rate_structure">
+<a class="viewcode-back" href="../../../modules.html#app.services.costing.get_active_rate_structure">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_active_rate_structure</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">fiscal_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">IndirectRateStructure</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Look up the active FPRA indirect rate structure for a fiscal year.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+<span class="sd">    fiscal_year : int</span>
+<span class="sd">        The fiscal year to look up (e.g., 2026).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    IndirectRateStructure or None</span>
+<span class="sd">        The rate structure for the given fiscal year, or None if not found.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">IndirectRateStructure</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">IndirectRateStructure</span><span class="o">.</span><span class="n">fiscal_year</span> <span class="o">==</span> <span class="n">fiscal_year</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">IndirectRateStructure</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+        <span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_task_burden">
+<a class="viewcode-back" href="../../../modules.html#app.services.costing.calculate_task_burden">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_task_burden</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">fiscal_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute the full cost breakdown for a single task.</span>
+
+<span class="sd">    This function reads all ResourceAssignment records for the given task,</span>
+<span class="sd">    calculates direct labour costs from hours × rate_snapshot, applies the</span>
+<span class="sd">    fiscal year's active FPRA indirect rate structure, and persists the</span>
+<span class="sd">    results in the TaskCostLedger table.</span>
+
+<span class="sd">    The algorithm:</span>
+
+<span class="sd">    1. Look up the active FPRA for the given fiscal year.</span>
+<span class="sd">    2. Query all ResourceAssignments for the task's PortfolioNode.</span>
+<span class="sd">    3. For each assignment, compute direct labour cost</span>
+<span class="sd">       (planned_hours × rate_snapshot).</span>
+<span class="sd">    4. Apply the burdening cascade to produce the fully-burdened amount.</span>
+<span class="sd">    5. Upsert the TaskCostLedger entry for the LABOR_DIRECT cost element.</span>
+<span class="sd">    6. Return the complete cost breakdown with all tiers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : UUID</span>
+<span class="sd">        The UUID of the PortfolioNode (task) to calculate.</span>
+<span class="sd">    fiscal_year : int</span>
+<span class="sd">        The fiscal year for the FPRA rate lookup.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing:</span>
+
+<span class="sd">        - ``task_id`` (str): The task UUID.</span>
+<span class="sd">        - ``task_name`` (str): Human-readable task name.</span>
+<span class="sd">        - ``fiscal_year`` (int): Fiscal year used.</span>
+<span class="sd">        - ``currency_code`` (str): Currency code from the FPRA.</span>
+<span class="sd">        - ``ledger_entries`` (list): Individual cost element breakdown lines.</span>
+<span class="sd">        - ``total_direct`` (float): Sum of all direct (unburdened) amounts.</span>
+<span class="sd">        - ``total_burdened`` (float): Sum of all fully-burdened amounts.</span>
+<span class="sd">        - ``burden_difference`` (float): Total indirect cost added.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If no FPRA rate structure is found for the given fiscal year.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Step 1: Look up the active FPRA</span>
+    <span class="n">rate_structure</span> <span class="o">=</span> <span class="n">get_active_rate_structure</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">fiscal_year</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rate_structure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"No FPRA indirect rate structure found for fiscal year </span><span class="si">{</span><span class="n">fiscal_year</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 2: Get the task node</span>
+    <span class="n">task_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">task_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">task_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># Step 3: Query all ResourceAssignments for this task</span>
+    <span class="n">assignments_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="n">assignments_result</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Step 4: Find or create the LABOR_DIRECT cost element</span>
+    <span class="n">labor_element_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">CostElement</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">CostElement</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="s2">"LABOR_DIRECT"</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">labor_element</span> <span class="o">=</span> <span class="n">labor_element_result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">labor_element</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">labor_element</span> <span class="o">=</span> <span class="n">CostElement</span><span class="p">(</span>
+            <span class="n">code</span><span class="o">=</span><span class="s2">"LABOR_DIRECT"</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"Direct Labour"</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="n">CostElementCategory</span><span class="o">.</span><span class="n">LABOR</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">labor_element</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Step 5: Calculate direct labour from assignments</span>
+    <span class="n">total_direct</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span><span class="p">))</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">rate_snapshot</span><span class="p">))</span>
+        <span class="n">direct</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">*</span> <span class="n">rate</span>
+        <span class="n">total_direct</span> <span class="o">+=</span> <span class="n">direct</span>
+
+    <span class="c1"># Step 6: Apply burdening cascade</span>
+    <span class="n">total_burdened</span> <span class="o">=</span> <span class="n">apply_burden</span><span class="p">(</span>
+        <span class="n">total_direct</span><span class="p">,</span>
+        <span class="n">rate_structure</span><span class="o">.</span><span class="n">fringe_rate_percent</span><span class="p">,</span>
+        <span class="n">rate_structure</span><span class="o">.</span><span class="n">overhead_rate_percent</span><span class="p">,</span>
+        <span class="n">rate_structure</span><span class="o">.</span><span class="n">ga_rate_percent</span><span class="p">,</span>
+        <span class="n">rate_structure</span><span class="o">.</span><span class="n">fee_profit_percent</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 7: Upsert the TaskCostLedger entry</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">TaskCostLedger</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">TaskCostLedger</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_id</span><span class="p">,</span>
+            <span class="n">TaskCostLedger</span><span class="o">.</span><span class="n">cost_element_id</span> <span class="o">==</span> <span class="n">labor_element</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">TaskCostLedger</span><span class="o">.</span><span class="n">fiscal_year</span> <span class="o">==</span> <span class="n">fiscal_year</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ledger_entry</span> <span class="o">=</span> <span class="n">TaskCostLedger</span><span class="p">(</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">task_id</span><span class="p">,</span>
+            <span class="n">cost_element_id</span><span class="o">=</span><span class="n">labor_element</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">fiscal_year</span><span class="o">=</span><span class="n">fiscal_year</span><span class="p">,</span>
+            <span class="n">direct_unburdened_amount</span><span class="o">=</span><span class="n">total_direct</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">),</span>
+            <span class="n">fully_burdened_amount</span><span class="o">=</span><span class="n">total_burdened</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ledger_entry</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">existing</span><span class="o">.</span><span class="n">direct_unburdened_amount</span> <span class="o">=</span> <span class="n">total_direct</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+        <span class="n">existing</span><span class="o">.</span><span class="n">fully_burdened_amount</span> <span class="o">=</span> <span class="n">total_burdened</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Step 8: Build the response</span>
+    <span class="n">ledger_entries</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="s2">"cost_element_code"</span><span class="p">:</span> <span class="n">labor_element</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="s2">"cost_element_name"</span><span class="p">:</span> <span class="n">labor_element</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"category"</span><span class="p">:</span> <span class="n">labor_element</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+            <span class="s2">"direct_unburdened_amount"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_direct</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+            <span class="s2">"fully_burdened_amount"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_burdened</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"task_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">task_id</span><span class="p">),</span>
+        <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">task_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"fiscal_year"</span><span class="p">:</span> <span class="n">fiscal_year</span><span class="p">,</span>
+        <span class="s2">"currency_code"</span><span class="p">:</span> <span class="n">rate_structure</span><span class="o">.</span><span class="n">currency_code</span><span class="p">,</span>
+        <span class="s2">"ledger_entries"</span><span class="p">:</span> <span class="n">ledger_entries</span><span class="p">,</span>
+        <span class="s2">"total_direct"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_direct</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+        <span class="s2">"total_burdened"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_burdened</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+        <span class="s2">"burden_difference"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">total_burdened</span> <span class="o">-</span> <span class="n">total_direct</span><span class="p">)</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="cbs_rollup">
+<a class="viewcode-back" href="../../../modules.html#app.services.costing.cbs_rollup">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cbs_rollup</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">fiscal_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Recursively compute multi-tier CBS financial rollups using ltree paths.</span>
+
+<span class="sd">    This function aggregates TaskCostLedger entries from all descendants</span>
+<span class="sd">    of the given root node, grouping costs by WBS hierarchy level and</span>
+<span class="sd">    by cost element category.</span>
+
+<span class="sd">    The algorithm:</span>
+
+<span class="sd">    1. Look up the active FPRA for the given fiscal year.</span>
+<span class="sd">    2. Find the root node and its ltree path.</span>
+<span class="sd">    3. Query all PortfolioNodes whose path is contained within the root's path</span>
+<span class="sd">       (ltree containment operator @&gt;).</span>
+<span class="sd">    4. For each node, query its TaskCostLedger entries for the fiscal year.</span>
+<span class="sd">    5. Group costs by outline level (depth in the WBS tree).</span>
+<span class="sd">    6. Within each level, break down costs by category.</span>
+<span class="sd">    7. Calculate percentage-of-total for each category.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    project_id : UUID</span>
+<span class="sd">        The UUID of the root PortfolioNode (project/programme).</span>
+<span class="sd">    fiscal_year : int</span>
+<span class="sd">        The fiscal year for the rollup.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing:</span>
+
+<span class="sd">        - ``project_id`` (str): Root node UUID.</span>
+<span class="sd">        - ``project_name`` (str): Root node name.</span>
+<span class="sd">        - ``fiscal_year`` (int): Fiscal year.</span>
+<span class="sd">        - ``currency_code`` (str): Currency code from the FPRA.</span>
+<span class="sd">        - ``levels`` (list): Hierarchical rollup from root to leaf levels.</span>
+<span class="sd">        - ``grand_total_direct`` (float): Grand total of all direct costs.</span>
+<span class="sd">        - ``grand_total_burdened`` (float): Grand total of all fully-burdened costs.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If no FPRA rate structure is found for the given fiscal year.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Step 1: Look up the active FPRA</span>
+    <span class="n">rate_structure</span> <span class="o">=</span> <span class="n">get_active_rate_structure</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">fiscal_year</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rate_structure</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"No FPRA indirect rate structure found for fiscal year </span><span class="si">{</span><span class="n">fiscal_year</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 2: Get the root node</span>
+    <span class="n">root_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">root_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># Step 3: Find all descendant nodes using ltree containment</span>
+    <span class="c1"># The path column stores the ltree path (e.g., '1.2.3')</span>
+    <span class="c1"># We use string-based containment since SQLite doesn't support ltree operators</span>
+    <span class="n">root_path</span> <span class="o">=</span> <span class="n">root_node</span><span class="o">.</span><span class="n">path</span> <span class="ow">or</span> <span class="s2">""</span>
+    
+    <span class="c1"># Query all portfolio nodes that are descendants of the root</span>
+    <span class="n">all_nodes_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">select</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">))</span>
+    <span class="n">all_nodes</span> <span class="o">=</span> <span class="n">all_nodes_result</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Filter to descendants (nodes whose path starts with the root's path)</span>
+    <span class="n">descendants</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">all_nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">root_path</span><span class="p">):</span>
+            <span class="n">descendants</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">descendants</span><span class="p">:</span>
+        <span class="n">descendants</span> <span class="o">=</span> <span class="p">[</span><span class="n">root_node</span><span class="p">]</span>
+
+    <span class="c1"># Step 4: Query all TaskCostLedger entries for these nodes</span>
+    <span class="n">descendant_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">descendant_ids</span><span class="p">:</span>
+        <span class="n">ledger_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="n">select</span><span class="p">(</span><span class="n">TaskCostLedger</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">CostElement</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">TaskCostLedger</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">descendant_ids</span><span class="p">),</span>
+                <span class="n">TaskCostLedger</span><span class="o">.</span><span class="n">fiscal_year</span> <span class="o">==</span> <span class="n">fiscal_year</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">ledgers</span> <span class="o">=</span> <span class="n">ledger_result</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ledgers</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Step 5: Build a node lookup map</span>
+    <span class="n">node_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">}</span>
+
+    <span class="c1"># Step 6: Group by node, then by category</span>
+    <span class="c1"># node_id -&gt; category -&gt; (direct, burdened)</span>
+    <span class="c1"># Convert foreign-currency ledger entries to the project's base currency</span>
+    <span class="n">node_category_costs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Decimal</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Determine the project's base currency from the root node</span>
+    <span class="n">project_base_currency</span> <span class="o">=</span> <span class="n">root_node</span><span class="o">.</span><span class="n">currency_code</span> <span class="ow">or</span> <span class="s2">"GBP"</span>
+    <span class="n">valuation_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">ledger</span> <span class="ow">in</span> <span class="n">ledgers</span><span class="p">:</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">ledger</span><span class="o">.</span><span class="n">portfolio_node_id</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="n">ledger</span><span class="o">.</span><span class="n">cost_element</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="k">if</span> <span class="n">node_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_category_costs</span><span class="p">:</span>
+            <span class="n">node_category_costs</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_category_costs</span><span class="p">[</span><span class="n">node_id</span><span class="p">]:</span>
+            <span class="n">node_category_costs</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">),</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">))</span>
+
+        <span class="c1"># Convert to base currency if the node uses a different currency</span>
+        <span class="n">direct_amount</span><span class="p">,</span> <span class="n">burdened_amount</span> <span class="o">=</span> <span class="n">convert_ledger_to_base_currency</span><span class="p">(</span>
+            <span class="n">ledger</span><span class="p">,</span> <span class="n">project_base_currency</span><span class="p">,</span> <span class="n">valuation_date</span><span class="p">,</span> <span class="n">db</span>
+        <span class="p">)</span>
+
+        <span class="n">prev_direct</span><span class="p">,</span> <span class="n">prev_burdened</span> <span class="o">=</span> <span class="n">node_category_costs</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="n">category</span><span class="p">]</span>
+        <span class="n">node_category_costs</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">prev_direct</span> <span class="o">+</span> <span class="n">direct_amount</span><span class="p">,</span>
+            <span class="n">prev_burdened</span> <span class="o">+</span> <span class="n">burdened_amount</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 7: Group by outline level</span>
+    <span class="c1"># outline_level -&gt; list of (node, category_costs)</span>
+    <span class="n">level_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">:</span>
+        <span class="n">outline_level</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">))</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span> <span class="k">else</span> <span class="mi">1</span>
+        
+        <span class="k">if</span> <span class="n">outline_level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">level_data</span><span class="p">:</span>
+            <span class="n">level_data</span><span class="p">[</span><span class="n">outline_level</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># Aggregate all descendant costs for this node</span>
+        <span class="n">category_totals</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Decimal</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="k">for</span> <span class="n">desc_node</span> <span class="ow">in</span> <span class="n">descendants</span><span class="p">:</span>
+            <span class="n">desc_path</span> <span class="o">=</span> <span class="n">desc_node</span><span class="o">.</span><span class="n">path</span> <span class="ow">or</span> <span class="s2">""</span>
+            <span class="n">node_path</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span> <span class="ow">or</span> <span class="s2">""</span>
+            <span class="c1"># Check if desc_node is a descendant of (or equal to) node</span>
+            <span class="k">if</span> <span class="n">desc_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">node_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">desc_node</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">node_category_costs</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">cat</span><span class="p">,</span> <span class="p">(</span><span class="n">direct</span><span class="p">,</span> <span class="n">burdened</span><span class="p">)</span> <span class="ow">in</span> <span class="n">node_category_costs</span><span class="p">[</span><span class="n">desc_node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">cat</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">category_totals</span><span class="p">:</span>
+                        <span class="n">category_totals</span><span class="p">[</span><span class="n">cat</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">),</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">))</span>
+                    <span class="n">prev_d</span><span class="p">,</span> <span class="n">prev_b</span> <span class="o">=</span> <span class="n">category_totals</span><span class="p">[</span><span class="n">cat</span><span class="p">]</span>
+                    <span class="n">category_totals</span><span class="p">[</span><span class="n">cat</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">prev_d</span> <span class="o">+</span> <span class="n">direct</span><span class="p">,</span> <span class="n">prev_b</span> <span class="o">+</span> <span class="n">burdened</span><span class="p">)</span>
+        
+        <span class="n">level_data</span><span class="p">[</span><span class="n">outline_level</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"node"</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span>
+            <span class="s2">"category_costs"</span><span class="p">:</span> <span class="n">category_totals</span><span class="p">,</span>
+        <span class="p">})</span>
+
+    <span class="c1"># Step 8: Calculate grand totals</span>
+    <span class="n">grand_direct</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+    <span class="n">grand_burdened</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">node_entries</span> <span class="ow">in</span> <span class="n">level_data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">node_entries</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cat_costs</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"category_costs"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">grand_direct</span> <span class="o">+=</span> <span class="n">cat_costs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">grand_burdened</span> <span class="o">+=</span> <span class="n">cat_costs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Step 9: Build the response</span>
+    <span class="n">levels</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">level_num</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">level_data</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="n">level_entries</span> <span class="o">=</span> <span class="n">level_data</span><span class="p">[</span><span class="n">level_num</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">level_entries</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"node"</span><span class="p">]</span>
+            <span class="n">category_costs</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s2">"category_costs"</span><span class="p">]</span>
+            
+            <span class="c1"># Calculate node totals</span>
+            <span class="n">node_direct</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">category_costs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">node_burdened</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">b</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">category_costs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            
+            <span class="c1"># Build category breakdown</span>
+            <span class="n">category_breakdown</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">cat</span><span class="p">,</span> <span class="p">(</span><span class="n">direct</span><span class="p">,</span> <span class="n">burdened</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">category_costs</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="n">pct</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="p">(</span><span class="n">burdened</span> <span class="o">/</span> <span class="n">grand_burdened</span> <span class="o">*</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"100"</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">grand_burdened</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                    <span class="k">else</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">category_breakdown</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">"category"</span><span class="p">:</span> <span class="n">cat</span><span class="p">,</span>
+                    <span class="s2">"total_direct"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">direct</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+                    <span class="s2">"total_burdened"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">burdened</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+                    <span class="s2">"percentage_of_total"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">pct</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+                <span class="p">})</span>
+            
+            <span class="n">levels</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="s2">"node_name"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">"node_code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                <span class="s2">"outline_level"</span><span class="p">:</span> <span class="n">level_num</span><span class="p">,</span>
+                <span class="s2">"total_direct"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">node_direct</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+                <span class="s2">"total_burdened"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">node_burdened</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+                <span class="s2">"category_breakdown"</span><span class="p">:</span> <span class="n">category_breakdown</span><span class="p">,</span>
+            <span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"project_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
+        <span class="s2">"project_name"</span><span class="p">:</span> <span class="n">root_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"fiscal_year"</span><span class="p">:</span> <span class="n">fiscal_year</span><span class="p">,</span>
+        <span class="s2">"currency_code"</span><span class="p">:</span> <span class="n">rate_structure</span><span class="o">.</span><span class="n">currency_code</span><span class="p">,</span>
+        <span class="s2">"levels"</span><span class="p">:</span> <span class="n">levels</span><span class="p">,</span>
+        <span class="s2">"grand_total_direct"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">grand_direct</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+        <span class="s2">"grand_total_burdened"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">grand_burdened</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)),</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

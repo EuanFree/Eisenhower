@@ -1,0 +1,575 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eisenhower Portfolio Manager — API Documentation &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Eisenhower Portfolio Manager — User Guide" href="user_guide/index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Eisenhower Portfolio Manager — API Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="eisenhower-portfolio-manager-api-documentation">
+<h1>Eisenhower Portfolio Manager — API Documentation<a class="headerlink" href="#eisenhower-portfolio-manager-api-documentation" title="Link to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The <strong>Eisenhower Portfolio Manager</strong> is an enterprise-grade web application
+designed for defence programme management.  It provides a complete backend
+API for managing portfolios, projects, tasks, resources, and locations
+through a unified hierarchical data model.</p>
+<p>The system is built for use in <strong>classified operational environments</strong>
+(SCIFs — Sensitive Compartmented Information Facilities) where standard
+browser storage is prohibited and all user preferences must be persisted
+server-side.</p>
+</section>
+<section id="key-capabilities">
+<h2>Key Capabilities<a class="headerlink" href="#key-capabilities" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Unified Tree Data Model</strong> — Portfolios, resources, and locations are
+stored in a single polymorphic hierarchy using PostgreSQL’s <code class="docutils literal notranslate"><span class="pre">ltree</span></code>
+extension, enabling efficient ancestor/descendant queries.</p></li>
+<li><p><strong>Critical Path Method (CPM) Scheduling</strong> — Automatic schedule calculation
+using forward and backward passes, with support for all four dependency
+types (FS, SS, FF, SF), lag/lead days, and a working calendar that skips
+weekends.  Includes DCMA 14-Point integrity checks.</p></li>
+<li><p><strong>Attribute-Based Access Control (ABAC)</strong> — Fine-grained security that
+restricts data access based on user clearance levels and security caveats.
+When a user lacks clearance for an intermediate node but has clearance
+for its children, the parent is shown as a “ghost node” with redacted
+data, preserving the tree structure for the frontend.</p></li>
+<li><p><strong>Forensic Audit Logging</strong> — Every mutation to the data hierarchy is
+recorded in an immutable audit trail with SHA-256 chained hashing,
+making tampering detectable.</p></li>
+<li><p><strong>Server-Side Display Profiles</strong> — User display preferences (theme,
+density, color accessibility) are stored in PostgreSQL and hydrated
+on login, supporting hot-desking in terminal environments.</p></li>
+<li><p><strong>Daily Cockpit Dashboard</strong> — Personal landing page endpoints that provide
+each user with their active tasks, focus queue ordered by critical path
+priority, claimable placeholder tasks, and quick progress/blocker updates.</p></li>
+</ul>
+</section>
+<section id="security-architecture">
+<h2>Security Architecture<a class="headerlink" href="#security-architecture" title="Link to this heading"></a></h2>
+<p>The system implements multiple layers of security:</p>
+<ol class="arabic simple">
+<li><p><strong>Authentication</strong> — JWT-based authentication with bcrypt password hashing.</p></li>
+<li><p><strong>Role-Based Access Control (RBAC)</strong> — Users have roles (Admin, Manager,
+Member, Viewer) that control administrative actions.</p></li>
+<li><p><strong>Attribute-Based Access Control (ABAC)</strong> — Each data node carries a
+security classification (OFFICIAL through TOP_SECRET) and optional caveats
+(e.g., <code class="docutils literal notranslate"><span class="pre">UK_EYES_ONLY</span></code>).  Users must have matching clearance to access data.</p></li>
+<li><p><strong>Forensic Audit Trail</strong> — All data mutations are logged with chained
+SHA-256 hashes, creating a tamper-evident record.</p></li>
+</ol>
+</section>
+<section id="data-model">
+<h2>Data Model<a class="headerlink" href="#data-model" title="Link to this heading"></a></h2>
+<p>The core data model revolves around the <strong>Universal Breakdown Node</strong> (UBN),
+an abstract base that supports three specialised sub-types:</p>
+<ul class="simple">
+<li><p><strong>PortfolioNode</strong> (WBS) — Represents work packages, projects, and programmes
+with scheduling and Earned Value Management (EVM) fields.</p></li>
+<li><p><strong>ResourceNode</strong> (RBS) — Represents people, facilities, and assets with
+rate and availability information.</p></li>
+<li><p><strong>LocationNode</strong> (LBS) — Represents physical locations in a hierarchical
+structure, with SCIF/TEMPEST classification flags.</p></li>
+</ul>
+<p>Secondary entities include:</p>
+<ul class="simple">
+<li><p><strong>DependencyLink</strong> — Precedence relationships between portfolio nodes.</p></li>
+<li><p><strong>ResourceAssignment</strong> — Links resources to portfolio nodes with allocation details.</p></li>
+<li><p><strong>NodeBlocker</strong> — Tracks impediments blocking progress on tasks.</p></li>
+<li><p><strong>ForensicAuditLog</strong> — Immutable audit trail with SHA-256 chained hashing.</p></li>
+</ul>
+</section>
+<section id="api-endpoints">
+<h2>API Endpoints<a class="headerlink" href="#api-endpoints" title="Link to this heading"></a></h2>
+<p>The API is organised into the following groups:</p>
+<ul class="simple">
+<li><p><strong>Authentication</strong> — User registration, login, and session management.</p></li>
+<li><p><strong>Users</strong> — User management and clearance administration.</p></li>
+<li><p><strong>Display Settings</strong> — Server-side display profile persistence.</p></li>
+<li><p><strong>WBS (Work Breakdown Structure)</strong> — Tree queries with ABAC filtering.</p></li>
+<li><p><strong>Schedule</strong> — CPM recalculation and schedule analysis.</p></li>
+<li><p><strong>Cockpit</strong> — Personal daily landing page endpoints.</p></li>
+</ul>
+</section>
+<section id="system-requirements">
+<h2>System Requirements<a class="headerlink" href="#system-requirements" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Python</strong> 3.10+</p></li>
+<li><p><strong>PostgreSQL</strong> 12+ with the <code class="docutils literal notranslate"><span class="pre">ltree</span></code> extension enabled</p></li>
+<li><p><strong>FastAPI</strong> web framework with <strong>Uvicorn</strong> ASGI server</p></li>
+</ul>
+</section>
+<section id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p>Install dependencies:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+</li>
+<li><p>Configure the database connection in <code class="docutils literal notranslate"><span class="pre">.env</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DATABASE_URL</span><span class="o">=</span><span class="n">postgresql</span><span class="o">+</span><span class="n">psycopg2</span><span class="p">:</span><span class="o">//</span><span class="n">user</span><span class="p">:</span><span class="n">password</span><span class="nd">@localhost</span><span class="p">:</span><span class="mi">5432</span><span class="o">/</span><span class="n">eisenhower</span>
+</pre></div>
+</div>
+</li>
+<li><p>Initialise the database:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">init_db</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">seed</span>
+</pre></div>
+</div>
+</li>
+<li><p>Start the server:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uvicorn</span> <span class="n">app</span><span class="o">.</span><span class="n">main</span><span class="p">:</span><span class="n">app</span> <span class="o">--</span><span class="n">reload</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="documentation-navigation">
+<h2>Documentation Navigation<a class="headerlink" href="#documentation-navigation" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#quick-start">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/getting-started.html">Getting Started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#features">Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#account-settings">Account &amp; Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#administration">Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#ai-assistant">AI Assistant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#collaboration">Collaboration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#daily-work">Daily Work</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#documents">Documents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#governance-compliance">Governance &amp; Compliance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#integrations">Integrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#planning-scheduling">Planning &amp; Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#procurement-contracts">Procurement &amp; Contracts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#reports-export">Reports &amp; Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#resources-people">Resources &amp; People</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/index.html#security-audit">Security &amp; Audit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#reference">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/roles.html">User Roles &amp; Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/roles.html#role-overview">Role Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/glossary.html#quick-reference">Quick Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#core-security">Core Security</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.core.abac">Attribute-Based Access Control (ABAC)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.core.export_control">Export Control Governance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.core.supplier_abac">Supplier Portal ABAC Filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.core.session">Session Lifecycle Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.core.exceptions">Concurrency Control &amp; Locking Exceptions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.models.models">Data Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#architecture-overview">Architecture Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.Ltree"><code class="docutils literal notranslate"><span class="pre">Ltree</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.compile_ltree_postgresql"><code class="docutils literal notranslate"><span class="pre">compile_ltree_postgresql()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.compile_array_sqlite"><code class="docutils literal notranslate"><span class="pre">compile_array_sqlite()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.compile_jsonb_sqlite"><code class="docutils literal notranslate"><span class="pre">compile_jsonb_sqlite()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SQLiteArray"><code class="docutils literal notranslate"><span class="pre">SQLiteArray</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.UserRole"><code class="docutils literal notranslate"><span class="pre">UserRole</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.TreeType"><code class="docutils literal notranslate"><span class="pre">TreeType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SecurityClassification"><code class="docutils literal notranslate"><span class="pre">SecurityClassification</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ClearanceType"><code class="docutils literal notranslate"><span class="pre">ClearanceType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DeliveryMode"><code class="docutils literal notranslate"><span class="pre">DeliveryMode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ResourceType"><code class="docutils literal notranslate"><span class="pre">ResourceType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.LocationTier"><code class="docutils literal notranslate"><span class="pre">LocationTier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DependencyType"><code class="docutils literal notranslate"><span class="pre">DependencyType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.AssignmentStatus"><code class="docutils literal notranslate"><span class="pre">AssignmentStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.BlockerCategory"><code class="docutils literal notranslate"><span class="pre">BlockerCategory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.BlockerSeverity"><code class="docutils literal notranslate"><span class="pre">BlockerSeverity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.AuditActionType"><code class="docutils literal notranslate"><span class="pre">AuditActionType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ExportControlRegime"><code class="docutils literal notranslate"><span class="pre">ExportControlRegime</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.Density"><code class="docutils literal notranslate"><span class="pre">Density</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.Theme"><code class="docutils literal notranslate"><span class="pre">Theme</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ColorAccessibility"><code class="docutils literal notranslate"><span class="pre">ColorAccessibility</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ProficiencyLevel"><code class="docutils literal notranslate"><span class="pre">ProficiencyLevel</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.VerificationStatus"><code class="docutils literal notranslate"><span class="pre">VerificationStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.RequisitionStatus"><code class="docutils literal notranslate"><span class="pre">RequisitionStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ClashCategory"><code class="docutils literal notranslate"><span class="pre">ClashCategory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ClashSeverity"><code class="docutils literal notranslate"><span class="pre">ClashSeverity</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SkillCategory"><code class="docutils literal notranslate"><span class="pre">SkillCategory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SkillDefinition"><code class="docutils literal notranslate"><span class="pre">SkillDefinition</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.UserSkillProfile"><code class="docutils literal notranslate"><span class="pre">UserSkillProfile</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ResourceRequisitionRequest"><code class="docutils literal notranslate"><span class="pre">ResourceRequisitionRequest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.User"><code class="docutils literal notranslate"><span class="pre">User</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.UserDisplaySettings"><code class="docutils literal notranslate"><span class="pre">UserDisplaySettings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DALSILLevel"><code class="docutils literal notranslate"><span class="pre">DALSILLevel</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.EngineeringBaselineTier"><code class="docutils literal notranslate"><span class="pre">EngineeringBaselineTier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.UniversalBreakdownNode"><code class="docutils literal notranslate"><span class="pre">UniversalBreakdownNode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.EVMTechnique"><code class="docutils literal notranslate"><span class="pre">EVMTechnique</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.PortfolioNode"><code class="docutils literal notranslate"><span class="pre">PortfolioNode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ResourceNode"><code class="docutils literal notranslate"><span class="pre">ResourceNode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.LocationNode"><code class="docutils literal notranslate"><span class="pre">LocationNode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DependencyLink"><code class="docutils literal notranslate"><span class="pre">DependencyLink</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ResourceAssignment"><code class="docutils literal notranslate"><span class="pre">ResourceAssignment</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.NodeBlocker"><code class="docutils literal notranslate"><span class="pre">NodeBlocker</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.MilestoneWeightStep"><code class="docutils literal notranslate"><span class="pre">MilestoneWeightStep</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ProcurementLifecycleStage"><code class="docutils literal notranslate"><span class="pre">ProcurementLifecycleStage</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ProcurementItem"><code class="docutils literal notranslate"><span class="pre">ProcurementItem</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.TaskProcurementConstraint"><code class="docutils literal notranslate"><span class="pre">TaskProcurementConstraint</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ExportControlLicenseType"><code class="docutils literal notranslate"><span class="pre">ExportControlLicenseType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.IssuingAuthority"><code class="docutils literal notranslate"><span class="pre">IssuingAuthority</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ExportControlLicense"><code class="docutils literal notranslate"><span class="pre">ExportControlLicense</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ForensicAuditLog"><code class="docutils literal notranslate"><span class="pre">ForensicAuditLog</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ScheduleClashIssue"><code class="docutils literal notranslate"><span class="pre">ScheduleClashIssue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.BaselineTier"><code class="docutils literal notranslate"><span class="pre">BaselineTier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.BaselineChangeRequestStatus"><code class="docutils literal notranslate"><span class="pre">BaselineChangeRequestStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.PortfolioBaseline"><code class="docutils literal notranslate"><span class="pre">PortfolioBaseline</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.BaselineNodeSnapshot"><code class="docutils literal notranslate"><span class="pre">BaselineNodeSnapshot</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.BaselineChangeRequest"><code class="docutils literal notranslate"><span class="pre">BaselineChangeRequest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.CDRLStatus"><code class="docutils literal notranslate"><span class="pre">CDRLStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.VerificationTestCaseStatus"><code class="docutils literal notranslate"><span class="pre">VerificationTestCaseStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ContractDeliverable"><code class="docutils literal notranslate"><span class="pre">ContractDeliverable</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.VerificationTestCase"><code class="docutils literal notranslate"><span class="pre">VerificationTestCase</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.TeamChannelWebhook"><code class="docutils literal notranslate"><span class="pre">TeamChannelWebhook</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DistributionType"><code class="docutils literal notranslate"><span class="pre">DistributionType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ActivityDurationDistribution"><code class="docutils literal notranslate"><span class="pre">ActivityDurationDistribution</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ExportBatchStatus"><code class="docutils literal notranslate"><span class="pre">ExportBatchStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.OracleProjectMapping"><code class="docutils literal notranslate"><span class="pre">OracleProjectMapping</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.TimesheetOracleExportBatch"><code class="docutils literal notranslate"><span class="pre">TimesheetOracleExportBatch</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.CostElementCategory"><code class="docutils literal notranslate"><span class="pre">CostElementCategory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.CostElement"><code class="docutils literal notranslate"><span class="pre">CostElement</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.IndirectRateStructure"><code class="docutils literal notranslate"><span class="pre">IndirectRateStructure</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.TaskCostLedger"><code class="docutils literal notranslate"><span class="pre">TaskCostLedger</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.TemplateTier"><code class="docutils literal notranslate"><span class="pre">TemplateTier</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.StructuralTemplate"><code class="docutils literal notranslate"><span class="pre">StructuralTemplate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ResourceCrewTemplate"><code class="docutils literal notranslate"><span class="pre">ResourceCrewTemplate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ResourceCrewTemplateMember"><code class="docutils literal notranslate"><span class="pre">ResourceCrewTemplateMember</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DocumentArtifact"><code class="docutils literal notranslate"><span class="pre">DocumentArtifact</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SandboxScenarioStatus"><code class="docutils literal notranslate"><span class="pre">SandboxScenarioStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SandboxScenario"><code class="docutils literal notranslate"><span class="pre">SandboxScenario</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.TransactionType"><code class="docutils literal notranslate"><span class="pre">TransactionType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ManagementReservePool"><code class="docutils literal notranslate"><span class="pre">ManagementReservePool</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ManagementReserveTransaction"><code class="docutils literal notranslate"><span class="pre">ManagementReserveTransaction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.CalendarJurisdiction"><code class="docutils literal notranslate"><span class="pre">CalendarJurisdiction</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.CalendarExceptionType"><code class="docutils literal notranslate"><span class="pre">CalendarExceptionType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.WorkingCalendar"><code class="docutils literal notranslate"><span class="pre">WorkingCalendar</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.CalendarException"><code class="docutils literal notranslate"><span class="pre">CalendarException</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.AssetLocationLedger"><code class="docutils literal notranslate"><span class="pre">AssetLocationLedger</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ExchangeRateType"><code class="docutils literal notranslate"><span class="pre">ExchangeRateType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.CurrencyExchangeRate"><code class="docutils literal notranslate"><span class="pre">CurrencyExchangeRate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.LockOperationType"><code class="docutils literal notranslate"><span class="pre">LockOperationType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SubTreeLock"><code class="docutils literal notranslate"><span class="pre">SubTreeLock</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SubcontractorFormat"><code class="docutils literal notranslate"><span class="pre">SubcontractorFormat</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SubmissionStatus"><code class="docutils literal notranslate"><span class="pre">SubmissionStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SubcontractorSubmission"><code class="docutils literal notranslate"><span class="pre">SubcontractorSubmission</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ProgrammeArchiveSeal"><code class="docutils literal notranslate"><span class="pre">ProgrammeArchiveSeal</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SpillagePurgeSignature"><code class="docutils literal notranslate"><span class="pre">SpillagePurgeSignature</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ChamberReservation"><code class="docutils literal notranslate"><span class="pre">ChamberReservation</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.MaintenanceType"><code class="docutils literal notranslate"><span class="pre">MaintenanceType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.MaintenanceDowntimeWindow"><code class="docutils literal notranslate"><span class="pre">MaintenanceDowntimeWindow</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ConcessionType"><code class="docutils literal notranslate"><span class="pre">ConcessionType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ConcessionDisposition"><code class="docutils literal notranslate"><span class="pre">ConcessionDisposition</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.SafetySignificance"><code class="docutils literal notranslate"><span class="pre">SafetySignificance</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.EngineeringConcession"><code class="docutils literal notranslate"><span class="pre">EngineeringConcession</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ContractPricingType"><code class="docutils literal notranslate"><span class="pre">ContractPricingType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.AcceptanceDocumentType"><code class="docutils literal notranslate"><span class="pre">AcceptanceDocumentType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.AcceptanceStatus"><code class="docutils literal notranslate"><span class="pre">AcceptanceStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ProjectContractStructure"><code class="docutils literal notranslate"><span class="pre">ProjectContractStructure</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.FiscalYearSpendingCap"><code class="docutils literal notranslate"><span class="pre">FiscalYearSpendingCap</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.GovernmentAcceptanceMilestone"><code class="docutils literal notranslate"><span class="pre">GovernmentAcceptanceMilestone</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.MaterialType"><code class="docutils literal notranslate"><span class="pre">MaterialType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.LotStatus"><code class="docutils literal notranslate"><span class="pre">LotStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.PerishableMaterialLot"><code class="docutils literal notranslate"><span class="pre">PerishableMaterialLot</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.QuarantineFileFormat"><code class="docutils literal notranslate"><span class="pre">QuarantineFileFormat</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.QuarantineValidationStatus"><code class="docutils literal notranslate"><span class="pre">QuarantineValidationStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.CPMCalculationMode"><code class="docutils literal notranslate"><span class="pre">CPMCalculationMode</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.LeaveType"><code class="docutils literal notranslate"><span class="pre">LeaveType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.LeaveStatus"><code class="docutils literal notranslate"><span class="pre">LeaveStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DowntimeType"><code class="docutils literal notranslate"><span class="pre">DowntimeType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.LineManagementLink"><code class="docutils literal notranslate"><span class="pre">LineManagementLink</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.LeaveRequest"><code class="docutils literal notranslate"><span class="pre">LeaveRequest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ResourceDowntime"><code class="docutils literal notranslate"><span class="pre">ResourceDowntime</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DelegationRecord"><code class="docutils literal notranslate"><span class="pre">DelegationRecord</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.QuarantineBatch"><code class="docutils literal notranslate"><span class="pre">QuarantineBatch</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.WorkPatternCategory"><code class="docutils literal notranslate"><span class="pre">WorkPatternCategory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.WorkPatternTemplate"><code class="docutils literal notranslate"><span class="pre">WorkPatternTemplate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.WorkPatternDay"><code class="docutils literal notranslate"><span class="pre">WorkPatternDay</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ResourceWorkPattern"><code class="docutils literal notranslate"><span class="pre">ResourceWorkPattern</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DiodeBundleType"><code class="docutils literal notranslate"><span class="pre">DiodeBundleType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.DiodeIngestionStatus"><code class="docutils literal notranslate"><span class="pre">DiodeIngestionStatus</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.MerkleMergeStaging"><code class="docutils literal notranslate"><span class="pre">MerkleMergeStaging</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ExternalRepositoryType"><code class="docutils literal notranslate"><span class="pre">ExternalRepositoryType</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ArtifactLifecycleState"><code class="docutils literal notranslate"><span class="pre">ArtifactLifecycleState</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.models.models.ExternalRepositoryArtifact"><code class="docutils literal notranslate"><span class="pre">ExternalRepositoryArtifact</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#pydantic-schemas">Pydantic Schemas</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.schemas.schemas">Core Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.schemas.preview">Preview Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.schemas.supplier_schemas">Supplier Portal Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.schemas.hmi_catalog">HMI Catalog Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.schemas.ipmr_schemas">IPMR Report Schemas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.schemas.briefing_schemas">Briefing Schemas</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#api-routers">API Routers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id454">Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.users">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id464">Display Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.wbs">Work Breakdown Structure (WBS)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.schedule">Schedule (CPM &amp; Monte Carlo)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.cockpit">Daily Cockpit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.clashes">Schedule Clashes &amp; Leveling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.baselines">Baseline Governance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.requisitions">Resource Requisitions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.notifications">Notifications &amp; Webhooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.cdrl">Contract Deliverables (CDRL) &amp; V&amp;V</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id554">Earned Value Management (EVM)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.procurement">Procurement Tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.costing">Costing &amp; CBS Rollup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.currency">Currency Exchange</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.calendars">Working Calendars</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.templates">Templates &amp; Instantiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.sandboxes">Sandbox Scenarios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.airgap">Airgap Data Exchange</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.artifacts">Document Artifacts &amp; Vault</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.spatial">Spatial Location Tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.facilities">Facility Reservations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.oracle_timesheets">Oracle Timesheets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.reserves">Management Reserves</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.ipmr_reports">IPMR Reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.briefing">Executive Briefing Decks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.subcontractors">Subcontractor Submissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.supplier_portal">Supplier Portal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.merkle_sync">Merkle Sync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.websocket">WebSocket Presence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.mcp">MCP Gateway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.previews">Preview Endpoints</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.programmes">Programme Archive &amp; Seal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.admin_security">Admin Security</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.db_health">Database Health</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.routers.mock_fixtures">Mock Fixtures (Development Only)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#legacy-routers-reference-only">Legacy Routers (Reference Only)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#services">Services</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.cpm_engine">Critical Path Method Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.monte_carlo">Monte Carlo Schedule Risk Analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.leveling">Resource Leveling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.clash_daemon">Clash Daemon</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.baseline_engine">Baseline Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.evm_calculator">EVM Calculator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.costing">Costing Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1049">Currency Exchange</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.matching">Resource Matching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.notifications">Notifications Dispatch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.artifact_vault">Artifact Vault</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1092">Airgap Data Exchange</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.spatial">Spatial Tracking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.facility_telemetry">Facility Telemetry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.oracle_gateway">Oracle ERP Gateway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.reserve_governance">Management Reserve Governance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.templating">Template Engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1157">Sandbox Scenarios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.spillage_remediation">Spillage Remediation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.subcontractor_ingest">Subcontractor Ingest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.ipmr_generator">IPMR Generator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.briefing_generator">Briefing Generator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.export_p6">Primavera P6 Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.export_msp">Microsoft Project Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1237">Merkle Sync</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1288">WebSocket Presence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.lock_manager">Lock Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.db_maintenance">Database Maintenance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.mcp_server">MCP Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.services.archival">Programme Archival</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#utilities">Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.utils.auth">Authentication Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-app.utils.security">Security Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.config">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#configuration-categories">Configuration Categories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#environment-variables">Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1481">Security Warning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.config.Settings"><code class="docutils literal notranslate"><span class="pre">Settings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.config.settings"><code class="docutils literal notranslate"><span class="pre">settings</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.database">Database</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#connection-configuration">Connection Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1485">Security</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1486">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1487">Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.database.engine"><code class="docutils literal notranslate"><span class="pre">engine</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.database.SessionLocal"><code class="docutils literal notranslate"><span class="pre">SessionLocal</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.database.Base"><code class="docutils literal notranslate"><span class="pre">Base</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.database.get_db"><code class="docutils literal notranslate"><span class="pre">get_db()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.main">Application Entry Point</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#running-the-application">Running the Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#api-structure">API Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#interactive-documentation">Interactive Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.main.lifespan"><code class="docutils literal notranslate"><span class="pre">lifespan()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.main.app"><code class="docutils literal notranslate"><span class="pre">app</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.main.root"><code class="docutils literal notranslate"><span class="pre">root()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.main.health_check"><code class="docutils literal notranslate"><span class="pre">health_check()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-init_db">Database Initialization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1494">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#default-admin-credentials">Default Admin Credentials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#what-gets-created">What Gets Created</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#init_db.enable_extensions"><code class="docutils literal notranslate"><span class="pre">enable_extensions()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#init_db.create_tables"><code class="docutils literal notranslate"><span class="pre">create_tables()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#init_db.seed_admin_user"><code class="docutils literal notranslate"><span class="pre">seed_admin_user()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#module-app.cli.seed">CLI Seeder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1496">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#data-structure">Data Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#id1497">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.cli.seed.BenchmarkSeeder"><code class="docutils literal notranslate"><span class="pre">BenchmarkSeeder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.cli.seed.SovereignDefenceSeeder"><code class="docutils literal notranslate"><span class="pre">SovereignDefenceSeeder</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.cli.seed.run_benchmarks"><code class="docutils literal notranslate"><span class="pre">run_benchmarks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.cli.seed.setup_database"><code class="docutils literal notranslate"><span class="pre">setup_database()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#app.cli.seed.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and Tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="user_guide/index.html" class="btn btn-neutral float-right" title="Eisenhower Portfolio Manager — User Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

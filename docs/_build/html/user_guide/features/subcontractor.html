@@ -1,0 +1,193 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subcontractor Management &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Subcontractor Management</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/subcontractor.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="subcontractor-management">
+<h1>Subcontractor Management<a class="headerlink" href="#subcontractor-management" title="Link to this heading"></a></h1>
+<p>Manage subcontractor schedules and submissions. Ingest and reconcile subcontractor data.</p>
+<section id="subcontractors">
+<h2>subcontractors<a class="headerlink" href="#subcontractors" title="Link to this heading"></a></h2>
+<p>Subcontractor schedule submission API router.</p>
+<p>This module provides the REST API endpoints for the subcontractor
+schedule ingest pipeline.  It allows defence subcontractors to submit
+schedule updates (Primavera P6 .xer or MS Project .xml) for integration
+into the prime contractor’s master programme.</p>
+<p>The ingest pipeline ensures that external schedule data is validated
+against contractual boundary gates before being merged into the live
+WBS.  This prevents milestone slippage, logic tampering, and negative
+float inflation from subcontractor submissions.</p>
+</section>
+<section id="endpoints">
+<h2>Endpoints<a class="headerlink" href="#endpoints" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/submissions/upload</span></code> — Upload a schedule file and trigger
+automated validation against contractual boundary gates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/submissions/{id}/validation-report</span></code> — Retrieve the automated
+compliance score and boundary breach report for a submission.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/submissions/{id}/approve-merge</span></code> — Approve a validated
+submission and merge it into the live WBS.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/submissions</span></code> — List all submissions with optional filtering.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/submissions/{id}</span></code> — Get a single submission by ID.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/submissions/{id}/staging-diff</span></code> — Generate the staging diff
+showing the impact of merging the submission.</p></li>
+</ul>
+</section>
+<section id="workflow">
+<h2>Workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>A subcontractor (or prime contractor on their behalf) uploads a
+schedule file via <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/submissions/upload</span></code>.</p></li>
+<li><p>The system parses the file, extracts tasks and dependencies, and
+runs automated DCMA checks against the contractual boundary gates.</p></li>
+<li><p>The validation report is retrieved via
+<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/submissions/{id}/validation-report</span></code>.  If critical breaches
+are found, the submission is rejected and cannot be merged.</p></li>
+<li><p>If validation passes, the staging diff is generated via
+<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/submissions/{id}/staging-diff</span></code> to show the impact on
+the prime schedule.</p></li>
+<li><p>A human reviewer examines the staging diff and approves the merge
+via <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/submissions/{id}/approve-merge</span></code>.</p></li>
+<li><p>The merge is recorded in the ForensicAuditLog with action type
+<code class="docutils literal notranslate"><span class="pre">SUBCONTRACTOR_MERGE</span></code>.</p></li>
+</ol>
+</section>
+<section id="security">
+<h2>Security<a class="headerlink" href="#security" title="Link to this heading"></a></h2>
+<p>All endpoints require JWT authentication.  The submitting user must
+have sufficient security clearance to access the target WBS node
+(checked via ABAC).  Submissions can only be merged by users with
+Manager or Admin role.</p>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: Retrieve the automated validation report for a submission.</p></li>
+<li><p><strong>View</strong>: List all subcontractor submissions with optional filtering.</p></li>
+<li><p><strong>View</strong>: Get a single submission by ID.</p></li>
+</ul>
+<p><strong>Creating New Items</strong></p>
+<ul class="simple">
+<li><p><strong>Create</strong>: Upload a subcontractor schedule file and trigger automated validation.</p></li>
+<li><p><strong>Create</strong>: Approve a validated submission and merge it into the live WBS.</p></li>
+<li><p><strong>Create</strong>: Generate the staging diff for a submission.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

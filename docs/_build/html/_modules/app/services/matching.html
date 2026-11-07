@@ -1,0 +1,558 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.matching &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.matching</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.matching</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Resource matching and skill-matrix engine for the Eisenhower Portfolio Manager.</span>
+
+<span class="sd">This module implements the **Optimistic / Permissive Match Algorithm** that</span>
+<span class="sd">ranks personnel candidates against resource requisition requirements.  It is</span>
+<span class="sd">the core intelligence behind the requisition review workflow.</span>
+
+<span class="sd">Algorithm Overview</span>
+<span class="sd">------------------</span>
+
+<span class="sd">The matching engine evaluates every active user in the system against a</span>
+<span class="sd">requisition's requirements and returns a ranked list of candidates ordered</span>
+<span class="sd">by their overall match score (highest first).</span>
+
+<span class="sd">The algorithm has two gates:</span>
+
+<span class="sd">1. **Hard Gate (Security)** — A user must have sufficient security clearance</span>
+<span class="sd">   and all required caveats to access the target portfolio node.  If the hard</span>
+<span class="sd">   gate fails, the match score is 0% and the candidate is excluded.</span>
+
+<span class="sd">2. **Soft Gate (Skills)** — A user's skill proficiency is compared against</span>
+<span class="sd">   the requisition's minimum proficiency requirement.  The algorithm is</span>
+<span class="sd">   *permissive*: if a user has not rated a non-mandatory required skill,</span>
+<span class="sd">   they receive a neutral default score of 50% rather than 0%.  This avoids</span>
+<span class="sd">   penalising personnel who simply haven't updated their skill profile.</span>
+
+<span class="sd">Special Cases</span>
+<span class="sd">~~~~~~~~~~~~~</span>
+
+<span class="sd">- If a requisition lists **zero skill requirements**, all cleared personnel</span>
+<span class="sd">  receive a 100% match score.</span>
+<span class="sd">- Forward capacity availability is calculated by comparing existing</span>
+<span class="sd">  ``ResourceAssignment`` hours against the user's standard capacity within</span>
+<span class="sd">  the requested date range.</span>
+
+<span class="sd">Scoring Formula</span>
+<span class="sd">~~~~~~~~~~~~~~~</span>
+
+<span class="sd">For each required skill::</span>
+
+<span class="sd">    skill_score = (user_proficiency / min_proficiency) * 100</span>
+
+<span class="sd">    If user has no profile for the skill:</span>
+<span class="sd">        skill_score = 50  (neutral default)</span>
+
+<span class="sd">    If user_proficiency &gt;= min_proficiency:</span>
+<span class="sd">        verification_bonus = 10 if CERTIFIED else 5 if ENDORSED else 0</span>
+
+<span class="sd">    final_skill_score = min(skill_score + verification_bonus, 100)</span>
+
+<span class="sd">Overall match score is the average of all skill scores, weighted by</span>
+<span class="sd">capacity availability::</span>
+
+<span class="sd">    match_score = avg(final_skill_score) * (available_hours / requested_hours)</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">The matching engine is called from the requisitions router when a functional</span>
+<span class="sd">lead reviews pending requisitions.  It returns a ranked list of</span>
+<span class="sd">``CandidateMatchResponse`` objects that the frontend displays as a candidate</span>
+<span class="sd">shortlist.</span>
+
+<span class="sd">Example</span>
+<span class="sd">~~~~~~~</span>
+
+<span class="sd">    from app.services.matching import find_candidates</span>
+
+<span class="sd">    candidates = find_candidates(</span>
+<span class="sd">        db=session,</span>
+<span class="sd">        requisition=req,</span>
+<span class="sd">        node_security=SecurityClassification.SECRET,</span>
+<span class="sd">        node_caveats=['UK_EYES_ONLY'],</span>
+<span class="sd">    )</span>
+
+<span class="sd">    # candidates is a list of CandidateMatchResponse, sorted by match_score desc</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">and_</span><span class="p">,</span> <span class="n">or_</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">User</span><span class="p">,</span> <span class="n">UserSkillProfile</span><span class="p">,</span> <span class="n">SkillDefinition</span><span class="p">,</span> <span class="n">ProficiencyLevel</span><span class="p">,</span>
+    <span class="n">VerificationStatus</span><span class="p">,</span> <span class="n">SecurityClassification</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="p">,</span>
+    <span class="n">ResourceNode</span><span class="p">,</span> <span class="n">RequisitionStatus</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">CandidateMatchResponse</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Security clearance helpers</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_clearance_rank</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Map a security classification to a numeric rank for comparison.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    level : SecurityClassification</span>
+<span class="sd">        The classification level to rank.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Numeric rank: OFFICIAL=1, OFFICIAL_SENSITIVE=2, SECRET=3, TOP_SECRET=4.</span>
+<span class="sd">    """</span>
+    <span class="n">ranks</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL_SENSITIVE</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">TOP_SECRET</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">ranks</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_user_has_clearance</span><span class="p">(</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">node_classification</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">node_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if a user has sufficient clearance to access a node.</span>
+
+<span class="sd">    A user is cleared if:</span>
+<span class="sd">    1. Their clearance level &gt;= the node's security classification.</span>
+<span class="sd">    2. All of the node's caveats are present in the user's caveats list.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The user to check.</span>
+<span class="sd">    node_classification : SecurityClassification</span>
+<span class="sd">        The node's security classification.</span>
+<span class="sd">    node_caveats : list of str or None</span>
+<span class="sd">        The node's security caveats.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the user is cleared, False otherwise.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">_clearance_rank</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">_clearance_rank</span><span class="p">(</span><span class="n">node_classification</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">user_caveats</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[])</span>
+    <span class="n">node_caveat_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">node_caveats</span> <span class="ow">or</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node_caveat_set</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">user_caveats</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Capacity availability</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_available_hours</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">end_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">requested_hours</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Calculate a user's available hours within a date range.</span>
+
+<span class="sd">    The algorithm estimates standard capacity based on the number of</span>
+<span class="sd">    calendar days in the range (assuming 8 hours/day), then subtracts</span>
+<span class="sd">    hours already committed via confirmed or claimed ResourceAssignments</span>
+<span class="sd">    that overlap with the requested period.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The user whose capacity to calculate.</span>
+<span class="sd">    start_date : date</span>
+<span class="sd">        Start of the requested period.</span>
+<span class="sd">    end_date : date</span>
+<span class="sd">        End of the requested period.</span>
+<span class="sd">    requested_hours : float</span>
+<span class="sd">        The number of hours being requested (used as a cap).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float</span>
+<span class="sd">        Available hours, capped at the requested_hours value.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Calculate total days in the range</span>
+    <span class="n">total_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">end_date</span> <span class="o">-</span> <span class="n">start_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+    <span class="k">if</span> <span class="n">total_days</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">total_days</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Same-day request</span>
+
+    <span class="c1"># Estimate standard capacity: 8 hours per day</span>
+    <span class="n">standard_capacity</span> <span class="o">=</span> <span class="n">total_days</span> <span class="o">*</span> <span class="mf">8.0</span>
+
+    <span class="c1"># Find the user's associated resource node(s)</span>
+    <span class="c1"># Resource nodes are linked to users via code/name matching or explicit assignment</span>
+    <span class="n">user_resource_nodes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">and_</span><span class="p">(</span>
+            <span class="n">ResourceNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">ResourceNode</span><span class="o">.</span><span class="n">resource_type</span> <span class="o">==</span> <span class="s2">"PERSON"</span><span class="p">,</span>
+            <span class="n">or_</span><span class="p">(</span>
+                <span class="n">ResourceNode</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                <span class="n">ResourceNode</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                <span class="n">ResourceNode</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">full_name</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Sum up already-allocated hours for overlapping assignments</span>
+    <span class="n">allocated_hours</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">for</span> <span class="n">res_node</span> <span class="ow">in</span> <span class="n">user_resource_nodes</span><span class="p">:</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">and_</span><span class="p">(</span>
+                <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">res_node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">or_</span><span class="p">(</span>
+                    <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"CONFIRMED"</span><span class="p">,</span>
+                    <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"CLAIMED"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+            <span class="c1"># Assume the assignment spans the full requested period</span>
+            <span class="c1"># (In a full implementation, this would check actual date ranges</span>
+            <span class="c1"># stored in the assignment's linked portfolio node)</span>
+            <span class="n">allocated_hours</span> <span class="o">+=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span> <span class="o">*</span> <span class="n">assignment</span><span class="o">.</span><span class="n">allocated_units</span>
+
+    <span class="c1"># Available hours = standard capacity - allocated hours</span>
+    <span class="n">available</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">standard_capacity</span> <span class="o">-</span> <span class="n">allocated_hours</span><span class="p">)</span>
+
+    <span class="c1"># Cap at requested hours</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">available</span><span class="p">,</span> <span class="n">requested_hours</span><span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Skill matching</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_calculate_skill_score</span><span class="p">(</span>
+    <span class="n">user_profile</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UserSkillProfile</span><span class="p">],</span>
+    <span class="n">min_proficiency</span><span class="p">:</span> <span class="n">ProficiencyLevel</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Calculate the match score for a single skill requirement.</span>
+
+<span class="sd">    This implements the **permissive** matching rule:</span>
+<span class="sd">    - If the user has a profile for the skill, compare proficiency levels.</span>
+<span class="sd">    - If the user has NO profile, assign a neutral default of 50%.</span>
+<span class="sd">    - Add a verification bonus for endorsed/certified skills.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_profile : UserSkillProfile or None</span>
+<span class="sd">        The user's skill profile for the required skill, or None if not found.</span>
+<span class="sd">    min_proficiency : ProficiencyLevel</span>
+<span class="sd">        The minimum proficiency level required.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing:</span>
+<span class="sd">        - 'proficiency_score' (float): The base proficiency match percentage.</span>
+<span class="sd">        - 'verification_bonus' (float): Bonus points for verification status.</span>
+<span class="sd">        - 'final_score' (float): Capped at 100%.</span>
+<span class="sd">        - 'user_proficiency' (int or None): User's proficiency level value.</span>
+<span class="sd">        - 'verification_status' (str or None): User's verification status.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">user_profile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Permissive default: 50% for unrated skills</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"proficiency_score"</span><span class="p">:</span> <span class="mf">50.0</span><span class="p">,</span>
+            <span class="s2">"verification_bonus"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">"final_score"</span><span class="p">:</span> <span class="mf">50.0</span><span class="p">,</span>
+            <span class="s2">"user_proficiency"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"verification_status"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"note"</span><span class="p">:</span> <span class="s2">"Neutral default — skill not rated by user"</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">user_level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">user_profile</span><span class="o">.</span><span class="n">proficiency_level</span><span class="p">)</span>
+    <span class="n">min_level</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">min_proficiency</span><span class="p">)</span>
+
+    <span class="c1"># Base proficiency score</span>
+    <span class="k">if</span> <span class="n">user_level</span> <span class="o">&gt;=</span> <span class="n">min_level</span><span class="p">:</span>
+        <span class="n">proficiency_score</span> <span class="o">=</span> <span class="mf">100.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">proficiency_score</span> <span class="o">=</span> <span class="p">(</span><span class="n">user_level</span> <span class="o">/</span> <span class="n">min_level</span><span class="p">)</span> <span class="o">*</span> <span class="mf">100.0</span>
+
+    <span class="c1"># Verification bonus</span>
+    <span class="n">verification_bonus</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">user_profile</span><span class="o">.</span><span class="n">verification_status</span> <span class="o">==</span> <span class="n">VerificationStatus</span><span class="o">.</span><span class="n">CERTIFIED</span><span class="p">:</span>
+        <span class="n">verification_bonus</span> <span class="o">=</span> <span class="mf">10.0</span>
+    <span class="k">elif</span> <span class="n">user_profile</span><span class="o">.</span><span class="n">verification_status</span> <span class="o">==</span> <span class="n">VerificationStatus</span><span class="o">.</span><span class="n">ENDORSED</span><span class="p">:</span>
+        <span class="n">verification_bonus</span> <span class="o">=</span> <span class="mf">5.0</span>
+
+    <span class="c1"># Cap at 100%</span>
+    <span class="n">final_score</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">proficiency_score</span> <span class="o">+</span> <span class="n">verification_bonus</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"proficiency_score"</span><span class="p">:</span> <span class="n">proficiency_score</span><span class="p">,</span>
+        <span class="s2">"verification_bonus"</span><span class="p">:</span> <span class="n">verification_bonus</span><span class="p">,</span>
+        <span class="s2">"final_score"</span><span class="p">:</span> <span class="n">final_score</span><span class="p">,</span>
+        <span class="s2">"user_proficiency"</span><span class="p">:</span> <span class="n">user_level</span><span class="p">,</span>
+        <span class="s2">"verification_status"</span><span class="p">:</span> <span class="n">user_profile</span><span class="o">.</span><span class="n">verification_status</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="s2">"note"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Main matching orchestrator</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="find_candidates">
+<a class="viewcode-back" href="../../../modules.html#app.services.matching.find_candidates">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_candidates</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">portfolio_node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">required_skill_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">min_proficiency</span><span class="p">:</span> <span class="n">ProficiencyLevel</span> <span class="o">=</span> <span class="n">ProficiencyLevel</span><span class="o">.</span><span class="n">NOVICE</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="p">:</span> <span class="n">date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">end_date</span><span class="p">:</span> <span class="n">date</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">requested_hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">40.0</span><span class="p">,</span>
+    <span class="n">node_classification</span><span class="p">:</span> <span class="n">SecurityClassification</span> <span class="o">=</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">,</span>
+    <span class="n">node_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">CandidateMatchResponse</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Find and rank all eligible candidates for a requisition.</span>
+
+<span class="sd">    This is the main entry point for the matching engine.  It evaluates</span>
+<span class="sd">    every active user against the requisition requirements and returns</span>
+<span class="sd">    a ranked list of candidates.</span>
+
+<span class="sd">    Algorithm steps:</span>
+<span class="sd">    1. Fetch all active users.</span>
+<span class="sd">    2. Apply hard gate: filter by security clearance and caveats.</span>
+<span class="sd">    3. For each cleared user, calculate skill match scores.</span>
+<span class="sd">    4. Calculate forward capacity availability.</span>
+<span class="sd">    5. Combine scores and rank by match_score descending.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    portfolio_node_id : str</span>
+<span class="sd">        UUID of the portfolio node requiring resources.</span>
+<span class="sd">    required_skill_ids : list of int or None</span>
+<span class="sd">        List of skill definition IDs required for this requisition.</span>
+<span class="sd">        If None or empty, all cleared users get 100% match.</span>
+<span class="sd">    min_proficiency : ProficiencyLevel</span>
+<span class="sd">        Minimum proficiency level required for each skill.</span>
+<span class="sd">    start_date : date or None</span>
+<span class="sd">        Start of the requested period (for capacity calculation).</span>
+<span class="sd">    end_date : date or None</span>
+<span class="sd">        End of the requested period (for capacity calculation).</span>
+<span class="sd">    requested_hours : float</span>
+<span class="sd">        Total hours being requested.</span>
+<span class="sd">    node_classification : SecurityClassification</span>
+<span class="sd">        Security classification of the target portfolio node.</span>
+<span class="sd">    node_caveats : list of str or None</span>
+<span class="sd">        Security caveats of the target portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of CandidateMatchResponse</span>
+<span class="sd">        Ranked list of candidates, sorted by match_score descending.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Fetch all active users</span>
+    <span class="n">all_users</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">candidates</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CandidateMatchResponse</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">all_users</span><span class="p">:</span>
+        <span class="c1"># --- Hard Gate: Security clearance ---</span>
+        <span class="n">clearance_ok</span> <span class="o">=</span> <span class="n">_user_has_clearance</span><span class="p">(</span>
+            <span class="n">user</span><span class="p">,</span> <span class="n">node_classification</span><span class="p">,</span> <span class="n">node_caveats</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">clearance_ok</span><span class="p">:</span>
+            <span class="c1"># User fails the hard gate — skip entirely</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># --- Soft Gate: Skill matching ---</span>
+        <span class="n">skill_matches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">required_skill_ids</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">required_skill_ids</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Zero skill requirements → 100% match for all cleared personnel</span>
+            <span class="n">overall_skill_score</span> <span class="o">=</span> <span class="mf">100.0</span>
+            <span class="n">skill_matches</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"skill_id"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"skill_name"</span><span class="p">:</span> <span class="s2">"No specific skills required"</span><span class="p">,</span>
+                <span class="s2">"final_score"</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span>
+                <span class="s2">"note"</span><span class="p">:</span> <span class="s2">"Zero skill requirements — all cleared personnel match"</span><span class="p">,</span>
+            <span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Fetch user's skill profiles</span>
+            <span class="n">user_profiles</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">profile</span><span class="o">.</span><span class="n">skill_id</span><span class="p">:</span> <span class="n">profile</span>
+                <span class="k">for</span> <span class="n">profile</span> <span class="ow">in</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UserSkillProfile</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">UserSkillProfile</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+            <span class="p">}</span>
+
+            <span class="n">skill_scores</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">skill_id</span> <span class="ow">in</span> <span class="n">required_skill_ids</span><span class="p">:</span>
+                <span class="n">profile</span> <span class="o">=</span> <span class="n">user_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">skill_id</span><span class="p">)</span>
+
+                <span class="c1"># Fetch skill definition for the name</span>
+                <span class="n">skill_def</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SkillDefinition</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">SkillDefinition</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">skill_id</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+                <span class="n">skill_name</span> <span class="o">=</span> <span class="n">skill_def</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">skill_def</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"Skill #</span><span class="si">{</span><span class="n">skill_id</span><span class="si">}</span><span class="s2">"</span>
+
+                <span class="n">match</span> <span class="o">=</span> <span class="n">_calculate_skill_score</span><span class="p">(</span><span class="n">profile</span><span class="p">,</span> <span class="n">min_proficiency</span><span class="p">)</span>
+                <span class="k">match</span><span class="p">[</span><span class="s2">"skill_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">skill_id</span>
+                <span class="k">match</span><span class="p">[</span><span class="s2">"skill_name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">skill_name</span>
+
+                <span class="n">skill_matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">)</span>
+                <span class="n">skill_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">match</span><span class="p">[</span><span class="s2">"final_score"</span><span class="p">])</span>
+
+            <span class="c1"># Average skill score</span>
+            <span class="n">overall_skill_score</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">skill_scores</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">skill_scores</span><span class="p">)</span>
+
+        <span class="c1"># --- Forward capacity availability ---</span>
+        <span class="n">available_hours</span> <span class="o">=</span> <span class="n">_calculate_available_hours</span><span class="p">(</span>
+            <span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">requested_hours</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Capacity factor: how much of the requested hours are available</span>
+        <span class="n">capacity_factor</span> <span class="o">=</span> <span class="n">available_hours</span> <span class="o">/</span> <span class="n">requested_hours</span> <span class="k">if</span> <span class="n">requested_hours</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+
+        <span class="c1"># Final match score: skill score weighted by capacity</span>
+        <span class="n">match_score</span> <span class="o">=</span> <span class="n">overall_skill_score</span> <span class="o">*</span> <span class="n">capacity_factor</span>
+
+        <span class="n">candidates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CandidateMatchResponse</span><span class="p">(</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">username</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">full_name</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">full_name</span><span class="p">,</span>
+            <span class="n">match_score</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">match_score</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="n">skill_matches</span><span class="o">=</span><span class="n">skill_matches</span><span class="p">,</span>
+            <span class="n">available_hours</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">available_hours</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="n">clearance_sufficient</span><span class="o">=</span><span class="n">clearance_ok</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="c1"># Sort by match_score descending</span>
+    <span class="n">candidates</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="o">.</span><span class="n">match_score</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">candidates</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

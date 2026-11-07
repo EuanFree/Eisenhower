@@ -1,0 +1,260 @@
+# =============================================================================
+# Patroni High-Availability Cluster Configuration
+# =============================================================================
+#
+# This file defines a 3-node Patroni cluster using local Raft consensus
+# (patroni-raft), suitable for air-gapped, SCIF environments without external
+# Consul, etcd, or ZooKeeper dependencies.
+#
+# Cluster Topology
+# ----------------
+#   Node 1 (patroni-1): Primary — accepts read/write traffic.
+#   Node 2 (patroni-2): Standby — synchronous replica.
+#   Node 3 (patroni-3): Standby — asynchronous replica (tie-breaker).
+#
+# Synchronous Replication
+# -----------------------
+#   synchronous_mode: 'on'
+#   synchronous_commit: 'remote_write'
+#
+#   Guarantees zero committed transaction loss for the SHA-256 ForensicAuditLog
+#   and UniversalBreakdownNode hierarchies during an abrupt host failure.
+#   At least one synchronous standby must acknowledge a WAL write before the
+#   transaction is reported as committed to the client.
+#
+# Raft Consensus
+# --------------
+#   Uses patroni-raft, which embeds a Raft consensus engine directly within
+#   Patroni. No external DCS (Distributed Configuration Store) required.
+#   Data is stored in /opt/patroni/raft/ on each node.
+#
+# Mutual TLS (mTLS)
+# -----------------
+#   All inter-node communication is protected with mutual TLS:
+#   - REST API endpoints (port 8008) require client certificates.
+#   - Raft consensus traffic (port 2380) is encrypted with TLS.
+#   - PostgreSQL replication connections use SSL.
+#
+#   Certificates are expected at:
+#     /etc/patroni/certs/patroni.crt    — Node certificate
+#     /etc/patroni/certs/patroni.key    — Node private key
+#     /etc/patroni/certs/ca.crt         — CA chain for peer verification
+#
+# Usage
+# -----
+#   1. Deploy this file to /etc/patroni/patroni.yml on all three nodes.
+#   2. Deploy TLS certificates to /etc/patroni/certs/ on each node.
+#   3. Update the 'name' field to match each node's hostname.
+#   4. Update the 'connect_address' to each node's internal IP.
+#   5. Start Patroni: systemctl start patroni
+#   6. Verify cluster: patronictl -c /etc/patroni/patroni.yml list
+#
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Cluster Identity
+# ---------------------------------------------------------------------------
+scope: eisenhower-ha
+# Each node must have a unique name matching its hostname
+name: patroni-1
+
+# ---------------------------------------------------------------------------
+# Raft Consensus Configuration
+# ---------------------------------------------------------------------------
+# Local Raft — no external DCS required. Suitable for air-gapped environments.
+# The 'hosts' list contains all three cluster members.
+# On first start, Patroni will form a Raft cluster automatically.
+restapi:
+  listen: 0.0.0.0:8008
+  connect_address: patroni-1:8008
+
+  # ---------------------------------------------------------------
+  # REST API Mutual TLS — Authenticate internal API callers
+  # ---------------------------------------------------------------
+  # Require client certificates on the REST API endpoint so that only
+  # authorised cluster members and monitoring tools can query status.
+  certfile: /etc/patroni/certs/patroni.crt
+  keyfile: /etc/patroni/certs/patroni.key
+  cacert: /etc/patroni/certs/ca.crt
+
+raft:
+  data_dir: /opt/patroni/raft
+  # All three nodes must be listed here on every member's config
+  hosts:
+    - patroni-1:2380
+    - patroni-2:2380
+    - patroni-3:2380
+
+  # ---------------------------------------------------------------
+  # Raft Consensus Mutual TLS — Encrypt leader election traffic
+  # ---------------------------------------------------------------
+  # Protect Raft heartbeats, log replication, and leader election
+  # with mutual TLS so that an attacker on the network cannot
+  # inject or observe consensus messages.
+  certfile: /etc/patroni/certs/patroni.crt
+  keyfile: /etc/patroni/certs/patroni.key
+  cacert: /etc/patroni/certs/ca.crt
+
+# ---------------------------------------------------------------------------
+# PostgreSQL Connection
+# ---------------------------------------------------------------------------
+postgresql:
+  listen: 0.0.0.0:5432
+  connect_address: patroni-1:5432
+  data_dir: /var/lib/postgresql/16/main
+  bin_dir: /usr/lib/postgresql/16/bin
+
+  # Authentication for Patroni's internal control operations
+  parameters:
+    unix_socket_directories: /var/run/postgresql
+
+    # ---------------------------------------------------------------
+    # PostgreSQL SSL — Encrypt replication and application traffic
+    # ---------------------------------------------------------------
+    ssl: "on"
+    ssl_cert_file: /etc/patroni/certs/patroni.crt
+    ssl_key_file: /etc/patroni/certs/patroni.key
+    ssl_ca_file: /etc/patroni/certs/ca.crt
+    ssl_ciphers: 'HIGH:MEDIUM:+3DES:!aNULL'
+    ssl_min_protocol_version: 'TLSv1.2'
+    ssl_prefer_server_ciphers: 'on'
+
+  # Synchronous Replication — zero data loss guarantee
+  # At least one synchronous standby must acknowledge WAL writes
+  synchronous_mode: true
+  synchronous_mode_strict: true
+  synchronous_standby_names: 'patroni-2, patroni-3'
+
+  pg_hba: |
+    # Local connections
+    local   all             all                                     trust
+    # Replication — require SSL for standby connections
+    hostssl replication     standby         127.0.0.1/32            scram-sha-256
+    hostssl replication     standby         172.28.0.0/16           scram-sha-256
+    # Application connections — require SCRAM-SHA-256 with SSL
+    hostssl all             all             127.0.0.1/32            scram-sha-256
+    hostssl all             all             172.28.0.0/16           scram-sha-256
+    # Allow Patroni internal health checks (SSL required)
+    hostssl all             patroni         127.0.0.1/32            scram-sha-256
+    hostssl all             patroni         172.28.0.0/16           scram-sha-256
+
+  # Continuous WAL Archiving
+  wal_level: replica
+  max_wal_senders: 5
+  max_replication_slots: 5
+  archive_mode: "on"
+  archive_command: >
+    /opt/patroni/archive_wal.sh %p %f
+  archive_timeout: 60
+
+  # Performance tuning for GiST indexing and large WBS trees
+  shared_buffers: 512MB
+  effective_cache_size: 1536MB
+  work_mem: 64MB
+  maintenance_work_mem: 512MB
+  random_page_cost: 1.1
+  effective_io_concurrency: 200
+
+  # WAL performance
+  wal_buffers: 16MB
+  wal_writer_delay: 200ms
+  checkpoint_completion_target: 0.9
+  min_wal_size: 1GB
+  max_wal_size: 4GB
+
+  # Synchronous commit — remote_write ensures data is on disk at standby
+  synchronous_commit: remote_write
+
+# ---------------------------------------------------------------------------
+# Bootstrap Configuration
+# ---------------------------------------------------------------------------
+# On first cluster formation, this section configures the primary node.
+# The 'users' block creates the application and replication accounts.
+bootstrap:
+  # Initial cluster configuration stored in Raft
+  dcs:
+    # PostgreSQL users created on bootstrap
+    users:
+      # Application user — used by FastAPI backend
+      eisenhower:
+        password: "CHANGE_ME_APP_PASSWORD"
+        options: "CREATEDB"
+      # Replication user — used by Patroni standbys
+      standby:
+        password: "CHANGE_ME_REPL_PASSWORD"
+        options: "REPLICATION"
+      # Read-only user — for backup and monitoring
+      backup_user:
+        password: "CHANGE_ME_BACKUP_PASSWORD"
+        options: "CREATEDB"
+
+    # PostgreSQL settings applied on bootstrap
+    postgresql:
+      parameters:
+        # GiST index performance for ltree
+        random_page_cost: 1.1
+        effective_io_concurrency: 200
+
+    # SQL scripts to run after bootstrap
+    initdb:
+      - encoding: UTF8
+      - locale: en_US.UTF-8
+      - data-checksums: true
+
+    # Enable required extensions on the primary after bootstrap
+    postgresql:
+      recovery_conf:
+        restore_command: >
+          /opt/patroni/restore_wal.sh %f %p
+
+  # Master cluster initialization
+  master_key:
+    # Extensions to enable on the primary database
+    create_replica_methods:
+      - basebackup
+    basebackup:
+      - checkpoint: 'fast'
+      - max-rate: 100M
+
+# ---------------------------------------------------------------------------
+# Replication
+# ---------------------------------------------------------------------------
+replication:
+  # Number of synchronous standbys
+  number: 2
+  # User for replication connections
+  user: standby
+
+# ---------------------------------------------------------------------------
+# Failover
+# ---------------------------------------------------------------------------
+# Automatic failover configuration
+# When the primary becomes unreachable, Patroni promotes the most up-to-date
+# synchronous standby within the 'maximum_lag_on_failover' threshold.
+maximum_lag_on_failover: 1048576  # 1 MB — promote only if nearly in sync
+maximum_lag_on_syncnode: 1048576  # 1 MB — sync node must be nearly in sync
+
+# Failover mode: 'automatic' — Patroni auto-promotes without human intervention
+# For SCIF environments, set to 'manual' to require operator confirmation
+# failover_mode: automatic
+
+# ---------------------------------------------------------------------------
+# Watchdog
+# ---------------------------------------------------------------------------
+# Hardware watchdog device — prevents split-brain scenarios
+# If Patroni crashes, the watchdog resets the machine
+# watchdog: /dev/watchdog
+
+# ---------------------------------------------------------------------------
+# Tags
+# ---------------------------------------------------------------------------
+# Node-level tags for controlling behavior per node
+# nofailover: false    # Allow this node to be promoted
+# noloadbalance: false  # Include in read replica pool
+# clonefrom: false      # Allow cloning from this node
+# nosync: false         # Allow this node to be a synchronous standby
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false

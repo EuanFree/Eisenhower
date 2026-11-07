@@ -1,0 +1,256 @@
+/* ==========================================================================
+   Eisenhower Portfolio Manager — Defence Design Token System
+   ==========================================================================
+   
+   This file establishes the foundational CSS custom properties (design tokens)
+   that drive the entire visual appearance of the application. It implements:
+   
+   1. Color foundations — semantic background, border, text, and classification
+      palettes mapped to CSS variables consumed by Tailwind.
+   
+   2. Density tiers — three row-height presets controlled via the
+      [data-density] attribute on <html>:
+      - ULTRA_DENSE: 28px rows for maximum information density
+      - BALANCED:    36px rows for standard operations
+      - COMFORT:     44px rows for accessibility and readability
+   
+   3. Accessibility palettes — color-blind-safe RAG (Red-Amber-Green) metric
+      indicators controlled via [data-color-mode].
+   
+   4. Theme palettes — SCIF_DARK, HIGH_CONTRAST_DARK, BALANCED_LIGHT, and
+      PROJECTOR themes controlled via [data-theme].
+   
+   Usage
+   -----
+   The backend display-settings store (UserDisplaySettings) hydrates these
+   attributes on page load via the Zustand useDisplayStore, so the UI is
+   pre-painted before React renders — no flash of unstyled content.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Color Foundations (default: SCIF_DARK theme)
+   -------------------------------------------------------------------------- */
+
+:root {
+  /* Background palette */
+  --bg-ops-base: #0F172A;
+  --bg-ops-surface: #1E293B;
+  --bg-ops-overlay: #334155;
+
+  /* Border palette */
+  --border-ops-subtle: #334155;
+  --border-ops-strong: #475569;
+
+  /* Classification theme colors */
+  --cls-official: #38BDF8;
+  --cls-official-sensitive: #22D3EE;
+  --cls-secret: #F87171;
+  --cls-top-secret: #C084FC;
+
+  /* Text palette */
+  --text-ops-primary: #F8FAFC;
+  --text-ops-muted: #94A3B8;
+
+  /* RAG metrics (standard) */
+  --rag-red: #EF4444;
+  --rag-amber: #F59E0B;
+  --rag-green: #22C55E;
+
+  /* UI scale — multiplied by 100 for CSS calc() convenience */
+  --ui-scale: 1;
+
+  /* Default density: BALANCED */
+  --row-height: 36px;
+  --cell-font-size: 13px;
+  --pad-y: 6px;
+}
+
+/* --------------------------------------------------------------------------
+   2. Density Tiers
+   -------------------------------------------------------------------------- */
+
+[data-density='ULTRA_DENSE'] {
+  --row-height: 28px;
+  --cell-font-size: 11px;
+  --pad-y: 2px;
+}
+
+[data-density='BALANCED'] {
+  --row-height: 36px;
+  --cell-font-size: 13px;
+  --pad-y: 6px;
+}
+
+[data-density='COMFORT'] {
+  --row-height: 44px;
+  --cell-font-size: 15px;
+  --pad-y: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   3. Theme Palettes
+   -------------------------------------------------------------------------- */
+
+/* SCIF_DARK — default dark theme for classified operations rooms */
+[data-theme='SCIF_DARK'] {
+  --bg-ops-base: #0F172A;
+  --bg-ops-surface: #1E293B;
+  --bg-ops-overlay: #334155;
+  --border-ops-subtle: #334155;
+  --border-ops-strong: #475569;
+  --text-ops-primary: #F8FAFC;
+  --text-ops-muted: #94A3B8;
+}
+
+/* HIGH_CONTRAST_DARK — maximised contrast for low-light SCIF environments */
+[data-theme='HIGH_CONTRAST_DARK'] {
+  --bg-ops-base: #000000;
+  --bg-ops-surface: #111111;
+  --bg-ops-overlay: #222222;
+  --border-ops-subtle: #444444;
+  --border-ops-strong: #888888;
+  --text-ops-primary: #FFFFFF;
+  --text-ops-muted: #CCCCCC;
+}
+
+/* BALANCED_LIGHT — light theme for general office use */
+[data-theme='BALANCED_LIGHT'] {
+  --bg-ops-base: #F8FAFC;
+  --bg-ops-surface: #FFFFFF;
+  --bg-ops-overlay: #E2E8F0;
+  --border-ops-subtle: #CBD5E1;
+  --border-ops-strong: #94A3B8;
+  --text-ops-primary: #0F172A;
+  --text-ops-muted: #475569;
+}
+
+/* PROJECTOR — high-brightness theme for briefing room projectors */
+[data-theme='PROJECTOR'] {
+  --bg-ops-base: #FFFFFF;
+  --bg-ops-surface: #F1F5F9;
+  --bg-ops-overlay: #E2E8F0;
+  --border-ops-subtle: #94A3B8;
+  --border-ops-strong: #475569;
+  --text-ops-primary: #000000;
+  --text-ops-muted: #334155;
+}
+
+/* --------------------------------------------------------------------------
+   4. Accessibility Color Palettes
+   -------------------------------------------------------------------------- */
+
+/* Standard RAG — default color-blind-naive palette */
+[data-color-mode='STANDARD_RAG'] {
+  --rag-red: #EF4444;
+  --rag-amber: #F59E0B;
+  --rag-green: #22C55E;
+}
+
+/* Deuteranopia — red-green color blindness (green confusion) */
+[data-color-mode='DEUTERANOPIA'] {
+  --rag-red: #E63946;
+  --rag-amber: #F4A261;
+  --rag-green: #2A9D8F;
+}
+
+/* Protanopia — red-green color blindness (red confusion) */
+[data-color-mode='PROTANOPIA'] {
+  --rag-red: #D62828;
+  --rag-amber: #F77F00;
+  --rag-green: #0077B6;
+}
+
+/* Tritanopia — blue-yellow color blindness */
+[data-color-mode='TRITANOPIA'] {
+  --rag-red: #E63946;
+  --rag-amber: #F4A261;
+  --rag-green: #2A9D8F;
+}
+
+/* Monochrome pattern — grayscale with pattern overlays */
+[data-color-mode='MONOCHROME_PATTERN'] {
+  --rag-red: #333333;
+  --rag-amber: #777777;
+  --rag-green: #BBBBBB;
+}
+
+/* --------------------------------------------------------------------------
+   5. Global Reset & Base Styles
+   -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: calc(16px * var(--ui-scale));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-ops-base);
+  color: var(--text-ops-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* Monospace for codes, dates, EVM costs, float days */
+code,
+.font-mono,
+[class*='font-mono'] {
+  font-family: ui-monospace, 'JetBrains Mono', 'Cascadia Code', monospace;
+}
+
+/* --------------------------------------------------------------------------
+   6. Animations
+   -------------------------------------------------------------------------- */
+
+/* Grace Countdown Bar — 2-second fading animation for hover modal exit cooldown.
+   The bar shrinks from full width to zero, visually indicating the remaining
+   grace time before the hover modal auto-dismisses. */
+@keyframes graceCountdown {
+  0% {
+    width: 100%;
+    opacity: 1;
+  }
+  100% {
+    width: 0%;
+    opacity: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. Low-Profile / Briefing Mode Overrides
+   -------------------------------------------------------------------------- */
+
+/* When Briefing Mode is active, suppress all flashing/pulsing animations
+   and convert them to static, discreet indicators. */
+
+[data-low-profile="true"] .animate-pulse,
+[data-low-profile="true"] [class*="animate-pulse"] {
+  animation: none !important;
+}
+
+[data-low-profile="true"] .animate-pulse-border {
+  animation: none !important;
+}
+
+/* Suppress any blinking or flashing keyframe animations */
+[data-low-profile="true"] * {
+  animation-iteration-count: 1 !important;
+}
+
+/* Override specific pulse animations to be static */
+[data-low-profile="true"] .animate-pulse {
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   End of tokens.css
+   ========================================================================== */

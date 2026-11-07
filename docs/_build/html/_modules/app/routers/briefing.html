@@ -1,0 +1,324 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.briefing &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.briefing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.briefing</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Briefing Pack Export Router.</span>
+
+<span class="sd">This module provides the API endpoint for generating executive briefing</span>
+<span class="sd">decks in PowerPoint (.pptx) format.  The briefing generator produces</span>
+<span class="sd">standardized presentations containing programme health metrics, schedule</span>
+<span class="sd">visualizations, EVM S-Curves, risk tornado charts, and risk matrices.</span>
+
+<span class="sd">Endpoint</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">POST /api/v1/reports/briefing/generate-deck</span>
+
+<span class="sd">Accepts a project ID, reporting cut-off date, and optional slide selection</span>
+<span class="sd">flags.  Returns a downloadable .pptx briefing deck with defence classification</span>
+<span class="sd">stamps on every slide.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All endpoints require JWT authentication.  The caller must have sufficient</span>
+<span class="sd">clearance to access the programme data being briefed.  Classification</span>
+<span class="sd">markings are automatically derived from the programme's highest-classified</span>
+<span class="sd">node and stamped on every slide.</span>
+
+<span class="sd">Slide Selection</span>
+<span class="sd">~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The ``slide_selection`` parameter allows the caller to request specific</span>
+<span class="sd">slides rather than the full 5-slide deck.  For example, ``[1, 3]`` generates</span>
+<span class="sd">only the Programme Master Health and EVM S-Curve slides.</span>
+
+<span class="sd">References</span>
+<span class="sd">~~~~~~~~~~</span>
+
+<span class="sd">- IPMR/CPR Formats 1–5 (ANSI/EIA-748B)</span>
+<span class="sd">- DoD 5000.02-M: Defense Acquisition Program Management</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">UniversalBreakdownNode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.briefing_schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BriefingGenerateRequest</span><span class="p">,</span>
+    <span class="n">BriefingGenerateResponse</span><span class="p">,</span>
+    <span class="n">BriefingSlideInfo</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.briefing_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">BriefingGenerator</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="generate_briefing_deck">
+<a class="viewcode-back" href="../../../modules.html#app.routers.briefing.generate_briefing_deck">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/generate-deck"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_briefing_deck</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">BriefingGenerateRequest</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Generate an executive briefing deck for a programme.</span>
+
+<span class="sd">    Produces a standardized PowerPoint (.pptx) presentation containing</span>
+<span class="sd">    up to 5 slides:</span>
+
+<span class="sd">    1. **Programme Master Health** — Executive summary with RAG status,</span>
+<span class="sd">       CPI/SPI, and critical path summary.</span>
+<span class="sd">    2. **Comparative Gantt Snapshot** — Top-level WBS with baseline</span>
+<span class="sd">       comparison and status-date drop line.</span>
+<span class="sd">    3. **Cumulative EVM S-Curve** — PV, EV, and AC curves through</span>
+<span class="sd">       contract completion.</span>
+<span class="sd">    4. **Top 5 Schedule Drivers** — Monte Carlo Criticality Index</span>
+<span class="sd">       tornado chart.</span>
+<span class="sd">    5. **5×5 Programme Risk Matrix** — Active risks by likelihood vs</span>
+<span class="sd">       consequence.</span>
+
+<span class="sd">    Every slide is stamped with the programme's classification marking</span>
+<span class="sd">    at the top and bottom.  Export-control disclaimers appear on the</span>
+<span class="sd">    title slide.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : BriefingGenerateRequest</span>
+<span class="sd">        The generation request containing project ID, status date,</span>
+<span class="sd">        and optional slide selection.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user requesting the briefing.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Response</span>
+<span class="sd">        A downloadable .pptx file with appropriate headers.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the project is not found.</span>
+<span class="sd">        403 if the user lacks clearance to access the programme.</span>
+<span class="sd">        422 if the request parameters are invalid.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Validate project_id</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">project_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">project_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid project_id format: </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">project_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Parse status date</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">status_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">status_date</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid status_date format: </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">status_date</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Load root node</span>
+    <span class="n">root_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">project_uuid</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">root_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">project_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Basic clearance check — user must have at least OFFICIAL clearance</span>
+    <span class="c1"># to request a briefing (ABAC is applied per-node in the generator)</span>
+    <span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">403</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"User does not have a security clearance level assigned"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Generate the briefing deck</span>
+    <span class="n">generator</span> <span class="o">=</span> <span class="n">BriefingGenerator</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pptx_bytes</span><span class="p">,</span> <span class="n">metadata</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">project_id</span><span class="o">=</span><span class="n">project_uuid</span><span class="p">,</span>
+            <span class="n">status_date</span><span class="o">=</span><span class="n">status_date</span><span class="p">,</span>
+            <span class="n">slide_selection</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">slide_selection</span><span class="p">,</span>
+            <span class="n">title_override</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">title_override</span><span class="p">,</span>
+            <span class="n">classification_override</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">classification_override</span><span class="p">,</span>
+            <span class="n">include_export_disclaimer</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">include_export_disclaimer</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Briefing generation failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Build response metadata</span>
+    <span class="n">slide_info</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">BriefingSlideInfo</span><span class="p">(</span>
+            <span class="n">slide_number</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"slide_number"</span><span class="p">],</span>
+            <span class="n">slide_title</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"slide_title"</span><span class="p">],</span>
+            <span class="n">data_points</span><span class="o">=</span><span class="n">s</span><span class="p">[</span><span class="s2">"data_points"</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">"slides"</span><span class="p">]</span>
+    <span class="p">]</span>
+
+    <span class="n">response_meta</span> <span class="o">=</span> <span class="n">BriefingGenerateResponse</span><span class="p">(</span>
+        <span class="n">deck_id</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"deck_id"</span><span class="p">],</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"title"</span><span class="p">],</span>
+        <span class="n">slide_count</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"slide_count"</span><span class="p">],</span>
+        <span class="n">slides</span><span class="o">=</span><span class="n">slide_info</span><span class="p">,</span>
+        <span class="n">file_size_bytes</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"file_size_bytes"</span><span class="p">],</span>
+        <span class="n">classification</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"classification"</span><span class="p">],</span>
+        <span class="n">generated_at</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"generated_at"</span><span class="p">],</span>
+        <span class="n">message</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"message"</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Return the .pptx file as a downloadable response</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"briefing_</span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">'deck_id'</span><span class="p">][:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">.pptx"</span>
+
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+        <span class="n">content</span><span class="o">=</span><span class="n">pptx_bytes</span><span class="p">,</span>
+        <span class="n">media_type</span><span class="o">=</span><span class="s2">"application/vnd.openxmlformats-officedocument.presentationml.presentation"</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"Content-Disposition"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"attachment; filename=</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="s2">"X-Briefing-Deck-Id"</span><span class="p">:</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">"deck_id"</span><span class="p">],</span>
+            <span class="s2">"X-Briefing-Classification"</span><span class="p">:</span> <span class="n">metadata</span><span class="p">[</span><span class="s2">"classification"</span><span class="p">],</span>
+            <span class="s2">"X-Briefing-Slide-Count"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"slide_count"</span><span class="p">]),</span>
+        <span class="p">},</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

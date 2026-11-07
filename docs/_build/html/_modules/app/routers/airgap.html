@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.airgap &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.airgap</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.airgap</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""API router for the offline cross-domain data exchange (airgap) module.</span>
+
+<span class="sd">This module exposes the endpoints for exporting and importing ``.defpack``</span>
+<span class="sd">bundles between air-gapped systems.  These endpoints enable secure data</span>
+<span class="sd">transfer between sovereign networks that share no live connectivity — for</span>
+<span class="sd">example, from an unclassified development environment to a classified</span>
+<span class="sd">operational environment.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">---------</span>
+
+<span class="sd">POST /api/v1/airgap/export</span>
+<span class="sd">    Generate a signed and encrypted ``.defpack`` bundle for a project</span>
+<span class="sd">    sub-tree.  Nodes classified above the target ceiling are redacted.</span>
+<span class="sd">    The bundle is streamed as a file download.</span>
+
+<span class="sd">POST /api/v1/airgap/import</span>
+<span class="sd">    Ingest an uploaded ``.defpack`` file into the target air-gapped</span>
+<span class="sd">    PostgreSQL instance.  Performs signature verification, schema</span>
+<span class="sd">    validation, replay attack detection, and ltree reparenting.</span>
+<span class="sd">    Returns an import validation report.</span>
+
+<span class="sd">Sub-Tree Locking</span>
+<span class="sd">~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The ``POST /import`` endpoint acquires a sub-tree lock before merging</span>
+<span class="sd">imported nodes into the target database.  This prevents concurrent</span>
+<span class="sd">mutations from interfering with the ltree reparenting process.</span>
+<span class="sd">If a lock is already held, HTTP 423 (Locked) is returned.</span>
+
+<span class="sd">Security Considerations</span>
+<span class="sd">-----------------------</span>
+
+<span class="sd">- Both endpoints require a valid JWT token via the ``get_current_user``</span>
+<span class="sd">  dependency.</span>
+<span class="sd">- The export endpoint enforces that the user's clearance meets or exceeds</span>
+<span class="sd">  the requested classification ceiling.</span>
+<span class="sd">- The import endpoint verifies the package signature, validates the JSON</span>
+<span class="sd">  schema, checks for duplicate transaction IDs (replay attack prevention),</span>
+<span class="sd">  and verifies the importer's clearance.</span>
+<span class="sd">- Every export and import is logged in the ForensicAuditLog with the</span>
+<span class="sd">  user's identity and the classification marking.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">    # Export a .defpack bundle:</span>
+<span class="sd">    POST /api/v1/airgap/export</span>
+<span class="sd">    {</span>
+<span class="sd">        "project_id": "uuid...",</span>
+<span class="sd">        "classification_ceiling": "SECRET"</span>
+<span class="sd">    }</span>
+
+<span class="sd">    # Import an uploaded .defpack bundle:</span>
+<span class="sd">    POST /api/v1/airgap/import</span>
+<span class="sd">    (multipart form with .defpack file and optional parent_node_id)</span>
+
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">Form</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">UploadFile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">SecurityClassification</span><span class="p">,</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span> <span class="n">LockOperationType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AirgapExportRequest</span><span class="p">,</span>
+    <span class="n">AirgapExportResponse</span><span class="p">,</span>
+    <span class="n">AirgapImportResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.airgap</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">export_airgap_package</span><span class="p">,</span>
+    <span class="n">ingest_airgap_package</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.lock_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">acquire_subtree_lock</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="export_bundle">
+<a class="viewcode-back" href="../../../modules.html#app.routers.airgap.export_bundle">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/export"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">AirgapExportResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Export a project as a .defpack bundle"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Generate a signed and encrypted ``.defpack`` bundle for a project "</span>
+        <span class="s2">"sub-tree.  The bundle includes PortfolioNodes, DependencyLinks, "</span>
+        <span class="s2">"ResourceAssignments, PortfolioBaselines, and relevant ForensicAuditLog "</span>
+        <span class="s2">"entries.  Before packaging, any node whose classification exceeds the "</span>
+        <span class="s2">"target ceiling is redacted to prevent data spillage.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"The resulting ``.defpack`` file is a ZIP archive containing:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"- ``payload.json`` — Canonical JSON with version 1.0.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"- ``manifest.json`` — SHA-256 hashes of each payload section.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"- ``signature.bin`` — Signature of the manifest for integrity verification.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"The bundle is streamed as a file download with the appropriate "</span>
+        <span class="s2">"Content-Disposition header."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_bundle</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">AirgapExportRequest</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate and stream a .defpack bundle for download.</span>
+
+<span class="sd">    This endpoint extracts the entire project sub-tree, redacts any nodes</span>
+<span class="sd">    exceeding the classification ceiling, and packages everything into a</span>
+<span class="sd">    signed ``.defpack`` ZIP archive.  The archive is returned as a file</span>
+<span class="sd">    download with the appropriate MIME type and Content-Disposition header.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : AirgapExportRequest</span>
+<span class="sd">        The project ID and classification ceiling for the export.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user initiating the export.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Response</span>
+<span class="sd">        A streaming response containing the ``.defpack`` ZIP archive with</span>
+<span class="sd">        ``application/zip`` content type and a ``Content-Disposition`` header</span>
+<span class="sd">        for file download.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the project node is not found, the user lacks clearance, or the</span>
+<span class="sd">        export fails for any other reason.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Verify user clearance meets the ceiling</span>
+    <span class="n">user_clearance</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="s2">"clearance_level"</span><span class="p">,</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.core.abac</span><span class="w"> </span><span class="kn">import</span> <span class="n">CLEARANCE_LEVELS</span>
+
+    <span class="k">if</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">classification_ceiling</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"User clearance </span><span class="si">{</span><span class="n">user_clearance</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> insufficient for "</span>
+                <span class="sa">f</span><span class="s2">"export ceiling </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">classification_ceiling</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Generate the bundle</span>
+    <span class="n">archive_bytes</span> <span class="o">=</span> <span class="n">export_airgap_package</span><span class="p">(</span>
+        <span class="n">project_id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">project_id</span><span class="p">,</span>
+        <span class="n">target_classification_ceiling</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">classification_ceiling</span><span class="p">,</span>
+        <span class="n">user</span><span class="o">=</span><span class="n">current_user</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Stream the bundle as a file download</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"defpack_</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">project_id</span><span class="p">[:</span><span class="mi">8</span><span class="p">]</span><span class="si">}</span><span class="s2">.defpack"</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+        <span class="n">content</span><span class="o">=</span><span class="n">archive_bytes</span><span class="p">,</span>
+        <span class="n">media_type</span><span class="o">=</span><span class="s2">"application/zip"</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"Content-Disposition"</span><span class="p">:</span> <span class="sa">f</span><span class="s1">'attachment; filename="</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s1">"'</span><span class="p">,</span>
+            <span class="s2">"Content-Length"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">archive_bytes</span><span class="p">)),</span>
+        <span class="p">},</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="import_bundle">
+<a class="viewcode-back" href="../../../modules.html#app.routers.airgap.import_bundle">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/import"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">AirgapImportResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Import a .defpack bundle"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Ingest an uploaded ``.defpack`` file into the target air-gapped "</span>
+        <span class="s2">"PostgreSQL instance.  The import process performs:</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"1. **Signature Verification** — Verifies the package signature "</span>
+        <span class="s2">"against the manifest.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"2. **Schema Validation** — Validates the JSON structure against "</span>
+        <span class="s2">"the expected schema.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"3. **Replay Attack Prevention** — Checks for duplicate transaction "</span>
+        <span class="s2">"IDs.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"4. **Classification Check** — Verifies the importer's clearance.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"5. **Node Merge** — Creates new records with reparented ltree paths.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"6. **Audit Logging** — Records an ``AIRGAP_INGEST`` entry.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"Returns an import validation report indicating success or rejection."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">import_bundle</span><span class="p">(</span>
+    <span class="n">defpack_file</span><span class="p">:</span> <span class="n">UploadFile</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The .defpack ZIP archive to import."</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">parent_node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">"UUID of the parent node under which to reparent the imported "</span>
+            <span class="s2">"tree.  If omitted, the imported tree becomes a new root."</span>
+        <span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AirgapImportResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Ingest an uploaded .defpack file and return an import validation report.</span>
+
+<span class="sd">    This endpoint accepts a ``.defpack`` ZIP archive uploaded via multipart</span>
+<span class="sd">    form data.  It performs a multi-stage validation and merge process:</span>
+<span class="sd">    signature verification, schema validation, replay attack detection,</span>
+<span class="sd">    classification check, and node merge with ltree reparenting.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    defpack_file : UploadFile</span>
+<span class="sd">        The uploaded ``.defpack`` ZIP archive.</span>
+<span class="sd">    parent_node_id : str or None</span>
+<span class="sd">        UUID of the parent node under which to reparent the imported tree.</span>
+<span class="sd">        If omitted, the imported tree becomes a new root.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user initiating the import.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    AirgapImportResponse</span>
+<span class="sd">        An import validation report containing the status, counts of</span>
+<span class="sd">        imported entities, and any warnings or errors.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the file is not a valid ``.defpack`` archive, the signature</span>
+<span class="sd">        verification fails, or the user lacks clearance.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Validate file extension</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">defpack_file</span><span class="o">.</span><span class="n">filename</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">defpack_file</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".defpack"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"File must have a .defpack extension"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Read the file bytes</span>
+    <span class="n">file_bytes</span> <span class="o">=</span> <span class="n">defpack_file</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_bytes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Uploaded file is empty"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Determine the lock path based on parent_node_id</span>
+    <span class="n">lock_path</span> <span class="o">=</span> <span class="s2">"root"</span>  <span class="c1"># default: lock the entire tree</span>
+    <span class="k">if</span> <span class="n">parent_node_id</span><span class="p">:</span>
+        <span class="n">parent_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">parent_node_id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">parent_node</span><span class="p">:</span>
+            <span class="n">lock_path</span> <span class="o">=</span> <span class="n">parent_node</span><span class="o">.</span><span class="n">path</span>
+
+    <span class="c1"># Perform the import within a sub-tree lock</span>
+    <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span>
+            <span class="n">_import_with_lock</span><span class="p">(</span>
+                <span class="n">db</span><span class="p">,</span> <span class="n">lock_path</span><span class="p">,</span> <span class="n">file_bytes</span><span class="p">,</span> <span class="n">parent_node_id</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">id</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">AirgapImportResponse</span><span class="p">(</span><span class="o">**</span><span class="n">report</span><span class="p">)</span></div>
+
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_import_with_lock</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">lock_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">file_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+    <span class="n">parent_node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Ingest airgap package within a sub-tree lock.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    lock_path : str</span>
+<span class="sd">        Ltree path to lock (parent node path or "root").</span>
+<span class="sd">    file_bytes : bytes</span>
+<span class="sd">        The .defpack file content.</span>
+<span class="sd">    parent_node_id : str or None</span>
+<span class="sd">        UUID of the parent node for reparenting.</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        ID of the user initiating the import.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Import validation report.</span>
+<span class="sd">    """</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">acquire_subtree_lock</span><span class="p">(</span>
+        <span class="n">db</span><span class="p">,</span> <span class="n">lock_path</span><span class="p">,</span> <span class="n">LockOperationType</span><span class="o">.</span><span class="n">AIRGAP_IMPORT</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">ttl_seconds</span><span class="o">=</span><span class="mi">120</span>
+    <span class="p">):</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">ingest_airgap_package</span><span class="p">(</span>
+            <span class="n">defpack_file</span><span class="o">=</span><span class="n">file_bytes</span><span class="p">,</span>
+            <span class="n">parent_node_id</span><span class="o">=</span><span class="n">parent_node_id</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

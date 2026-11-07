@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eisenhower Portfolio Manager — User Guide &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Getting Started" href="getting-started.html" />
+    <link rel="prev" title="Eisenhower Portfolio Manager — API Documentation" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#quick-start">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#features">Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#account-settings">Account &amp; Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#administration">Administration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ai-assistant">AI Assistant</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#collaboration">Collaboration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#daily-work">Daily Work</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#documents">Documents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#governance-compliance">Governance &amp; Compliance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#integrations">Integrations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#planning-scheduling">Planning &amp; Scheduling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#procurement-contracts">Procurement &amp; Contracts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reports-export">Reports &amp; Export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resources-people">Resources &amp; People</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#security-audit">Security &amp; Audit</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#reference">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="roles.html">User Roles &amp; Permissions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="roles.html#role-overview">Role Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="glossary.html#quick-reference">Quick Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Eisenhower Portfolio Manager — User Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/user_guide/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="eisenhower-portfolio-manager-user-guide">
+<h1>Eisenhower Portfolio Manager — User Guide<a class="headerlink" href="#eisenhower-portfolio-manager-user-guide" title="Link to this heading"></a></h1>
+<p>Welcome to the Eisenhower Portfolio Manager user guide. This documentation
+is designed to help you get started and make the most of the system,
+regardless of your technical background.</p>
+</section>
+<section id="who-is-this-guide-for">
+<h1>Who Is This Guide For?<a class="headerlink" href="#who-is-this-guide-for" title="Link to this heading"></a></h1>
+<p>This guide is for everyone who uses the Eisenhower system:</p>
+<ul class="simple">
+<li><p><strong>Project Managers</strong> — Plan and track defence programmes and projects.</p></li>
+<li><p><strong>Team Members</strong> — Manage your tasks, report progress, and collaborate.</p></li>
+<li><p><strong>Programme Managers</strong> — Oversee multiple projects and generate reports.</p></li>
+<li><p><strong>System Administrators</strong> — Configure and maintain the system.</p></li>
+<li><p><strong>Viewers</strong> — Access read-only information within your clearance level.</p></li>
+</ul>
+</section>
+<section id="quick-start">
+<h1>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading"></a></h1>
+<p>New to the system? Start here:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+</ul>
+</div>
+</section>
+<section id="features">
+<h1>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h1>
+<p>Explore the system’s capabilities by feature area:</p>
+<section id="account-settings">
+<h2>Account &amp; Settings<a class="headerlink" href="#account-settings" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/authentication.html"><span class="doc">Account &amp; Sign-In</span></a> — Account &amp; Sign-In</p></li>
+<li><p><a class="reference internal" href="features/display.html"><span class="doc">Display Settings</span></a> — Display Settings</p></li>
+<li><p><a class="reference internal" href="features/users.html"><span class="doc">User Management</span></a> — User Management</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="administration">
+<h2>Administration<a class="headerlink" href="#administration" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/admin.html"><span class="doc">System Administration</span></a> — System Administration</p></li>
+<li><p><a class="reference internal" href="features/backup.html"><span class="doc">Database Backup</span></a> — Database Backup</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="ai-assistant">
+<h2>AI Assistant<a class="headerlink" href="#ai-assistant" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/copilot.html"><span class="doc">CoPilot AI</span></a> — CoPilot AI</p></li>
+<li><p><a class="reference internal" href="features/mcp.html"><span class="doc">AI Assistant (MCP)</span></a> — AI Assistant (MCP)</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="collaboration">
+<h2>Collaboration<a class="headerlink" href="#collaboration" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/lease.html"><span class="doc">Check-Out Leases</span></a> — Check-Out Leases</p></li>
+<li><p><a class="reference internal" href="features/notification.html"><span class="doc">Notifications</span></a> — Notifications</p></li>
+<li><p><a class="reference internal" href="features/websocket.html"><span class="doc">Real-Time Collaboration</span></a> — Real-Time Collaboration</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="daily-work">
+<h2>Daily Work<a class="headerlink" href="#daily-work" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/cockpit.html"><span class="doc">Daily Cockpit</span></a> — Daily Cockpit</p></li>
+<li><p><a class="reference internal" href="features/dashboard.html"><span class="doc">Dashboard</span></a> — Dashboard</p></li>
+<li><p><a class="reference internal" href="features/other.html"><span class="doc">Other Features</span></a> — Other Features</p></li>
+<li><p><a class="reference internal" href="features/preview.html"><span class="doc">Quick Previews</span></a> — Quick Previews</p></li>
+<li><p><a class="reference internal" href="features/view.html"><span class="doc">Views &amp; Presets</span></a> — Views &amp; Presets</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="documents">
+<h2>Documents<a class="headerlink" href="#documents" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/artifact.html"><span class="doc">Document Vault</span></a> — Document Vault</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="governance-compliance">
+<h2>Governance &amp; Compliance<a class="headerlink" href="#governance-compliance" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/baseline.html"><span class="doc">Baseline Governance</span></a> — Baseline Governance</p></li>
+<li><p><a class="reference internal" href="features/commercial.html"><span class="doc">Commercial Governance</span></a> — Commercial Governance</p></li>
+<li><p><a class="reference internal" href="features/engineering.html"><span class="doc">Engineering Governance</span></a> — Engineering Governance</p></li>
+<li><p><a class="reference internal" href="features/programme.html"><span class="doc">Programme Management</span></a> — Programme Management</p></li>
+<li><p><a class="reference internal" href="features/reserve.html"><span class="doc">Management Reserves</span></a> — Management Reserves</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="integrations">
+<h2>Integrations<a class="headerlink" href="#integrations" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/oracle.html"><span class="doc">Oracle Integration</span></a> — Oracle Integration</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="planning-scheduling">
+<h2>Planning &amp; Scheduling<a class="headerlink" href="#planning-scheduling" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/calendar.html"><span class="doc">Working Calendars</span></a> — Working Calendars</p></li>
+<li><p><a class="reference internal" href="features/costing.html"><span class="doc">Cost Management</span></a> — Cost Management</p></li>
+<li><p><a class="reference internal" href="features/currency.html"><span class="doc">Currency Exchange</span></a> — Currency Exchange</p></li>
+<li><p><a class="reference internal" href="features/sandbox.html"><span class="doc">Sandbox Scenarios</span></a> — Sandbox Scenarios</p></li>
+<li><p><a class="reference internal" href="features/schedule.html"><span class="doc">Schedule Management</span></a> — Schedule Management</p></li>
+<li><p><a class="reference internal" href="features/template.html"><span class="doc">Templates</span></a> — Templates</p></li>
+<li><p><a class="reference internal" href="features/wbs.html"><span class="doc">Work Breakdown Structure</span></a> — Work Breakdown Structure</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="procurement-contracts">
+<h2>Procurement &amp; Contracts<a class="headerlink" href="#procurement-contracts" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/procurement.html"><span class="doc">Procurement Tracking</span></a> — Procurement Tracking</p></li>
+<li><p><a class="reference internal" href="features/subcontractor.html"><span class="doc">Subcontractor Management</span></a> — Subcontractor Management</p></li>
+<li><p><a class="reference internal" href="features/supplier.html"><span class="doc">Supplier Portal</span></a> — Supplier Portal</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="reports-export">
+<h2>Reports &amp; Export<a class="headerlink" href="#reports-export" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/briefing.html"><span class="doc">Executive Briefings</span></a> — Executive Briefings</p></li>
+<li><p><a class="reference internal" href="features/evm.html"><span class="doc">Earned Value Management</span></a> — Earned Value Management</p></li>
+<li><p><a class="reference internal" href="features/export.html"><span class="doc">Data Export</span></a> — Data Export</p></li>
+<li><p><a class="reference internal" href="features/ipmr.html"><span class="doc">IPMR Reports</span></a> — IPMR Reports</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="resources-people">
+<h2>Resources &amp; People<a class="headerlink" href="#resources-people" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/delegation.html"><span class="doc">Delegation Management</span></a> — Delegation Management</p></li>
+<li><p><a class="reference internal" href="features/equipment.html"><span class="doc">Equipment Management</span></a> — Equipment Management</p></li>
+<li><p><a class="reference internal" href="features/material.html"><span class="doc">Materials Management</span></a> — Materials Management</p></li>
+<li><p><a class="reference internal" href="features/requisition.html"><span class="doc">Resource Requisitions</span></a> — Resource Requisitions</p></li>
+<li><p><a class="reference internal" href="features/resource.html"><span class="doc">Resource Management</span></a> — Resource Management</p></li>
+<li><p><a class="reference internal" href="features/spatial.html"><span class="doc">Location Tracking</span></a> — Location Tracking</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="security-audit">
+<h2>Security &amp; Audit<a class="headerlink" href="#security-audit" title="Link to this heading"></a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="features/airgap.html"><span class="doc">Air-Gap Data Exchange</span></a> — Air-Gap Data Exchange</p></li>
+<li><p><a class="reference internal" href="features/audit.html"><span class="doc">Audit Trail</span></a> — Audit Trail</p></li>
+<li><p><a class="reference internal" href="features/merkle.html"><span class="doc">Data Synchronisation</span></a> — Data Synchronisation</p></li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+<section id="reference">
+<h1>Reference<a class="headerlink" href="#reference" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="roles.html">User Roles &amp; Permissions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roles.html#role-overview">Role Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html#quick-reference">Quick Reference</a></li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and Tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="../genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="../search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Eisenhower Portfolio Manager — API Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="getting-started.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

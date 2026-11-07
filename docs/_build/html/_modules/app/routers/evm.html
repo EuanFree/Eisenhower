@@ -1,0 +1,808 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.evm &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.evm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.evm</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""EVM (Earned Value Management) API router.</span>
+
+<span class="sd">This module provides the REST API endpoints for ANSI/EIA-748 Earned Value</span>
+<span class="sd">Management.  It enables programme managers to:</span>
+
+<span class="sd">- View S-Curve data for charting cumulative PV, EV, and AC over time.</span>
+<span class="sd">- Inspect task-level EVM breakdowns with variances and performance indices.</span>
+<span class="sd">- Manage milestone weight steps for the MILESTONE_WEIGHTS EVM technique.</span>
+<span class="sd">- Verify milestone checkpoints, triggering automatic EV recalculation.</span>
+
+<span class="sd">S-Curve Charting</span>
+<span class="sd">~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The S-Curve endpoint returns time-phased data points that the frontend</span>
+<span class="sd">can plot as cumulative curves.  Three lines are typically shown:</span>
+
+<span class="sd">- **Planned Value (PV)** — The baseline schedule in monetary terms.</span>
+<span class="sd">- **Earned Value (EV)** — The actual work performed in budgeted terms.</span>
+<span class="sd">- **Actual Cost (AC)** — The real cost incurred.</span>
+
+<span class="sd">The gap between PV and EV shows schedule variance, while the gap between</span>
+<span class="sd">EV and AC shows cost variance.</span>
+
+<span class="sd">Milestone Weight Steps</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">For tasks using the MILESTONE_WEIGHTS EVM technique, milestone steps</span>
+<span class="sd">define the checkpoints at which EV is earned.  Each step has a weight</span>
+<span class="sd">fraction, and the sum of all weights must equal 1.000.</span>
+
+<span class="sd">When a milestone is verified as passed, the task's EV is automatically</span>
+<span class="sd">recalculated based on the sum of verified weights.</span>
+
+<span class="sd">Authentication</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">All endpoints require JWT authentication via the ``get_current_user``</span>
+<span class="sd">dependency.  Users must have appropriate clearance to access the</span>
+<span class="sd">portfolio nodes they query.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">~~~~~~~~~</span>
+
+<span class="sd">- ``GET /projects/{id}/s-curve-data`` — S-Curve charting data.</span>
+<span class="sd">- ``GET /projects/{id}/evm-rollup`` — Hierarchical EVM rollup.</span>
+<span class="sd">- ``GET /tasks/{id}/cost-breakdown`` — Task-level EVM breakdown.</span>
+<span class="sd">- ``POST /tasks/{id}/calculate-ev`` — Recalculate EV for a task.</span>
+<span class="sd">- ``GET /tasks/{id}/milestone-steps`` — List milestone weight steps.</span>
+<span class="sd">- ``POST /tasks/{id}/milestone-steps`` — Create a milestone step.</span>
+<span class="sd">- ``PUT /tasks/{id}/milestone-steps/{step_id}`` — Update a milestone step.</span>
+<span class="sd">- ``DELETE /tasks/{id}/milestone-steps/{step_id}`` — Delete a milestone step.</span>
+<span class="sd">- ``POST /tasks/{id}/milestone-steps/{step_id}/verify`` — Verify a milestone.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">MilestoneWeightStep</span><span class="p">,</span> <span class="n">EVMTechnique</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MilestoneWeightStepCreate</span><span class="p">,</span>
+    <span class="n">MilestoneWeightStepUpdate</span><span class="p">,</span>
+    <span class="n">MilestoneWeightStepResponse</span><span class="p">,</span>
+    <span class="n">MilestoneWeightStepListResponse</span><span class="p">,</span>
+    <span class="n">EVMTaskBreakdownResponse</span><span class="p">,</span>
+    <span class="n">EVMSCurveResponse</span><span class="p">,</span>
+    <span class="n">EVMRollupResponse</span><span class="p">,</span>
+    <span class="n">EVMRollupListResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.evm_calculator</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">calculate_task_earned_value</span><span class="p">,</span>
+    <span class="n">evm_rollup</span><span class="p">,</span>
+    <span class="n">generate_s_curve_data</span><span class="p">,</span>
+    <span class="n">validate_milestone_weights</span><span class="p">,</span>
+    <span class="n">verify_milestone_step</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># S-Curve and Rollup Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="get_s_curve_data">
+<a class="viewcode-back" href="../../../modules.html#app.routers.evm.get_s_curve_data">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/projects/</span><span class="si">{project_id}</span><span class="s2">/s-curve-data"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_s_curve_data</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">period_days</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Days between data points"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Retrieve time-phased S-Curve data for a project.</span>
+
+<span class="sd">    Returns cumulative Planned Value, Earned Value, and Actual Cost</span>
+<span class="sd">    data points over the project timeline.  The frontend uses these</span>
+<span class="sd">    points to chart the classic EVM S-Curve.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    project_id : str</span>
+<span class="sd">        UUID of the root project PortfolioNode.</span>
+<span class="sd">    period_days : int</span>
+<span class="sd">        Number of days between data points (default 7 for weekly).</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        S-Curve data with project metadata and time-phased curve points.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the project is not found.</span>
+<span class="sd">        500 if S-Curve generation fails.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">project_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid project ID format"</span><span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">project_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Project not found"</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">generate_s_curve_data</span><span class="p">(</span><span class="n">project_uuid</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">period_days</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Failed to generate S-Curve data: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_evm_rollup">
+<a class="viewcode-back" href="../../../modules.html#app.routers.evm.get_evm_rollup">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/projects/</span><span class="si">{project_id}</span><span class="s2">/evm-rollup"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_evm_rollup</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Retrieve hierarchical EVM rollup for a project.</span>
+
+<span class="sd">    Aggregates PV, EV, and AC values at each level of the WBS hierarchy,</span>
+<span class="sd">    from Programme down to individual tasks.  Each level includes</span>
+<span class="sd">    computed variances and performance indices.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    project_id : str</span>
+<span class="sd">        UUID of the root project PortfolioNode.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Hierarchical rollup data with one entry per WBS level.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the project is not found.</span>
+<span class="sd">        500 if rollup computation fails.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">project_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid project ID format"</span><span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">project_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Project not found"</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">rollup_data</span> <span class="o">=</span> <span class="n">evm_rollup</span><span class="p">(</span><span class="n">project_uuid</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"root_node_id"</span><span class="p">:</span> <span class="n">project_id</span><span class="p">,</span>
+            <span class="s2">"levels"</span><span class="p">:</span> <span class="n">rollup_data</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Failed to compute EVM rollup: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Task-Level EVM Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="get_task_cost_breakdown">
+<a class="viewcode-back" href="../../../modules.html#app.routers.evm.get_task_cost_breakdown">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/cost-breakdown"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_task_cost_breakdown</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Retrieve the complete EVM breakdown for a single task.</span>
+
+<span class="sd">    Returns all EVM values (BAC, PV, EV, AC), the assigned EVM technique,</span>
+<span class="sd">    and derived variances and performance indices (CV, SV, CPI, SPI, EAC).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : str</span>
+<span class="sd">        UUID of the PortfolioNode task.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Complete EVM breakdown for the task.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the task is not found.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">task_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid task ID format"</span><span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">task_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Task not found"</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">calculate_task_earned_value</span><span class="p">(</span><span class="n">task_uuid</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"evm_technique"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"evm_technique"</span><span class="p">],</span>
+        <span class="s2">"bac_cost"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"bac_cost"</span><span class="p">],</span>
+        <span class="s2">"planned_value"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"planned_value"</span><span class="p">],</span>
+        <span class="s2">"earned_value"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"earned_value"</span><span class="p">],</span>
+        <span class="s2">"actual_cost"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"actual_cost"</span><span class="p">],</span>
+        <span class="s2">"cost_variance"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"cost_variance"</span><span class="p">],</span>
+        <span class="s2">"schedule_variance"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"schedule_variance"</span><span class="p">],</span>
+        <span class="s2">"cpi"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"cpi"</span><span class="p">],</span>
+        <span class="s2">"spi"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"spi"</span><span class="p">],</span>
+        <span class="s2">"eac"</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">"eac"</span><span class="p">],</span>
+        <span class="s2">"percent_complete"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">percent_complete</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="recalculate_task_ev">
+<a class="viewcode-back" href="../../../modules.html#app.routers.evm.recalculate_task_ev">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/calculate-ev"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">recalculate_task_ev</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Recalculate Earned Value for a task using its assigned EVM technique.</span>
+
+<span class="sd">    Triggers a fresh EV calculation based on the task's current state</span>
+<span class="sd">    (dates, progress, milestone verifications) and the assigned EVM</span>
+<span class="sd">    technique.  The result is persisted to the database.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : str</span>
+<span class="sd">        UUID of the PortfolioNode task.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Updated EVM values after recalculation.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the task is not found.</span>
+<span class="sd">        500 if calculation fails.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">task_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid task ID format"</span><span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">task_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Task not found"</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">calculate_task_earned_value</span><span class="p">(</span><span class="n">task_uuid</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Failed to calculate EV: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Milestone Weight Step Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="list_milestone_steps">
+<a class="viewcode-back" href="../../../modules.html#app.routers.evm.list_milestone_steps">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/milestone-steps"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_milestone_steps</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all milestone weight steps for a task.</span>
+
+<span class="sd">    Returns the complete set of milestone checkpoints, including their</span>
+<span class="sd">    weight fractions, verification status, and summary statistics.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : str</span>
+<span class="sd">        UUID of the PortfolioNode task.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Milestone steps with summary statistics (total_weight,</span>
+<span class="sd">        verified_weight, earned_value_fraction).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the task is not found.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">task_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid task ID format"</span><span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">task_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Task not found"</span><span class="p">)</span>
+
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">MilestoneWeightStep</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">MilestoneWeightStep</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_uuid</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">MilestoneWeightStep</span><span class="o">.</span><span class="n">target_date</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">total_weight</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">weight_fraction</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">)</span>
+    <span class="n">verified_weight</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">weight_fraction</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span>
+        <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">is_verified_passed</span>
+    <span class="p">)</span>
+
+    <span class="n">step_responses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">:</span>
+        <span class="n">step_responses</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+            <span class="s2">"step_name"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">step_name</span><span class="p">,</span>
+            <span class="s2">"weight_fraction"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">weight_fraction</span><span class="p">),</span>
+            <span class="s2">"target_date"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">target_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">target_date</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"is_verified_passed"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">is_verified_passed</span><span class="p">,</span>
+            <span class="s2">"verified_at"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">verified_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">verified_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"verified_by_user_id"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">verified_by_user_id</span><span class="p">,</span>
+        <span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"steps"</span><span class="p">:</span> <span class="n">step_responses</span><span class="p">,</span>
+        <span class="s2">"total_weight"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">total_weight</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="s2">"verified_weight"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">verified_weight</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="s2">"earned_value_fraction"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">verified_weight</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="create_milestone_step">
+<a class="viewcode-back" href="../../../modules.html#app.routers.evm.create_milestone_step">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/milestone-steps"</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="mi">201</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_milestone_step</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">step_data</span><span class="p">:</span> <span class="n">MilestoneWeightStepCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new milestone weight step for a task.</span>
+
+<span class="sd">    Adds a new checkpoint to the task's milestone weight definition.</span>
+<span class="sd">    After creation, the system validates that all weights sum to 1.000.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : str</span>
+<span class="sd">        UUID of the PortfolioNode task.</span>
+<span class="sd">    step_data : MilestoneWeightStepCreate</span>
+<span class="sd">        Milestone step data (name, weight, target date).</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        The newly created milestone step.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the task is not found.</span>
+<span class="sd">        400 if milestone weights don't sum to 1.0 after creation.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">task_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid task ID format"</span><span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">task_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Task not found"</span><span class="p">)</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="n">MilestoneWeightStep</span><span class="p">(</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">task_uuid</span><span class="p">,</span>
+        <span class="n">step_name</span><span class="o">=</span><span class="n">step_data</span><span class="o">.</span><span class="n">step_name</span><span class="p">,</span>
+        <span class="n">weight_fraction</span><span class="o">=</span><span class="n">step_data</span><span class="o">.</span><span class="n">weight_fraction</span><span class="p">,</span>
+        <span class="n">target_date</span><span class="o">=</span><span class="n">step_data</span><span class="o">.</span><span class="n">target_date</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Validate weights sum to 1.0</span>
+    <span class="n">is_valid</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">validate_milestone_weights</span><span class="p">(</span><span class="n">task_uuid</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+        <span class="s2">"step_name"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">step_name</span><span class="p">,</span>
+        <span class="s2">"weight_fraction"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">weight_fraction</span><span class="p">),</span>
+        <span class="s2">"target_date"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">target_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">target_date</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"is_verified_passed"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">is_verified_passed</span><span class="p">,</span>
+        <span class="s2">"verified_at"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"verified_by_user_id"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="update_milestone_step">
+<a class="viewcode-back" href="../../../modules.html#app.routers.evm.update_milestone_step">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/milestone-steps/</span><span class="si">{step_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_milestone_step</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">step_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">step_data</span><span class="p">:</span> <span class="n">MilestoneWeightStepUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update an existing milestone weight step.</span>
+
+<span class="sd">    Partially updates the milestone step.  If ``is_verified_passed``</span>
+<span class="sd">    is set to True, the step is verified and EV is recalculated.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : str</span>
+<span class="sd">        UUID of the PortfolioNode task.</span>
+<span class="sd">    step_id : str</span>
+<span class="sd">        UUID of the MilestoneWeightStep to update.</span>
+<span class="sd">    step_data : MilestoneWeightStepUpdate</span>
+<span class="sd">        Fields to update.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        The updated milestone step.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the step is not found.</span>
+<span class="sd">        400 if weight update causes invalid total.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">task_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+        <span class="n">step_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">step_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid ID format"</span><span class="p">)</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">MilestoneWeightStep</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">MilestoneWeightStep</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">step_uuid</span><span class="p">,</span>
+        <span class="n">MilestoneWeightStep</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_uuid</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Milestone step not found"</span><span class="p">)</span>
+
+    <span class="c1"># Update fields</span>
+    <span class="k">if</span> <span class="n">step_data</span><span class="o">.</span><span class="n">step_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">step</span><span class="o">.</span><span class="n">step_name</span> <span class="o">=</span> <span class="n">step_data</span><span class="o">.</span><span class="n">step_name</span>
+    <span class="k">if</span> <span class="n">step_data</span><span class="o">.</span><span class="n">weight_fraction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">step</span><span class="o">.</span><span class="n">weight_fraction</span> <span class="o">=</span> <span class="n">step_data</span><span class="o">.</span><span class="n">weight_fraction</span>
+    <span class="k">if</span> <span class="n">step_data</span><span class="o">.</span><span class="n">target_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">step</span><span class="o">.</span><span class="n">target_date</span> <span class="o">=</span> <span class="n">step_data</span><span class="o">.</span><span class="n">target_date</span>
+
+    <span class="c1"># Handle verification</span>
+    <span class="k">if</span> <span class="n">step_data</span><span class="o">.</span><span class="n">is_verified_passed</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+        <span class="n">step</span><span class="o">.</span><span class="n">is_verified_passed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">step</span><span class="o">.</span><span class="n">verified_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+        <span class="n">step</span><span class="o">.</span><span class="n">verified_by_user_id</span> <span class="o">=</span> <span class="n">step_data</span><span class="o">.</span><span class="n">verified_by_user_id</span> <span class="ow">or</span> <span class="n">current_user</span><span class="o">.</span><span class="n">id</span>
+
+        <span class="c1"># Recalculate EV if using MILESTONE_WEIGHTS</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">task_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">evm_technique</span> <span class="o">==</span> <span class="n">EVMTechnique</span><span class="o">.</span><span class="n">MILESTONE_WEIGHTS</span><span class="p">:</span>
+            <span class="n">calculate_task_earned_value</span><span class="p">(</span><span class="n">task_uuid</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+
+    <span class="c1"># Validate weights</span>
+    <span class="n">is_valid</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">validate_milestone_weights</span><span class="p">(</span><span class="n">task_uuid</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+        <span class="s2">"step_name"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">step_name</span><span class="p">,</span>
+        <span class="s2">"weight_fraction"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">weight_fraction</span><span class="p">),</span>
+        <span class="s2">"target_date"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">target_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">target_date</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"is_verified_passed"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">is_verified_passed</span><span class="p">,</span>
+        <span class="s2">"verified_at"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">verified_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">verified_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"verified_by_user_id"</span><span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">verified_by_user_id</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="delete_milestone_step">
+<a class="viewcode-back" href="../../../modules.html#app.routers.evm.delete_milestone_step">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/milestone-steps/</span><span class="si">{step_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_milestone_step</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">step_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete a milestone weight step.</span>
+
+<span class="sd">    Removes a milestone checkpoint from the task's definition.</span>
+<span class="sd">    Note: deleting a step will likely cause the weight sum to</span>
+<span class="sd">    deviate from 1.000, which may affect EV calculation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : str</span>
+<span class="sd">        UUID of the PortfolioNode task.</span>
+<span class="sd">    step_id : str</span>
+<span class="sd">        UUID of the MilestoneWeightStep to delete.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Confirmation of deletion.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the step is not found.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">task_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+        <span class="n">step_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">step_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid ID format"</span><span class="p">)</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">MilestoneWeightStep</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">MilestoneWeightStep</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">step_uuid</span><span class="p">,</span>
+        <span class="n">MilestoneWeightStep</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_uuid</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Milestone step not found"</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"deleted"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"step_id"</span><span class="p">:</span> <span class="n">step_id</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="verify_milestone">
+<a class="viewcode-back" href="../../../modules.html#app.routers.evm.verify_milestone">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/milestone-steps/</span><span class="si">{step_id}</span><span class="s2">/verify"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">verify_milestone</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">step_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Verify a milestone step as passed.</span>
+
+<span class="sd">    Marks the milestone as verified, records the verification timestamp</span>
+<span class="sd">    and user, and automatically recalculates the task's Earned Value</span>
+<span class="sd">    if it uses the MILESTONE_WEIGHTS technique.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : str</span>
+<span class="sd">        UUID of the PortfolioNode task.</span>
+<span class="sd">    step_id : str</span>
+<span class="sd">        UUID of the MilestoneWeightStep to verify.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user performing the verification.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Updated milestone step data and recalculated EV.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the step is not found.</span>
+<span class="sd">        500 if verification fails.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">task_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+        <span class="n">step_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">step_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid ID format"</span><span class="p">)</span>
+
+    <span class="n">step</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">MilestoneWeightStep</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">MilestoneWeightStep</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">step_uuid</span><span class="p">,</span>
+        <span class="n">MilestoneWeightStep</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_uuid</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Milestone step not found"</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">verify_milestone_step</span><span class="p">(</span><span class="n">step_uuid</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Failed to verify milestone: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

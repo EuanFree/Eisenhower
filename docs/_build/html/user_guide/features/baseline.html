@@ -1,0 +1,196 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baseline Governance &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Baseline Governance</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/baseline.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="baseline-governance">
+<h1>Baseline Governance<a class="headerlink" href="#baseline-governance" title="Link to this heading"></a></h1>
+<p>Capture and manage project baselines. Track changes against approved baselines and request baseline change approvals.</p>
+<section id="baselines">
+<h2>baselines<a class="headerlink" href="#baselines" title="Link to this heading"></a></h2>
+<p>API router for Performance Measurement Baseline (PMB) governance.</p>
+<p>This router provides endpoints for freezing baselines, comparing live
+WBS state against frozen baselines, and managing Baseline Change Requests
+(BCRs).</p>
+<section id="endpoints">
+<h3>Endpoints<a class="headerlink" href="#endpoints" title="Link to this heading"></a></h3>
+<p>POST   /api/v1/baselines/freeze          — Freeze a new baseline snapshot.
+GET    /api/v1/baselines/compare          — Compare live state against a baseline.
+GET    /api/v1/baselines/list             — List baselines for a project.
+POST   /api/v1/baselines/bcr              — Create a new Baseline Change Request.
+PUT    /api/v1/baselines/bcr/{id}         — Update BCR status (approve/reject).
+GET    /api/v1/baselines/bcr/{id}         — Get BCR details.
+GET    /api/v1/baselines/bcr              — List BCRs by status/tier.</p>
+</section>
+</section>
+<section id="sub-tree-locking">
+<h2>Sub-Tree Locking<a class="headerlink" href="#sub-tree-locking" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/freeze</span></code> endpoint acquires a sub-tree lock before cloning
+the live WBS sub-tree into baseline snapshot rows.  This prevents
+concurrent mutations from changing the source tree during the snapshot.
+If a lock is already held, HTTP 423 (Locked) is returned.</p>
+</section>
+<section id="security">
+<h2>Security<a class="headerlink" href="#security" title="Link to this heading"></a></h2>
+<p>All endpoints require JWT authentication.  The authenticated user must
+have sufficient clearance to access the portfolio nodes involved.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<blockquote>
+<div><p># Freeze a new baseline
+POST /api/v1/baselines/freeze
+{
+“root_node_id”: “&lt;uuid&gt;”,
+“baseline_code”: “B0_CONTRACT”,
+“name”: “Contract Baseline”
+}</p>
+<p># Compare live state against a baseline
+GET /api/v1/baselines/compare?root_node_id=&lt;uuid&gt;&amp;baseline_id=&lt;uuid&gt;</p>
+<p># Create a BCR
+POST /api/v1/baselines/bcr
+{
+“bcr_number”: “BCR-2024-001”,
+“title”: “Extend delivery schedule”,
+“justification”: “Supply chain delays…”,
+“tier”: “TIER_2_PROJECT_CCB”,
+“schedule_finish_slip_days”: 14
+}</p>
+</div></blockquote>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: Compare live WBS state against a frozen baseline.</p></li>
+<li><p><strong>View</strong>: List all baselines for a given portfolio project.</p></li>
+<li><p><strong>View</strong>: List Baseline Change Requests, optionally filtered by status or tier.</p></li>
+<li><p><strong>View</strong>: Get details of a specific Baseline Change Request.</p></li>
+</ul>
+<p><strong>Creating New Items</strong></p>
+<ul class="simple">
+<li><p><strong>Create</strong>: Freeze a new Performance Measurement Baseline.</p></li>
+<li><p><strong>Create</strong>: Create a new Baseline Change Request.</p></li>
+</ul>
+<p><strong>Updating Information</strong></p>
+<ul class="simple">
+<li><p><strong>Update</strong>: Update the status of a Baseline Change Request.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

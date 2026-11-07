@@ -1,0 +1,836 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.oracle_gateway &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.oracle_gateway</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.oracle_gateway</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Oracle ERP gateway service for timesheet pre-population and export staging.</span>
+
+<span class="sd">This module provides the bridge between the Eisenhower Portfolio Manager's</span>
+<span class="sd">internal scheduling system and Oracle EBS (Enterprise Business Suite) for</span>
+<span class="sd">timesheet and cost accounting workflows.</span>
+
+<span class="sd">Two Core Functions</span>
+<span class="sd">------------------</span>
+
+<span class="sd">1. **Timesheet Pre-Population** — When a user opens their weekly timesheet,</span>
+<span class="sd">   the system inspects active CPM (Critical Path Method) assignments and</span>
+<span class="sd">   auto-populates scheduled hours so the user can confirm or adjust rather</span>
+<span class="sd">   than entering from scratch.</span>
+
+<span class="sd">2. **Oracle Staging Payload Generation** — When a timesheet period is closed,</span>
+<span class="sd">   approved timesheet lines are formatted into Oracle EBS staging format</span>
+<span class="sd">   (PA_TRANSACTION_INTERFACE_ALL schema / OTL CSV).  Classified task names</span>
+<span class="sd">   are automatically replaced with sanitised cost-code identifiers to prevent</span>
+<span class="sd">   classified information from leaking into the ERP system.</span>
+
+<span class="sd">Timesheet Pre-Population Algorithm</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The algorithm works as follows:</span>
+
+<span class="sd">1. Find the ResourceNode corresponding to the authenticated user by matching</span>
+<span class="sd">   the user's username, email, or full_name against the resource's code/name.</span>
+
+<span class="sd">2. Query all active ResourceAssignments for that resource where the assigned</span>
+<span class="sd">   PortfolioNode's planned dates overlap with the requested timesheet period.</span>
+
+<span class="sd">3. For each assignment, distribute the planned hours across the working days</span>
+<span class="sd">   within the period, respecting the allocated_units (e.g., 0.5 = half-day).</span>
+
+<span class="sd">4. Look up the OracleProjectMapping for each portfolio node to obtain the</span>
+<span class="sd">   Oracle cost code (project number, task number, expenditure org, type).</span>
+
+<span class="sd">5. Return the pre-populated line items so the frontend can display them</span>
+<span class="sd">   in the timesheet grid.</span>
+
+<span class="sd">Oracle Staging Payload Format</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The staging payload follows the Oracle EBS PA_TRANSACTION_INTERFACE_ALL</span>
+<span class="sd">table structure, which is the standard interface for loading project</span>
+<span class="sd">transactions into Oracle Projects.  The CSV format includes:</span>
+
+<span class="sd">- TRANSACTION_ID — Unique transaction identifier.</span>
+<span class="sd">- ORGANIZATION_ID — Organisation identifier.</span>
+<span class="sd">- PROJECT_ID — Oracle project number.</span>
+<span class="sd">- TASK_ID — Oracle task number.</span>
+<span class="sd">- EXPENDITURE_TYPE — Cost category (e.g., 'Direct Labor').</span>
+<span class="sd">- TRANSACTION_DATE — Date the work was performed.</span>
+<span class="sd">- TRANSACTION_STATUS — Status of the transaction (PENDING).</span>
+<span class="sd">- BILLABLE_FLAG — Whether the transaction is billable (Y).</span>
+<span class="sd">- CREATION_DATE — Timestamp of record creation.</span>
+<span class="sd">- CREATED_BY — User who created the record.</span>
+<span class="sd">- RESOURCE_ID — Resource identifier (user).</span>
+<span class="sd">- NAME — Resource name.</span>
+<span class="sd">- DESCRIPTION — Description of work (sanitised for classified tasks).</span>
+<span class="sd">- TRANSACTION_AMOUNT — Hours worked.</span>
+<span class="sd">- EXCHANGE_RATE — Currency exchange rate (1.0 for domestic).</span>
+<span class="sd">- EXCHANGE_RATE_TYPE — Exchange rate type.</span>
+<span class="sd">- EXCHANGE_RATE_DATE — Date of exchange rate.</span>
+<span class="sd">- ATTRIBUTE_CATEGORY — Global attribute category.</span>
+<span class="sd">- GLOBAL_ATTRIBUTE_CATEGORY — Additional attribute category.</span>
+<span class="sd">- BATCH_SOURCE_NAME — Source system identifier.</span>
+
+<span class="sd">Data Sanitization</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Before generating the staging payload, classified task names are replaced</span>
+<span class="sd">with their Oracle cost-code identifiers.  For example, a task named</span>
+<span class="sd">"CLASSIFIED AVIONICS INTEGRATION" with Oracle task number "10.02.01"</span>
+<span class="sd">will appear in the export as "Task 10.02.01" to prevent classified</span>
+<span class="sd">information from entering the ERP system.</span>
+
+<span class="sd">Dependencies</span>
+<span class="sd">~~~~~~~~~~~~</span>
+
+<span class="sd">This service requires a live PostgreSQL instance to query the PortfolioNode</span>
+<span class="sd">tree, ResourceAssignments, and OracleProjectMappings.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">and_</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span>
+    <span class="n">OracleProjectMapping</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">ResourceAssignment</span><span class="p">,</span>
+    <span class="n">ResourceNode</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">TimesheetOracleExportBatch</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Security classification helpers</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="n">_SECURITY_RANK</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL_SENSITIVE</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">TOP_SECRET</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_workday</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return True if the given date is a working day (Mon–Fri).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    d : date</span>
+<span class="sd">        The date to check.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the date is Monday through Friday.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">5</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_workdays_in_range</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">date</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return a list of working days between start and end (inclusive).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start : date</span>
+<span class="sd">        The start date of the range.</span>
+<span class="sd">    end : date</span>
+<span class="sd">        The end date of the range.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[date]</span>
+<span class="sd">        List of dates that fall on Monday through Friday.</span>
+<span class="sd">    """</span>
+    <span class="n">days</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="k">while</span> <span class="n">current</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_is_workday</span><span class="p">(</span><span class="n">current</span><span class="p">):</span>
+            <span class="n">days</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+        <span class="n">current</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">days</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_resource_node_for_user</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ResourceNode</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Find the ResourceNode corresponding to a User.</span>
+
+<span class="sd">    Matches the user's username, email, or full_name against the</span>
+<span class="sd">    ResourceNode's code and name fields.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        SQLAlchemy database session.</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ResourceNode or None</span>
+<span class="sd">        The matching resource node, or None if not found.</span>
+<span class="sd">    """</span>
+    <span class="n">search_terms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">:</span>
+        <span class="n">search_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">:</span>
+        <span class="n">search_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">full_name</span><span class="p">:</span>
+        <span class="n">search_terms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">full_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">search_terms</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">search_terms</span><span class="p">:</span>
+        <span class="n">resource</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">ResourceNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="n">ResourceNode</span><span class="o">.</span><span class="n">code</span><span class="o">.</span><span class="n">ilike</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%</span><span class="si">{</span><span class="n">term</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+                    <span class="o">|</span> <span class="n">ResourceNode</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">ilike</span><span class="p">(</span><span class="sa">f</span><span class="s2">"%</span><span class="si">{</span><span class="n">term</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">resource</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">resource</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_oracle_mapping</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">portfolio_node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OracleProjectMapping</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Look up the Oracle EBS project mapping for a portfolio node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        SQLAlchemy database session.</span>
+<span class="sd">    portfolio_node_id : UUID</span>
+<span class="sd">        The portfolio node to look up.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    OracleProjectMapping or None</span>
+<span class="sd">        The mapping record, or None if not configured.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">OracleProjectMapping</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">OracleProjectMapping</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">portfolio_node_id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_task_description</span><span class="p">(</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">mapping</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OracleProjectMapping</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate a sanitised task description for Oracle export.</span>
+
+<span class="sd">    For classified tasks (SECRET or higher), replace the task name</span>
+<span class="sd">    with the Oracle cost-code identifier to prevent classified</span>
+<span class="sd">    information from entering the ERP system.</span>
+
+<span class="sd">    For unclassified tasks, return the task name with the Oracle</span>
+<span class="sd">    task number appended for traceability.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The portfolio node being exported.</span>
+<span class="sd">    mapping : OracleProjectMapping or None</span>
+<span class="sd">        The Oracle project mapping for this node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The sanitised description string.</span>
+<span class="sd">    """</span>
+    <span class="n">is_classified</span> <span class="o">=</span> <span class="n">_SECURITY_RANK</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="p">)</span> <span class="o">&gt;=</span> <span class="n">_SECURITY_RANK</span><span class="p">[</span><span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">is_classified</span><span class="p">:</span>
+        <span class="c1"># Replace classified name with cost-code identifier</span>
+        <span class="n">task_num</span> <span class="o">=</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_task_number</span> <span class="k">if</span> <span class="n">mapping</span> <span class="k">else</span> <span class="s2">"UNKNOWN"</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Task </span><span class="si">{</span><span class="n">task_num</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Safe to include task name</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">"Unnamed Task"</span>
+        <span class="k">if</span> <span class="n">mapping</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">mapping</span><span class="o">.</span><span class="n">oracle_task_number</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="k">return</span> <span class="n">name</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Timesheet Pre-Population</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="prepopulate_timesheet_from_schedule">
+<a class="viewcode-back" href="../../../modules.html#app.services.oracle_gateway.prepopulate_timesheet_from_schedule">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">prepopulate_timesheet_from_schedule</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">period_start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">period_end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Pre-populate a user's weekly timesheet from active CPM assignments.</span>
+
+<span class="sd">    This function inspects the user's active ResourceAssignments and</span>
+<span class="sd">    distributes planned hours across the working days within the</span>
+<span class="sd">    requested period.  The result is a list of timesheet line items</span>
+<span class="sd">    ready to be displayed in the frontend timesheet grid.</span>
+
+<span class="sd">    Algorithm</span>
+<span class="sd">    ---------</span>
+
+<span class="sd">    1. Find the ResourceNode for the authenticated user.</span>
+<span class="sd">    2. Query all active ResourceAssignments for that resource.</span>
+<span class="sd">    3. Filter to assignments whose portfolio node dates overlap the period.</span>
+<span class="sd">    4. For each assignment, distribute hours across workdays in the period.</span>
+<span class="sd">    5. Look up Oracle cost codes for each portfolio node.</span>
+<span class="sd">    6. Return the pre-populated line items.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        SQLAlchemy database session.</span>
+<span class="sd">    user_id : UUID</span>
+<span class="sd">        The authenticated user's UUID.</span>
+<span class="sd">    period_start : date</span>
+<span class="sd">        Start date of the timesheet period.</span>
+<span class="sd">    period_end : date</span>
+<span class="sd">        End date of the timesheet period.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing:</span>
+<span class="sd">        - user_id: the user's UUID as a string</span>
+<span class="sd">        - period_start: ISO-formatted start date</span>
+<span class="sd">        - period_end: ISO-formatted end date</span>
+<span class="sd">        - scheduled_lines: list of timesheet line item dicts</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the user is not found or has no corresponding ResourceNode.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Find the user</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"User </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># Find the resource node for this user</span>
+    <span class="n">resource_node</span> <span class="o">=</span> <span class="n">_find_resource_node_for_user</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">resource_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Return empty timesheet if no resource node found</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"user_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">user_id</span><span class="p">),</span>
+            <span class="s2">"period_start"</span><span class="p">:</span> <span class="n">period_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"period_end"</span><span class="p">:</span> <span class="n">period_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"scheduled_lines"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+
+    <span class="c1"># Get all active assignments for this resource</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">resource_node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span>
+                <span class="p">[</span><span class="s2">"CONFIRMED"</span><span class="p">,</span> <span class="s2">"CLAIMED"</span><span class="p">]</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Get workdays in the period</span>
+    <span class="n">workdays</span> <span class="o">=</span> <span class="n">_get_workdays_in_range</span><span class="p">(</span><span class="n">period_start</span><span class="p">,</span> <span class="n">period_end</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">workdays</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"user_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">user_id</span><span class="p">),</span>
+            <span class="s2">"period_start"</span><span class="p">:</span> <span class="n">period_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"period_end"</span><span class="p">:</span> <span class="n">period_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"scheduled_lines"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+
+    <span class="c1"># Standard daily hours (8 hours per day)</span>
+    <span class="n">STANDARD_DAILY_HOURS</span> <span class="o">=</span> <span class="mf">8.0</span>
+
+    <span class="n">scheduled_lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+        <span class="c1"># Get the portfolio node</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Check if the node's planned dates overlap with the period</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="n">node_start</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span>
+            <span class="p">)</span>
+            <span class="n">node_end</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># No dates set — include all workdays in period</span>
+            <span class="n">node_start</span> <span class="o">=</span> <span class="n">period_start</span>
+            <span class="n">node_end</span> <span class="o">=</span> <span class="n">period_end</span>
+
+        <span class="c1"># Find overlapping workdays</span>
+        <span class="n">overlap_days</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">workdays</span>
+            <span class="k">if</span> <span class="n">node_start</span> <span class="o">&lt;=</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">node_end</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">overlap_days</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Get Oracle mapping for this node</span>
+        <span class="n">mapping</span> <span class="o">=</span> <span class="n">_get_oracle_mapping</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+
+        <span class="c1"># Calculate daily hours based on allocation</span>
+        <span class="n">allocated_units</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">allocated_units</span> <span class="ow">or</span> <span class="mf">0.0</span>
+        <span class="n">daily_hours</span> <span class="o">=</span> <span class="n">STANDARD_DAILY_HOURS</span> <span class="o">*</span> <span class="n">allocated_units</span>
+
+        <span class="c1"># If we have planned_hours, distribute them across overlap days</span>
+        <span class="k">if</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span> <span class="ow">and</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Distribute planned hours proportionally across overlap days</span>
+            <span class="n">total_planned</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span>
+            <span class="c1"># Calculate total workdays in the node's full planned period</span>
+            <span class="n">all_node_workdays</span> <span class="o">=</span> <span class="n">_get_workdays_in_range</span><span class="p">(</span><span class="n">node_start</span><span class="p">,</span> <span class="n">node_end</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">all_node_workdays</span><span class="p">:</span>
+                <span class="n">daily_hours</span> <span class="o">=</span> <span class="n">total_planned</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_node_workdays</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">daily_hours</span> <span class="o">=</span> <span class="n">total_planned</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">overlap_days</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Create a line item for each overlap day</span>
+        <span class="k">for</span> <span class="n">workday</span> <span class="ow">in</span> <span class="n">overlap_days</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+                <span class="s2">"oracle_project_number"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_project_number</span> <span class="k">if</span> <span class="n">mapping</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                <span class="s2">"oracle_task_number"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_task_number</span> <span class="k">if</span> <span class="n">mapping</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                <span class="s2">"oracle_expenditure_org_name"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_expenditure_org_name</span> <span class="k">if</span> <span class="n">mapping</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                <span class="s2">"oracle_expenditure_type"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_expenditure_type</span> <span class="k">if</span> <span class="n">mapping</span> <span class="k">else</span> <span class="s2">"Direct Labor"</span><span class="p">,</span>
+                <span class="s2">"work_date"</span><span class="p">:</span> <span class="n">workday</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="s2">"hours"</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">daily_hours</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="s2">"description"</span><span class="p">:</span> <span class="n">_sanitize_task_description</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">mapping</span><span class="p">),</span>
+                <span class="s2">"user_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">user_id</span><span class="p">),</span>
+                <span class="s2">"user_name"</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">full_name</span> <span class="ow">or</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">scheduled_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"user_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">user_id</span><span class="p">),</span>
+        <span class="s2">"period_start"</span><span class="p">:</span> <span class="n">period_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="s2">"period_end"</span><span class="p">:</span> <span class="n">period_end</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="s2">"scheduled_lines"</span><span class="p">:</span> <span class="n">scheduled_lines</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Oracle Staging Payload Generation</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="generate_oracle_staging_payload">
+<a class="viewcode-back" href="../../../modules.html#app.services.oracle_gateway.generate_oracle_staging_payload">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_oracle_staging_payload</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">batch_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]]]:</span>
+<span class="w">    </span><span class="sd">"""Generate an Oracle EBS staging payload for an export batch.</span>
+
+<span class="sd">    Formats approved timesheet lines into Oracle EBS</span>
+<span class="sd">    PA_TRANSACTION_INTERFACE_ALL schema / OTL CSV format.</span>
+<span class="sd">    Classified task names are automatically replaced with</span>
+<span class="sd">    sanitised cost-code identifiers.</span>
+
+<span class="sd">    The payload is returned as a CSV string along with a list</span>
+<span class="sd">    of line item dictionaries for audit purposes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        SQLAlchemy database session.</span>
+<span class="sd">    batch_id : UUID</span>
+<span class="sd">        The UUID of the export batch.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        A 2-tuple of:</span>
+<span class="sd">        - csv_content: the CSV-formatted staging payload string</span>
+<span class="sd">        - line_items: list of line item dicts for audit logging</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the batch is not found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Find the batch</span>
+    <span class="n">batch</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TimesheetOracleExportBatch</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">TimesheetOracleExportBatch</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">batch_id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">batch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Export batch </span><span class="si">{</span><span class="n">batch_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># CSV header matching PA_TRANSACTION_INTERFACE_ALL columns</span>
+    <span class="n">csv_header</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"TRANSACTION_ID"</span><span class="p">,</span>
+        <span class="s2">"ORGANIZATION_ID"</span><span class="p">,</span>
+        <span class="s2">"PROJECT_ID"</span><span class="p">,</span>
+        <span class="s2">"TASK_ID"</span><span class="p">,</span>
+        <span class="s2">"EXPENDITURE_TYPE"</span><span class="p">,</span>
+        <span class="s2">"TRANSACTION_DATE"</span><span class="p">,</span>
+        <span class="s2">"TRANSACTION_STATUS"</span><span class="p">,</span>
+        <span class="s2">"BILLABLE_FLAG"</span><span class="p">,</span>
+        <span class="s2">"CREATION_DATE"</span><span class="p">,</span>
+        <span class="s2">"CREATED_BY"</span><span class="p">,</span>
+        <span class="s2">"RESOURCE_ID"</span><span class="p">,</span>
+        <span class="s2">"NAME"</span><span class="p">,</span>
+        <span class="s2">"DESCRIPTION"</span><span class="p">,</span>
+        <span class="s2">"TRANSACTION_AMOUNT"</span><span class="p">,</span>
+        <span class="s2">"EXCHANGE_RATE"</span><span class="p">,</span>
+        <span class="s2">"EXCHANGE_RATE_TYPE"</span><span class="p">,</span>
+        <span class="s2">"EXCHANGE_RATE_DATE"</span><span class="p">,</span>
+        <span class="s2">"ATTRIBUTE_CATEGORY"</span><span class="p">,</span>
+        <span class="s2">"GLOBAL_ATTRIBUTE_CATEGORY"</span><span class="p">,</span>
+        <span class="s2">"BATCH_SOURCE_NAME"</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Collect all portfolio nodes referenced in this batch's period</span>
+    <span class="c1"># In a real implementation, timesheet lines would be stored in a</span>
+    <span class="c1"># separate table.  For now, we derive them from ResourceAssignments</span>
+    <span class="c1"># within the batch's period.</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">line_items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">csv_rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">batch_source</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"EISENHOWER_</span><span class="si">{</span><span class="n">batch</span><span class="o">.</span><span class="n">batch_reference</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">mapping</span> <span class="o">=</span> <span class="n">_get_oracle_mapping</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mapping</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Skip nodes without Oracle mapping</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Get the resource node</span>
+        <span class="n">resource</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Generate work days within the batch period</span>
+        <span class="n">workdays</span> <span class="o">=</span> <span class="n">_get_workdays_in_range</span><span class="p">(</span>
+            <span class="n">batch</span><span class="o">.</span><span class="n">period_start_date</span><span class="p">,</span> <span class="n">batch</span><span class="o">.</span><span class="n">period_end_date</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check overlap with node dates</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="n">node_start</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span>
+            <span class="p">)</span>
+            <span class="n">node_end</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span>
+            <span class="p">)</span>
+            <span class="n">workdays</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">workdays</span> <span class="k">if</span> <span class="n">node_start</span> <span class="o">&lt;=</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">node_end</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">workdays</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Calculate daily hours</span>
+        <span class="n">STANDARD_DAILY_HOURS</span> <span class="o">=</span> <span class="mf">8.0</span>
+        <span class="n">allocated_units</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">allocated_units</span> <span class="ow">or</span> <span class="mf">0.0</span>
+        <span class="n">daily_hours</span> <span class="o">=</span> <span class="n">STANDARD_DAILY_HOURS</span> <span class="o">*</span> <span class="n">allocated_units</span>
+
+        <span class="k">if</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span> <span class="ow">and</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">all_node_workdays</span> <span class="o">=</span> <span class="n">_get_workdays_in_range</span><span class="p">(</span>
+                <span class="n">node_start</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="k">else</span> <span class="n">batch</span><span class="o">.</span><span class="n">period_start_date</span><span class="p">,</span>
+                <span class="n">node_end</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="k">else</span> <span class="n">batch</span><span class="o">.</span><span class="n">period_end_date</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">all_node_workdays</span><span class="p">:</span>
+                <span class="n">daily_hours</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_node_workdays</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">workday</span> <span class="ow">in</span> <span class="n">workdays</span><span class="p">:</span>
+            <span class="n">transaction_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())</span>
+            <span class="n">sanitized_desc</span> <span class="o">=</span> <span class="n">_sanitize_task_description</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">mapping</span><span class="p">)</span>
+
+            <span class="n">row</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"TRANSACTION_ID"</span><span class="p">:</span> <span class="n">transaction_id</span><span class="p">,</span>
+                <span class="s2">"ORGANIZATION_ID"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_expenditure_org_name</span><span class="p">,</span>
+                <span class="s2">"PROJECT_ID"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_project_number</span><span class="p">,</span>
+                <span class="s2">"TASK_ID"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_task_number</span><span class="p">,</span>
+                <span class="s2">"EXPENDITURE_TYPE"</span><span class="p">:</span> <span class="n">mapping</span><span class="o">.</span><span class="n">oracle_expenditure_type</span><span class="p">,</span>
+                <span class="s2">"TRANSACTION_DATE"</span><span class="p">:</span> <span class="n">workday</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="s2">"TRANSACTION_STATUS"</span><span class="p">:</span> <span class="s2">"PENDING"</span><span class="p">,</span>
+                <span class="s2">"BILLABLE_FLAG"</span><span class="p">:</span> <span class="s2">"Y"</span><span class="p">,</span>
+                <span class="s2">"CREATION_DATE"</span><span class="p">:</span> <span class="n">now</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="s2">"CREATED_BY"</span><span class="p">:</span> <span class="n">resource</span><span class="o">.</span><span class="n">code</span> <span class="k">if</span> <span class="n">resource</span> <span class="k">else</span> <span class="s2">"SYSTEM"</span><span class="p">,</span>
+                <span class="s2">"RESOURCE_ID"</span><span class="p">:</span> <span class="n">resource</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">resource</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+                <span class="s2">"NAME"</span><span class="p">:</span> <span class="n">resource</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">resource</span> <span class="k">else</span> <span class="s2">"Unknown"</span><span class="p">,</span>
+                <span class="s2">"DESCRIPTION"</span><span class="p">:</span> <span class="n">sanitized_desc</span><span class="p">,</span>
+                <span class="s2">"TRANSACTION_AMOUNT"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">daily_hours</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span>
+                <span class="s2">"EXCHANGE_RATE"</span><span class="p">:</span> <span class="s2">"1.0"</span><span class="p">,</span>
+                <span class="s2">"EXCHANGE_RATE_TYPE"</span><span class="p">:</span> <span class="s2">"Corporate"</span><span class="p">,</span>
+                <span class="s2">"EXCHANGE_RATE_DATE"</span><span class="p">:</span> <span class="n">workday</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="s2">"ATTRIBUTE_CATEGORY"</span><span class="p">:</span> <span class="s2">"TIMESHEET"</span><span class="p">,</span>
+                <span class="s2">"GLOBAL_ATTRIBUTE_CATEGORY"</span><span class="p">:</span> <span class="s2">"EISENHOWER"</span><span class="p">,</span>
+                <span class="s2">"BATCH_SOURCE_NAME"</span><span class="p">:</span> <span class="n">batch_source</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">line_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+            <span class="c1"># Format as CSV row</span>
+            <span class="n">csv_row</span> <span class="o">=</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">row</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="si">}</span><span class="s1">"'</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">csv_header</span>
+            <span class="p">)</span>
+            <span class="n">csv_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">csv_row</span><span class="p">)</span>
+
+    <span class="c1"># Build CSV content</span>
+    <span class="n">csv_header_line</span> <span class="o">=</span> <span class="s2">","</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s1">'"</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">"'</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">csv_header</span><span class="p">)</span>
+    <span class="n">csv_content</span> <span class="o">=</span> <span class="n">csv_header_line</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">csv_rows</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+
+    <span class="c1"># Record forensic audit log entry</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">user_upn</span><span class="o">=</span><span class="s2">"system"</span><span class="p">,</span>
+            <span class="n">client_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">action_type</span><span class="o">=</span><span class="s2">"EXPORT"</span><span class="p">,</span>
+            <span class="n">entity_type</span><span class="o">=</span><span class="s2">"TimesheetOracleExportBatch"</span><span class="p">,</span>
+            <span class="n">entity_id</span><span class="o">=</span><span class="n">batch_id</span><span class="p">,</span>
+            <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"batch_reference"</span><span class="p">:</span> <span class="n">batch</span><span class="o">.</span><span class="n">batch_reference</span><span class="p">,</span>
+                <span class="s2">"record_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">line_items</span><span class="p">),</span>
+                <span class="s2">"total_hours"</span><span class="p">:</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="s2">"TRANSACTION_AMOUNT"</span><span class="p">])</span>
+                    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">line_items</span>
+                <span class="p">),</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="c1"># Don't fail the export if audit logging fails</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">csv_content</span><span class="p">,</span> <span class="n">line_items</span></div>
+
+
+
+<div class="viewcode-block" id="create_export_batch">
+<a class="viewcode-back" href="../../../modules.html#app.services.oracle_gateway.create_export_batch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_export_batch</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">period_start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">period_end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">line_items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TimesheetOracleExportBatch</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a new Oracle export batch for a closed timesheet period.</span>
+
+<span class="sd">    This function creates a new TimesheetOracleExportBatch record</span>
+<span class="sd">    and calculates the total hours and record count from the</span>
+<span class="sd">    provided line items.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        SQLAlchemy database session.</span>
+<span class="sd">    period_start : date</span>
+<span class="sd">        Start date of the timesheet period.</span>
+<span class="sd">    period_end : date</span>
+<span class="sd">        End date of the timesheet period.</span>
+<span class="sd">    user_id : UUID</span>
+<span class="sd">        The user who created the batch.</span>
+<span class="sd">    line_items : list</span>
+<span class="sd">        List of timesheet line item dictionaries.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TimesheetOracleExportBatch</span>
+<span class="sd">        The newly created export batch record.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Generate batch reference</span>
+    <span class="n">week_num</span> <span class="o">=</span> <span class="n">period_start</span><span class="o">.</span><span class="n">isocalendar</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="n">period_start</span><span class="o">.</span><span class="n">year</span>
+    <span class="n">batch_ref</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"TS-</span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">-W</span><span class="si">{</span><span class="n">week_num</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="c1"># Calculate totals</span>
+    <span class="n">total_hours</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"TRANSACTION_AMOUNT"</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">line_items</span>
+    <span class="p">)</span>
+    <span class="n">record_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">line_items</span><span class="p">)</span>
+
+    <span class="n">batch</span> <span class="o">=</span> <span class="n">TimesheetOracleExportBatch</span><span class="p">(</span>
+        <span class="n">batch_reference</span><span class="o">=</span><span class="n">batch_ref</span><span class="p">,</span>
+        <span class="n">period_start_date</span><span class="o">=</span><span class="n">period_start</span><span class="p">,</span>
+        <span class="n">period_end_date</span><span class="o">=</span><span class="n">period_end</span><span class="p">,</span>
+        <span class="n">total_hours</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">total_hours</span><span class="p">,</span> <span class="mi">2</span><span class="p">))),</span>
+        <span class="n">record_count</span><span class="o">=</span><span class="n">record_count</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">batch</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

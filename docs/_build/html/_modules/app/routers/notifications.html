@@ -1,0 +1,678 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.notifications &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.notifications</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.notifications</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""API router for notification webhook management and dispatch.</span>
+
+<span class="sd">This module provides the REST API endpoints for managing Microsoft Teams</span>
+<span class="sd">webhook configurations and triggering notification dispatches.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">---------</span>
+
+<span class="sd">The router exposes the following endpoints under ``/api/v1/notifications/webhooks``:</span>
+
+<span class="sd">- **GET /** — List all active webhooks.</span>
+<span class="sd">- **POST /** — Create a new webhook configuration.</span>
+<span class="sd">- **GET /{webhook_id}** — Get a specific webhook's details.</span>
+<span class="sd">- **PUT /{webhook_id}** — Update an existing webhook configuration.</span>
+<span class="sd">- **DELETE /{webhook_id}** — Delete a webhook configuration.</span>
+<span class="sd">- **POST /{webhook_id}/test** — Send a test notification to verify a webhook.</span>
+<span class="sd">- **POST /dispatch** — Manually trigger a notification event dispatch.</span>
+
+<span class="sd">Webhook Management</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Webhooks are associated with specific portfolio nodes.  When an event occurs</span>
+<span class="sd">on a node, notifications are dispatched to all active webhooks associated</span>
+<span class="sd">with that node or any of its ancestors in the tree hierarchy.</span>
+
+<span class="sd">Each webhook records its ``max_permitted_classification``, which determines</span>
+<span class="sd">the highest security classification level it may receive.  If a node's</span>
+<span class="sd">classification exceeds this limit, the notification is automatically redacted.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All endpoints require authentication via JWT token.  Only users with</span>
+<span class="sd">appropriate clearance levels can create or modify webhooks for classified</span>
+<span class="sd">portfolio nodes.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">.. code-block:: bash</span>
+
+<span class="sd">    # Create a new webhook</span>
+<span class="sd">    curl -X POST http://localhost:8000/api/v1/notifications/webhooks \\</span>
+<span class="sd">      -H "Authorization: Bearer &lt;token&gt;" \\</span>
+<span class="sd">      -H "Content-Type: application/json" \\</span>
+<span class="sd">      -d '{</span>
+<span class="sd">        "portfolio_node_id": "uuid",</span>
+<span class="sd">        "channel_name": "Project Alpha Ops",</span>
+<span class="sd">        "webhook_url": "https://outlook.office.com/webhook/...",</span>
+<span class="sd">        "max_permitted_classification": "OFFICIAL"</span>
+<span class="sd">      }'</span>
+
+<span class="sd">    # Send a test notification</span>
+<span class="sd">    curl -X POST http://localhost:8000/api/v1/notifications/webhooks/{id}/test \\</span>
+<span class="sd">      -H "Authorization: Bearer &lt;token&gt;"</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span> <span class="n">delete</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.ext.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncSession</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">selectinload</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TeamChannelWebhook</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">WebhookCreate</span><span class="p">,</span>
+    <span class="n">WebhookUpdate</span><span class="p">,</span>
+    <span class="n">WebhookResponse</span><span class="p">,</span>
+    <span class="n">WebhookListResponse</span><span class="p">,</span>
+    <span class="n">NotificationTestResponse</span><span class="p">,</span>
+    <span class="n">NotificationDispatchResponse</span><span class="p">,</span>
+    <span class="n">NotificationEventResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services</span><span class="w"> </span><span class="kn">import</span> <span class="n">notifications</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/webhooks"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"Notifications"</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_mask_webhook_url</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Mask a webhook URL for safe display in API responses.</span>
+
+<span class="sd">    Shows only the scheme and host, replacing the path with ellipsis</span>
+<span class="sd">    and the last 4 characters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    url : str</span>
+<span class="sd">        The full webhook URL.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        A masked version of the URL (e.g., 'https://...abcd').</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">20</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"https://..."</span> <span class="o">+</span> <span class="n">url</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span> <span class="k">else</span> <span class="s2">"https://..."</span>
+    <span class="c1"># Show the scheme and a hint of the path, then mask</span>
+    <span class="k">return</span> <span class="s2">"https://..."</span> <span class="o">+</span> <span class="n">url</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]</span>
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_webhook_to_response</span><span class="p">(</span><span class="n">webhook</span><span class="p">:</span> <span class="n">TeamChannelWebhook</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebhookResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert a TeamChannelWebhook model to a WebhookResponse schema.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    webhook : TeamChannelWebhook</span>
+<span class="sd">        The webhook model instance.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    WebhookResponse</span>
+<span class="sd">        The response schema with masked URL.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">WebhookResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">webhook</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">webhook</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+        <span class="n">channel_name</span><span class="o">=</span><span class="n">webhook</span><span class="o">.</span><span class="n">channel_name</span><span class="p">,</span>
+        <span class="n">webhook_url_masked</span><span class="o">=</span><span class="n">_mask_webhook_url</span><span class="p">(</span><span class="n">webhook</span><span class="o">.</span><span class="n">webhook_url</span><span class="p">),</span>
+        <span class="n">max_permitted_classification</span><span class="o">=</span><span class="n">webhook</span><span class="o">.</span><span class="n">max_permitted_classification</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">webhook</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">webhook</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">webhook</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="list_webhooks">
+<a class="viewcode-back" href="../../../modules.html#app.routers.notifications.list_webhooks">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">WebhookListResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_webhooks</span><span class="p">(</span>
+    <span class="n">active_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"If True, only return active webhooks"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all webhook configurations.</span>
+
+<span class="sd">    Returns a list of all webhook configurations, optionally filtered</span>
+<span class="sd">    to only active webhooks.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    active_only : bool</span>
+<span class="sd">        If True, only return webhooks where ``is_active`` is True.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        The database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    WebhookListResponse</span>
+<span class="sd">        A list of webhook configurations with masked URLs.</span>
+<span class="sd">    """</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="p">)</span><span class="o">.</span><span class="n">options</span><span class="p">(</span>
+        <span class="n">selectinload</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="o">.</span><span class="n">portfolio_node</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">active_only</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="n">webhooks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+
+    <span class="n">webhook_responses</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="k">await</span> <span class="n">_webhook_to_response</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">webhooks</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">WebhookListResponse</span><span class="p">(</span>
+        <span class="n">webhooks</span><span class="o">=</span><span class="n">webhook_responses</span><span class="p">,</span>
+        <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">webhook_responses</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_webhook">
+<a class="viewcode-back" href="../../../modules.html#app.routers.notifications.create_webhook">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">WebhookResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_webhook</span><span class="p">(</span>
+    <span class="n">webhook_data</span><span class="p">:</span> <span class="n">WebhookCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new Teams channel webhook configuration.</span>
+
+<span class="sd">    Registers a new webhook URL for a specific portfolio node.</span>
+<span class="sd">    The node must exist and the user must have access to it.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    webhook_data : WebhookCreate</span>
+<span class="sd">        The webhook configuration data.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        The database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    WebhookResponse</span>
+<span class="sd">        The created webhook configuration with masked URL.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the portfolio node is not found.</span>
+<span class="sd">        400 if the user lacks clearance for the node.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Verify the portfolio node exists</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">webhook_data</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Portfolio node </span><span class="si">{</span><span class="n">webhook_data</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check user clearance for the node</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.core.abac</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_node_visible</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span>
+            <span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span>
+            <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[],</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[],</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="mi">403</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to create webhook for this node"</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Create the webhook</span>
+    <span class="n">webhook</span> <span class="o">=</span> <span class="n">TeamChannelWebhook</span><span class="p">(</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">webhook_data</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+        <span class="n">channel_name</span><span class="o">=</span><span class="n">webhook_data</span><span class="o">.</span><span class="n">channel_name</span><span class="p">,</span>
+        <span class="n">webhook_url</span><span class="o">=</span><span class="n">webhook_data</span><span class="o">.</span><span class="n">webhook_url</span><span class="p">,</span>
+        <span class="n">max_permitted_classification</span><span class="o">=</span><span class="n">webhook_data</span><span class="o">.</span><span class="n">max_permitted_classification</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">webhook</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">webhook</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="k">await</span> <span class="n">_webhook_to_response</span><span class="p">(</span><span class="n">webhook</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_webhook">
+<a class="viewcode-back" href="../../../modules.html#app.routers.notifications.get_webhook">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/</span><span class="si">{webhook_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">WebhookResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_webhook</span><span class="p">(</span>
+    <span class="n">webhook_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get a specific webhook configuration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    webhook_id : UUID</span>
+<span class="sd">        The ID of the webhook to retrieve.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        The database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    WebhookResponse</span>
+<span class="sd">        The webhook configuration with masked URL.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the webhook is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">selectinload</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="o">.</span><span class="n">portfolio_node</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">webhook_id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">webhook</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">webhook</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Webhook </span><span class="si">{</span><span class="n">webhook_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="k">await</span> <span class="n">_webhook_to_response</span><span class="p">(</span><span class="n">webhook</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_webhook">
+<a class="viewcode-back" href="../../../modules.html#app.routers.notifications.update_webhook">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/</span><span class="si">{webhook_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">WebhookResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">update_webhook</span><span class="p">(</span>
+    <span class="n">webhook_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">webhook_data</span><span class="p">:</span> <span class="n">WebhookUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update an existing webhook configuration.</span>
+
+<span class="sd">    Performs a partial update: only the fields included in the request</span>
+<span class="sd">    body will be modified.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    webhook_id : UUID</span>
+<span class="sd">        The ID of the webhook to update.</span>
+<span class="sd">    webhook_data : WebhookUpdate</span>
+<span class="sd">        The fields to update.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        The database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    WebhookResponse</span>
+<span class="sd">        The updated webhook configuration.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the webhook is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">selectinload</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="o">.</span><span class="n">portfolio_node</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">webhook_id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">webhook</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">webhook</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Webhook </span><span class="si">{</span><span class="n">webhook_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Update only the provided fields</span>
+    <span class="n">update_data</span> <span class="o">=</span> <span class="n">webhook_data</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">update_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">webhook</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">webhook</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="k">await</span> <span class="n">_webhook_to_response</span><span class="p">(</span><span class="n">webhook</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_webhook">
+<a class="viewcode-back" href="../../../modules.html#app.routers.notifications.delete_webhook">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/</span><span class="si">{webhook_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_webhook</span><span class="p">(</span>
+    <span class="n">webhook_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete a webhook configuration.</span>
+
+<span class="sd">    Permanently removes the webhook configuration from the database.</span>
+<span class="sd">    This will stop all notifications to this channel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    webhook_id : UUID</span>
+<span class="sd">        The ID of the webhook to delete.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        The database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A confirmation message.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the webhook is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">webhook_id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">webhook</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">webhook</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Webhook </span><span class="si">{</span><span class="n">webhook_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">delete</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">webhook_id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Webhook </span><span class="si">{</span><span class="n">webhook_id</span><span class="si">}</span><span class="s2"> deleted successfully"</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="test_webhook">
+<a class="viewcode-back" href="../../../modules.html#app.routers.notifications.test_webhook">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/</span><span class="si">{webhook_id}</span><span class="s2">/test"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">NotificationTestResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_webhook</span><span class="p">(</span>
+    <span class="n">webhook_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Send a test notification to verify a webhook configuration.</span>
+
+<span class="sd">    Dispatches a simple test Adaptive Card to the specified webhook</span>
+<span class="sd">    to verify that the URL is valid and the channel is receiving</span>
+<span class="sd">    notifications correctly.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    webhook_id : UUID</span>
+<span class="sd">        The ID of the webhook to test.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        The database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NotificationTestResponse</span>
+<span class="sd">        The result of the test dispatch.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the webhook is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">TeamChannelWebhook</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">webhook_id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">webhook</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">webhook</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Webhook </span><span class="si">{</span><span class="n">webhook_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Dispatch the test notification</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">notifications</span><span class="o">.</span><span class="n">dispatch_test_notification</span><span class="p">(</span><span class="n">webhook_id</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">NotificationTestResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="dispatch_notification">
+<a class="viewcode-back" href="../../../modules.html#app.routers.notifications.dispatch_notification">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/dispatch"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">NotificationDispatchResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">dispatch_notification</span><span class="p">(</span>
+    <span class="n">event_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The type of event to dispatch (TASK_BLOCKED, HANDOFF_READY, REQUISITION_PENDING, EVM_VARIANCE_BREACH)"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"The portfolio node that triggered the event"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Manually trigger a notification event dispatch.</span>
+
+<span class="sd">    Dispatches a notification event to all active webhooks associated</span>
+<span class="sd">    with the specified node or its ancestors.  This endpoint is useful</span>
+<span class="sd">    for testing or manually triggering notifications.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    event_type : str</span>
+<span class="sd">        The type of event to dispatch.  Must be one of:</span>
+<span class="sd">        TASK_BLOCKED, HANDOFF_READY, REQUISITION_PENDING, EVM_VARIANCE_BREACH.</span>
+<span class="sd">    node_id : UUID</span>
+<span class="sd">        The portfolio node that triggered the event.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        The database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    NotificationDispatchResponse</span>
+<span class="sd">        The results of the dispatch operation, including per-webhook</span>
+<span class="sd">        status and summary counts.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if the event type is invalid.</span>
+<span class="sd">        404 if the node is not found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Validate event type</span>
+    <span class="n">valid_events</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">notifications</span><span class="o">.</span><span class="n">NotificationEventType</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">event_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_events</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid event type: </span><span class="si">{</span><span class="n">event_type</span><span class="si">}</span><span class="s2">. Must be one of: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">valid_events</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Verify the node exists</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_id</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">scalar_one_or_none</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Portfolio node </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Dispatch the event</span>
+    <span class="n">dispatch_results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">notifications</span><span class="o">.</span><span class="n">dispatch_event</span><span class="p">(</span>
+        <span class="n">event_type</span><span class="o">=</span><span class="n">event_type</span><span class="p">,</span>
+        <span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Convert results to response schemas</span>
+    <span class="n">event_responses</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">NotificationEventResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="p">)</span> <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">dispatch_results</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Calculate summary counts</span>
+    <span class="n">total_sent</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">dispatch_results</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"sent"</span><span class="p">)</span>
+    <span class="n">total_redacted</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">dispatch_results</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"redacted_and_sent"</span><span class="p">)</span>
+    <span class="n">total_failed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">dispatch_results</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"status"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"error"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">NotificationDispatchResponse</span><span class="p">(</span>
+        <span class="n">event_type</span><span class="o">=</span><span class="n">event_type</span><span class="p">,</span>
+        <span class="n">results</span><span class="o">=</span><span class="n">event_responses</span><span class="p">,</span>
+        <span class="n">total_sent</span><span class="o">=</span><span class="n">total_sent</span><span class="p">,</span>
+        <span class="n">total_redacted</span><span class="o">=</span><span class="n">total_redacted</span><span class="p">,</span>
+        <span class="n">total_failed</span><span class="o">=</span><span class="n">total_failed</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,703 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sqlalchemy.ext.compiler &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+          <li class="breadcrumb-item"><a href="../../sqlalchemy.html">sqlalchemy</a></li>
+      <li class="breadcrumb-item active">sqlalchemy.ext.compiler</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for sqlalchemy.ext.compiler</h1><div class="highlight"><pre>
+<span></span><span class="c1"># ext/compiler.py</span>
+<span class="c1"># Copyright (C) 2005-2026 the SQLAlchemy authors and contributors</span>
+<span class="c1"># &lt;see AUTHORS file&gt;</span>
+<span class="c1">#</span>
+<span class="c1"># This module is part of SQLAlchemy and is released under</span>
+<span class="c1"># the MIT License: https://www.opensource.org/licenses/mit-license.php</span>
+
+<span class="sa">r</span><span class="sd">"""Provides an API for creation of custom ClauseElements and compilers.</span>
+
+<span class="sd">Synopsis</span>
+<span class="sd">========</span>
+
+<span class="sd">Usage involves the creation of one or more</span>
+<span class="sd">:class:`~sqlalchemy.sql.expression.ClauseElement` subclasses and one or</span>
+<span class="sd">more callables defining its compilation::</span>
+
+<span class="sd">    from sqlalchemy.ext.compiler import compiles</span>
+<span class="sd">    from sqlalchemy.sql.expression import ColumnClause</span>
+
+
+<span class="sd">    class MyColumn(ColumnClause):</span>
+<span class="sd">        inherit_cache = True</span>
+
+
+<span class="sd">    @compiles(MyColumn)</span>
+<span class="sd">    def compile_mycolumn(element, compiler, **kw):</span>
+<span class="sd">        return "[%s]" % element.name</span>
+
+<span class="sd">Above, ``MyColumn`` extends :class:`~sqlalchemy.sql.expression.ColumnClause`,</span>
+<span class="sd">the base expression element for named column objects. The ``compiles``</span>
+<span class="sd">decorator registers itself with the ``MyColumn`` class so that it is invoked</span>
+<span class="sd">when the object is compiled to a string::</span>
+
+<span class="sd">    from sqlalchemy import select</span>
+
+<span class="sd">    s = select(MyColumn("x"), MyColumn("y"))</span>
+<span class="sd">    print(str(s))</span>
+
+<span class="sd">Produces:</span>
+
+<span class="sd">.. sourcecode:: sql</span>
+
+<span class="sd">    SELECT [x], [y]</span>
+
+<span class="sd">Dialect-specific compilation rules</span>
+<span class="sd">==================================</span>
+
+<span class="sd">Compilers can also be made dialect-specific. The appropriate compiler will be</span>
+<span class="sd">invoked for the dialect in use::</span>
+
+<span class="sd">    from sqlalchemy.schema import DDLElement</span>
+
+
+<span class="sd">    class AlterColumn(DDLElement):</span>
+<span class="sd">        inherit_cache = False</span>
+
+<span class="sd">        def __init__(self, column, cmd):</span>
+<span class="sd">            self.column = column</span>
+<span class="sd">            self.cmd = cmd</span>
+
+
+<span class="sd">    @compiles(AlterColumn)</span>
+<span class="sd">    def visit_alter_column(element, compiler, **kw):</span>
+<span class="sd">        return "ALTER COLUMN %s ..." % element.column.name</span>
+
+
+<span class="sd">    @compiles(AlterColumn, "postgresql")</span>
+<span class="sd">    def visit_alter_column(element, compiler, **kw):</span>
+<span class="sd">        return "ALTER TABLE %s ALTER COLUMN %s ..." % (</span>
+<span class="sd">            element.table.name,</span>
+<span class="sd">            element.column.name,</span>
+<span class="sd">        )</span>
+
+<span class="sd">The second ``visit_alter_table`` will be invoked when any ``postgresql``</span>
+<span class="sd">dialect is used.</span>
+
+<span class="sd">.. _compilerext_compiling_subelements:</span>
+
+<span class="sd">Compiling sub-elements of a custom expression construct</span>
+<span class="sd">=======================================================</span>
+
+<span class="sd">The ``compiler`` argument is the</span>
+<span class="sd">:class:`~sqlalchemy.engine.interfaces.Compiled` object in use. This object</span>
+<span class="sd">can be inspected for any information about the in-progress compilation,</span>
+<span class="sd">including ``compiler.dialect``, ``compiler.statement`` etc. The</span>
+<span class="sd">:class:`~sqlalchemy.sql.compiler.SQLCompiler` and</span>
+<span class="sd">:class:`~sqlalchemy.sql.compiler.DDLCompiler` both include a ``process()``</span>
+<span class="sd">method which can be used for compilation of embedded attributes::</span>
+
+<span class="sd">    from sqlalchemy.sql.expression import Executable, ClauseElement</span>
+
+
+<span class="sd">    class InsertFromSelect(Executable, ClauseElement):</span>
+<span class="sd">        inherit_cache = False</span>
+
+<span class="sd">        def __init__(self, table, select):</span>
+<span class="sd">            self.table = table</span>
+<span class="sd">            self.select = select</span>
+
+
+<span class="sd">    @compiles(InsertFromSelect)</span>
+<span class="sd">    def visit_insert_from_select(element, compiler, **kw):</span>
+<span class="sd">        return "INSERT INTO %s (%s)" % (</span>
+<span class="sd">            compiler.process(element.table, asfrom=True, **kw),</span>
+<span class="sd">            compiler.process(element.select, **kw),</span>
+<span class="sd">        )</span>
+
+
+<span class="sd">    insert = InsertFromSelect(t1, select(t1).where(t1.c.x &gt; 5))</span>
+<span class="sd">    print(insert)</span>
+
+<span class="sd">Produces (formatted for readability):</span>
+
+<span class="sd">.. sourcecode:: sql</span>
+
+<span class="sd">    INSERT INTO mytable (</span>
+<span class="sd">        SELECT mytable.x, mytable.y, mytable.z</span>
+<span class="sd">        FROM mytable</span>
+<span class="sd">        WHERE mytable.x &gt; :x_1</span>
+<span class="sd">    )</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">    The above ``InsertFromSelect`` construct is only an example, this actual</span>
+<span class="sd">    functionality is already available using the</span>
+<span class="sd">    :meth:`_expression.Insert.from_select` method.</span>
+
+
+<span class="sd">Cross Compiling between SQL and DDL compilers</span>
+<span class="sd">---------------------------------------------</span>
+
+<span class="sd">SQL and DDL constructs are each compiled using different base compilers -</span>
+<span class="sd">``SQLCompiler`` and ``DDLCompiler``.   A common need is to access the</span>
+<span class="sd">compilation rules of SQL expressions from within a DDL expression. The</span>
+<span class="sd">``DDLCompiler`` includes an accessor ``sql_compiler`` for this reason, such as</span>
+<span class="sd">below where we generate a CHECK constraint that embeds a SQL expression::</span>
+
+<span class="sd">    @compiles(MyConstraint)</span>
+<span class="sd">    def compile_my_constraint(constraint, ddlcompiler, **kw):</span>
+<span class="sd">        kw["literal_binds"] = True</span>
+<span class="sd">        return "CONSTRAINT %s CHECK (%s)" % (</span>
+<span class="sd">            constraint.name,</span>
+<span class="sd">            ddlcompiler.sql_compiler.process(constraint.expression, **kw),</span>
+<span class="sd">        )</span>
+
+<span class="sd">Above, we add an additional flag to the process step as called by</span>
+<span class="sd">:meth:`.SQLCompiler.process`, which is the ``literal_binds`` flag.  This</span>
+<span class="sd">indicates that any SQL expression which refers to a :class:`.BindParameter`</span>
+<span class="sd">object or other "literal" object such as those which refer to strings or</span>
+<span class="sd">integers should be rendered **in-place**, rather than being referred to as</span>
+<span class="sd">a bound parameter;  when emitting DDL, bound parameters are typically not</span>
+<span class="sd">supported.</span>
+
+
+<span class="sd">Changing the default compilation of existing constructs</span>
+<span class="sd">=======================================================</span>
+
+<span class="sd">The compiler extension applies just as well to the existing constructs.  When</span>
+<span class="sd">overriding the compilation of a built in SQL construct, the @compiles</span>
+<span class="sd">decorator is invoked upon the appropriate class (be sure to use the class,</span>
+<span class="sd">i.e. ``Insert`` or ``Select``, instead of the creation function such</span>
+<span class="sd">as ``insert()`` or ``select()``).</span>
+
+<span class="sd">Within the new compilation function, to get at the "original" compilation</span>
+<span class="sd">routine, use the appropriate visit_XXX method - this</span>
+<span class="sd">because compiler.process() will call upon the overriding routine and cause</span>
+<span class="sd">an endless loop.   Such as, to add "prefix" to all insert statements::</span>
+
+<span class="sd">    from sqlalchemy.sql.expression import Insert</span>
+
+
+<span class="sd">    @compiles(Insert)</span>
+<span class="sd">    def prefix_inserts(insert, compiler, **kw):</span>
+<span class="sd">        return compiler.visit_insert(insert.prefix_with("some prefix"), **kw)</span>
+
+<span class="sd">The above compiler will prefix all INSERT statements with "some prefix" when</span>
+<span class="sd">compiled.</span>
+
+<span class="sd">.. _type_compilation_extension:</span>
+
+<span class="sd">Changing Compilation of Types</span>
+<span class="sd">=============================</span>
+
+<span class="sd">``compiler`` works for types, too, such as below where we implement the</span>
+<span class="sd">MS-SQL specific 'max' keyword for ``String``/``VARCHAR``::</span>
+
+<span class="sd">    @compiles(String, "mssql")</span>
+<span class="sd">    @compiles(VARCHAR, "mssql")</span>
+<span class="sd">    def compile_varchar(element, compiler, **kw):</span>
+<span class="sd">        if element.length == "max":</span>
+<span class="sd">            return "VARCHAR('max')"</span>
+<span class="sd">        else:</span>
+<span class="sd">            return compiler.visit_VARCHAR(element, **kw)</span>
+
+
+<span class="sd">    foo = Table("foo", metadata, Column("data", VARCHAR("max")))</span>
+
+<span class="sd">Subclassing Guidelines</span>
+<span class="sd">======================</span>
+
+<span class="sd">A big part of using the compiler extension is subclassing SQLAlchemy</span>
+<span class="sd">expression constructs. To make this easier, the expression and</span>
+<span class="sd">schema packages feature a set of "bases" intended for common tasks.</span>
+<span class="sd">A synopsis is as follows:</span>
+
+<span class="sd">* :class:`~sqlalchemy.sql.expression.ClauseElement` - This is the root</span>
+<span class="sd">  expression class. Any SQL expression can be derived from this base, and is</span>
+<span class="sd">  probably the best choice for longer constructs such as specialized INSERT</span>
+<span class="sd">  statements.</span>
+
+<span class="sd">* :class:`~sqlalchemy.sql.expression.ColumnElement` - The root of all</span>
+<span class="sd">  "column-like" elements. Anything that you'd place in the "columns" clause of</span>
+<span class="sd">  a SELECT statement (as well as order by and group by) can derive from this -</span>
+<span class="sd">  the object will automatically have Python "comparison" behavior.</span>
+
+<span class="sd">  :class:`~sqlalchemy.sql.expression.ColumnElement` classes want to have a</span>
+<span class="sd">  ``type`` member which is expression's return type.  This can be established</span>
+<span class="sd">  at the instance level in the constructor, or at the class level if its</span>
+<span class="sd">  generally constant::</span>
+
+<span class="sd">      class timestamp(ColumnElement):</span>
+<span class="sd">          type = TIMESTAMP()</span>
+<span class="sd">          inherit_cache = True</span>
+
+<span class="sd">* :class:`~sqlalchemy.sql.functions.FunctionElement` - This is a hybrid of a</span>
+<span class="sd">  ``ColumnElement`` and a "from clause" like object, and represents a SQL</span>
+<span class="sd">  function or stored procedure type of call. Since most databases support</span>
+<span class="sd">  statements along the line of "SELECT FROM &lt;some function&gt;"</span>
+<span class="sd">  ``FunctionElement`` adds in the ability to be used in the FROM clause of a</span>
+<span class="sd">  ``select()`` construct::</span>
+
+<span class="sd">      from sqlalchemy.sql.expression import FunctionElement</span>
+
+
+<span class="sd">      class coalesce(FunctionElement):</span>
+<span class="sd">          name = "coalesce"</span>
+<span class="sd">          inherit_cache = True</span>
+
+
+<span class="sd">      @compiles(coalesce)</span>
+<span class="sd">      def compile(element, compiler, **kw):</span>
+<span class="sd">          return "coalesce(%s)" % compiler.process(element.clauses, **kw)</span>
+
+
+<span class="sd">      @compiles(coalesce, "oracle")</span>
+<span class="sd">      def compile(element, compiler, **kw):</span>
+<span class="sd">          if len(element.clauses) &gt; 2:</span>
+<span class="sd">              raise TypeError(</span>
+<span class="sd">                  "coalesce only supports two arguments on " "Oracle Database"</span>
+<span class="sd">              )</span>
+<span class="sd">          return "nvl(%s)" % compiler.process(element.clauses, **kw)</span>
+
+<span class="sd">* :class:`.ExecutableDDLElement` - The root of all DDL expressions,</span>
+<span class="sd">  like CREATE TABLE, ALTER TABLE, etc. Compilation of</span>
+<span class="sd">  :class:`.ExecutableDDLElement` subclasses is issued by a</span>
+<span class="sd">  :class:`.DDLCompiler` instead of a :class:`.SQLCompiler`.</span>
+<span class="sd">  :class:`.ExecutableDDLElement` can also be used as an event hook in</span>
+<span class="sd">  conjunction with event hooks like :meth:`.DDLEvents.before_create` and</span>
+<span class="sd">  :meth:`.DDLEvents.after_create`, allowing the construct to be invoked</span>
+<span class="sd">  automatically during CREATE TABLE and DROP TABLE sequences.</span>
+
+<span class="sd">  .. seealso::</span>
+
+<span class="sd">    :ref:`metadata_ddl_toplevel` - contains examples of associating</span>
+<span class="sd">    :class:`.DDL` objects (which are themselves :class:`.ExecutableDDLElement`</span>
+<span class="sd">    instances) with :class:`.DDLEvents` event hooks.</span>
+
+<span class="sd">* :class:`~sqlalchemy.sql.expression.Executable` - This is a mixin which</span>
+<span class="sd">  should be used with any expression class that represents a "standalone"</span>
+<span class="sd">  SQL statement that can be passed directly to an ``execute()`` method.  It</span>
+<span class="sd">  is already implicit within ``DDLElement`` and ``FunctionElement``.</span>
+
+<span class="sd">Most of the above constructs also respond to SQL statement caching.   A</span>
+<span class="sd">subclassed construct will want to define the caching behavior for the object,</span>
+<span class="sd">which usually means setting the flag ``inherit_cache`` to the value of</span>
+<span class="sd">``False`` or ``True``.  See the next section :ref:`compilerext_caching`</span>
+<span class="sd">for background.</span>
+
+
+<span class="sd">.. _compilerext_caching:</span>
+
+<span class="sd">Enabling Caching Support for Custom Constructs</span>
+<span class="sd">==============================================</span>
+
+<span class="sd">SQLAlchemy as of version 1.4 includes a</span>
+<span class="sd">:ref:`SQL compilation caching facility &lt;sql_caching&gt;` which will allow</span>
+<span class="sd">equivalent SQL constructs to cache their stringified form, along with other</span>
+<span class="sd">structural information used to fetch results from the statement.</span>
+
+<span class="sd">For reasons discussed at :ref:`caching_caveats`, the implementation of this</span>
+<span class="sd">caching system takes a conservative approach towards including custom SQL</span>
+<span class="sd">constructs and/or subclasses within the caching system.   This includes that</span>
+<span class="sd">any user-defined SQL constructs, including all the examples for this</span>
+<span class="sd">extension, will not participate in caching by default unless they positively</span>
+<span class="sd">assert that they are able to do so.  The :attr:`.HasCacheKey.inherit_cache`</span>
+<span class="sd">attribute when set to ``True`` at the class level of a specific subclass</span>
+<span class="sd">will indicate that instances of this class may be safely cached, using the</span>
+<span class="sd">cache key generation scheme of the immediate superclass.  This applies</span>
+<span class="sd">for example to the "synopsis" example indicated previously::</span>
+
+<span class="sd">    class MyColumn(ColumnClause):</span>
+<span class="sd">        inherit_cache = True</span>
+
+
+<span class="sd">    @compiles(MyColumn)</span>
+<span class="sd">    def compile_mycolumn(element, compiler, **kw):</span>
+<span class="sd">        return "[%s]" % element.name</span>
+
+<span class="sd">Above, the ``MyColumn`` class does not include any new state that</span>
+<span class="sd">affects its SQL compilation; the cache key of ``MyColumn`` instances will</span>
+<span class="sd">make use of that of the ``ColumnClause`` superclass, meaning it will take</span>
+<span class="sd">into account the class of the object (``MyColumn``), the string name and</span>
+<span class="sd">datatype of the object::</span>
+
+<span class="sd">    &gt;&gt;&gt; MyColumn("some_name", String())._generate_cache_key()</span>
+<span class="sd">    CacheKey(</span>
+<span class="sd">        key=('0', &lt;class '__main__.MyColumn'&gt;,</span>
+<span class="sd">        'name', 'some_name',</span>
+<span class="sd">        'type', (&lt;class 'sqlalchemy.sql.sqltypes.String'&gt;,</span>
+<span class="sd">                 ('length', None), ('collation', None))</span>
+<span class="sd">    ), bindparams=[])</span>
+
+<span class="sd">For objects that are likely to be **used liberally as components within many</span>
+<span class="sd">larger statements**, such as :class:`_schema.Column` subclasses and custom SQL</span>
+<span class="sd">datatypes, it's important that **caching be enabled as much as possible**, as</span>
+<span class="sd">this may otherwise negatively affect performance.</span>
+
+<span class="sd">An example of an object that **does** contain state which affects its SQL</span>
+<span class="sd">compilation is the one illustrated at :ref:`compilerext_compiling_subelements`;</span>
+<span class="sd">this is an "INSERT FROM SELECT" construct that combines together a</span>
+<span class="sd">:class:`_schema.Table` as well as a :class:`_sql.Select` construct, each of</span>
+<span class="sd">which independently affect the SQL string generation of the construct.  For</span>
+<span class="sd">this class, the example illustrates that it simply does not participate in</span>
+<span class="sd">caching::</span>
+
+<span class="sd">    class InsertFromSelect(Executable, ClauseElement):</span>
+<span class="sd">        inherit_cache = False</span>
+
+<span class="sd">        def __init__(self, table, select):</span>
+<span class="sd">            self.table = table</span>
+<span class="sd">            self.select = select</span>
+
+
+<span class="sd">    @compiles(InsertFromSelect)</span>
+<span class="sd">    def visit_insert_from_select(element, compiler, **kw):</span>
+<span class="sd">        return "INSERT INTO %s (%s)" % (</span>
+<span class="sd">            compiler.process(element.table, asfrom=True, **kw),</span>
+<span class="sd">            compiler.process(element.select, **kw),</span>
+<span class="sd">        )</span>
+
+<span class="sd">While it is also possible that the above ``InsertFromSelect`` could be made to</span>
+<span class="sd">produce a cache key that is composed of that of the :class:`_schema.Table` and</span>
+<span class="sd">:class:`_sql.Select` components together, the API for this is not at the moment</span>
+<span class="sd">fully public. However, for an "INSERT FROM SELECT" construct, which is only</span>
+<span class="sd">used by itself for specific operations, caching is not as critical as in the</span>
+<span class="sd">previous example.</span>
+
+<span class="sd">For objects that are **used in relative isolation and are generally</span>
+<span class="sd">standalone**, such as custom :term:`DML` constructs like an "INSERT FROM</span>
+<span class="sd">SELECT", **caching is generally less critical** as the lack of caching for such</span>
+<span class="sd">a construct will have only localized implications for that specific operation.</span>
+
+
+<span class="sd">Further Examples</span>
+<span class="sd">================</span>
+
+<span class="sd">"UTC timestamp" function</span>
+<span class="sd">-------------------------</span>
+
+<span class="sd">A function that works like "CURRENT_TIMESTAMP" except applies the</span>
+<span class="sd">appropriate conversions so that the time is in UTC time.   Timestamps are best</span>
+<span class="sd">stored in relational databases as UTC, without time zones.   UTC so that your</span>
+<span class="sd">database doesn't think time has gone backwards in the hour when daylight</span>
+<span class="sd">savings ends, without timezones because timezones are like character</span>
+<span class="sd">encodings - they're best applied only at the endpoints of an application</span>
+<span class="sd">(i.e. convert to UTC upon user input, re-apply desired timezone upon display).</span>
+
+<span class="sd">For PostgreSQL and Microsoft SQL Server::</span>
+
+<span class="sd">    from sqlalchemy.sql import expression</span>
+<span class="sd">    from sqlalchemy.ext.compiler import compiles</span>
+<span class="sd">    from sqlalchemy.types import DateTime</span>
+
+
+<span class="sd">    class utcnow(expression.FunctionElement):</span>
+<span class="sd">        type = DateTime()</span>
+<span class="sd">        inherit_cache = True</span>
+
+
+<span class="sd">    @compiles(utcnow, "postgresql")</span>
+<span class="sd">    def pg_utcnow(element, compiler, **kw):</span>
+<span class="sd">        return "TIMEZONE('utc', CURRENT_TIMESTAMP)"</span>
+
+
+<span class="sd">    @compiles(utcnow, "mssql")</span>
+<span class="sd">    def ms_utcnow(element, compiler, **kw):</span>
+<span class="sd">        return "GETUTCDATE()"</span>
+
+<span class="sd">Example usage::</span>
+
+<span class="sd">    from sqlalchemy import Table, Column, Integer, String, DateTime, MetaData</span>
+
+<span class="sd">    metadata = MetaData()</span>
+<span class="sd">    event = Table(</span>
+<span class="sd">        "event",</span>
+<span class="sd">        metadata,</span>
+<span class="sd">        Column("id", Integer, primary_key=True),</span>
+<span class="sd">        Column("description", String(50), nullable=False),</span>
+<span class="sd">        Column("timestamp", DateTime, server_default=utcnow()),</span>
+<span class="sd">    )</span>
+
+<span class="sd">"GREATEST" function</span>
+<span class="sd">-------------------</span>
+
+<span class="sd">The "GREATEST" function is given any number of arguments and returns the one</span>
+<span class="sd">that is of the highest value - its equivalent to Python's ``max``</span>
+<span class="sd">function.  A SQL standard version versus a CASE based version which only</span>
+<span class="sd">accommodates two arguments::</span>
+
+<span class="sd">    from sqlalchemy.sql import expression, case</span>
+<span class="sd">    from sqlalchemy.ext.compiler import compiles</span>
+<span class="sd">    from sqlalchemy.types import Numeric</span>
+
+
+<span class="sd">    class greatest(expression.FunctionElement):</span>
+<span class="sd">        type = Numeric()</span>
+<span class="sd">        name = "greatest"</span>
+<span class="sd">        inherit_cache = True</span>
+
+
+<span class="sd">    @compiles(greatest)</span>
+<span class="sd">    def default_greatest(element, compiler, **kw):</span>
+<span class="sd">        return compiler.visit_function(element)</span>
+
+
+<span class="sd">    @compiles(greatest, "sqlite")</span>
+<span class="sd">    @compiles(greatest, "mssql")</span>
+<span class="sd">    @compiles(greatest, "oracle")</span>
+<span class="sd">    def case_greatest(element, compiler, **kw):</span>
+<span class="sd">        arg1, arg2 = list(element.clauses)</span>
+<span class="sd">        return compiler.process(case((arg1 &gt; arg2, arg1), else_=arg2), **kw)</span>
+
+<span class="sd">Example usage::</span>
+
+<span class="sd">    Session.query(Account).filter(</span>
+<span class="sd">        greatest(Account.checking_balance, Account.savings_balance) &gt; 10000</span>
+<span class="sd">    )</span>
+
+<span class="sd">"false" expression</span>
+<span class="sd">------------------</span>
+
+<span class="sd">Render a "false" constant expression, rendering as "0" on platforms that</span>
+<span class="sd">don't have a "false" constant::</span>
+
+<span class="sd">    from sqlalchemy.sql import expression</span>
+<span class="sd">    from sqlalchemy.ext.compiler import compiles</span>
+
+
+<span class="sd">    class sql_false(expression.ColumnElement):</span>
+<span class="sd">        inherit_cache = True</span>
+
+
+<span class="sd">    @compiles(sql_false)</span>
+<span class="sd">    def default_false(element, compiler, **kw):</span>
+<span class="sd">        return "false"</span>
+
+
+<span class="sd">    @compiles(sql_false, "mssql")</span>
+<span class="sd">    @compiles(sql_false, "mysql")</span>
+<span class="sd">    @compiles(sql_false, "oracle")</span>
+<span class="sd">    def int_false(element, compiler, **kw):</span>
+<span class="sd">        return "0"</span>
+
+<span class="sd">Example usage::</span>
+
+<span class="sd">    from sqlalchemy import select, union_all</span>
+
+<span class="sd">    exp = union_all(</span>
+<span class="sd">        select(users.c.name, sql_false().label("enrolled")),</span>
+<span class="sd">        select(customers.c.name, customers.c.enrolled),</span>
+<span class="sd">    )</span>
+
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..</span><span class="w"> </span><span class="kn">import</span> <span class="n">exc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">sqltypes</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">..sql.compiler</span><span class="w"> </span><span class="kn">import</span> <span class="n">SQLCompiler</span>
+
+<span class="n">_F</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"_F"</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compiles</span><span class="p">(</span><span class="n">class_</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">specs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">_F</span><span class="p">],</span> <span class="n">_F</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Register a function as a compiler for a</span>
+<span class="sd">    given :class:`_expression.ClauseElement` type."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorate</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">_F</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_F</span><span class="p">:</span>
+        <span class="c1"># get an existing @compiles handler</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="n">class_</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_compiler_dispatcher"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># get the original handler.  All ClauseElement classes have one</span>
+        <span class="c1"># of these, but some TypeEngine classes will not.</span>
+        <span class="n">existing_dispatch</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="s2">"_compiler_dispatch"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">existing</span><span class="p">:</span>
+            <span class="n">existing</span> <span class="o">=</span> <span class="n">_dispatcher</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">existing_dispatch</span><span class="p">:</span>
+
+                <span class="k">def</span><span class="w"> </span><span class="nf">_wrap_existing_dispatch</span><span class="p">(</span>
+                    <span class="n">element</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">compiler</span><span class="p">:</span> <span class="n">SQLCompiler</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">Any</span>
+                <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">existing_dispatch</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">compiler</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">exc</span><span class="o">.</span><span class="n">UnsupportedCompilationError</span> <span class="k">as</span> <span class="n">uce</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">UnsupportedCompilationError</span><span class="p">(</span>
+                            <span class="n">compiler</span><span class="p">,</span>
+                            <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">),</span>
+                            <span class="n">message</span><span class="o">=</span><span class="s2">"</span><span class="si">%s</span><span class="s2"> construct has no default "</span>
+                            <span class="s2">"compilation handler."</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">),</span>
+                        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">uce</span>
+
+                <span class="n">existing</span><span class="o">.</span><span class="n">specs</span><span class="p">[</span><span class="s2">"default"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_wrap_existing_dispatch</span>
+
+            <span class="c1"># TODO: why is the lambda needed ?</span>
+            <span class="nb">setattr</span><span class="p">(</span>
+                <span class="n">class_</span><span class="p">,</span>
+                <span class="s2">"_compiler_dispatch"</span><span class="p">,</span>
+                <span class="k">lambda</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">existing</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="s2">"_compiler_dispatcher"</span><span class="p">,</span> <span class="n">existing</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">specs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">specs</span><span class="p">:</span>
+                <span class="n">existing</span><span class="o">.</span><span class="n">specs</span><span class="p">[</span><span class="n">s</span><span class="p">]</span> <span class="o">=</span> <span class="n">fn</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">existing</span><span class="o">.</span><span class="n">specs</span><span class="p">[</span><span class="s2">"default"</span><span class="p">]</span> <span class="o">=</span> <span class="n">fn</span>
+        <span class="k">return</span> <span class="n">fn</span>
+
+    <span class="k">return</span> <span class="n">decorate</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">deregister</span><span class="p">(</span><span class="n">class_</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Remove all custom compilers associated with a given</span>
+<span class="sd">    :class:`_expression.ClauseElement` type.</span>
+
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">class_</span><span class="p">,</span> <span class="s2">"_compiler_dispatcher"</span><span class="p">):</span>
+        <span class="n">class_</span><span class="o">.</span><span class="n">_compiler_dispatch</span> <span class="o">=</span> <span class="n">class_</span><span class="o">.</span><span class="n">_original_compiler_dispatch</span>
+        <span class="k">del</span> <span class="n">class_</span><span class="o">.</span><span class="n">_compiler_dispatcher</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_dispatcher</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">compiler</span><span class="p">:</span> <span class="n">SQLCompiler</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="c1"># TODO: yes, this could also switch off of DBAPI in use.</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">compiler</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">fn</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">specs</span><span class="p">[</span><span class="s2">"default"</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">ke</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">exc</span><span class="o">.</span><span class="n">UnsupportedCompilationError</span><span class="p">(</span>
+                    <span class="n">compiler</span><span class="p">,</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">),</span>
+                    <span class="n">message</span><span class="o">=</span><span class="s2">"</span><span class="si">%s</span><span class="s2"> construct has no default "</span>
+                    <span class="s2">"compilation handler."</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">),</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">ke</span>
+
+        <span class="c1"># if compilation includes add_to_result_map, collect add_to_result_map</span>
+        <span class="c1"># arguments from the user-defined callable, which are probably none</span>
+        <span class="c1"># because this is not public API.  if it wasn't called, then call it</span>
+        <span class="c1"># ourselves.</span>
+        <span class="n">arm</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"add_to_result_map"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arm</span><span class="p">:</span>
+            <span class="n">arm_collection</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">kw</span><span class="p">[</span><span class="s2">"add_to_result_map"</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">arm_collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">compiler</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">arm</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">arm_collection</span><span class="p">:</span>
+                <span class="n">arm_collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="n">element</span><span class="p">,),</span> <span class="n">sqltypes</span><span class="o">.</span><span class="n">NULLTYPE</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">tup</span> <span class="ow">in</span> <span class="n">arm_collection</span><span class="p">:</span>
+                <span class="n">arm</span><span class="p">(</span><span class="o">*</span><span class="n">tup</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

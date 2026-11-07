@@ -1,0 +1,358 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.ipmr_reports &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.ipmr_reports</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.ipmr_reports</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""IPMR/CPR EVM Report Export Router.</span>
+
+<span class="sd">This module provides the API endpoints for generating and exporting</span>
+<span class="sd">statutory Earned Value Management (EVM) reports compliant with the</span>
+<span class="sd">Integrated Program Management Report (IPMR) / Cost Performance Report</span>
+<span class="sd">(CPR) Formats 1 through 5.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">~~~~~~~~~</span>
+
+<span class="sd">All endpoints are JWT-authenticated and require the caller to have</span>
+<span class="sd">sufficient clearance to access the programme data.</span>
+
+<span class="sd">- **GET /ipmr/format1**: Emits Format 1 WBS spreadsheet for the selected</span>
+<span class="sd">  reporting month.  Returns BCWS (PV), BCWP (EV), and ACWP (AC) data</span>
+<span class="sd">  for each WBS element with derived variances and indices.</span>
+
+<span class="sd">- **GET /ipmr/format5**: Emits variance narrative report pre-populated</span>
+<span class="sd">  with active blocker logs.  Auto-extracts tasks exceeding predefined</span>
+<span class="sd">  variance thresholds and generates Problem/Cause, Impact, and</span>
+<span class="sd">  Corrective Action Plan narratives.</span>
+
+<span class="sd">Export Formats</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">Reports can be exported in two formats:</span>
+
+<span class="sd">- **XLSX** (default): OpenPyXL-formatted spreadsheet with defence table</span>
+<span class="sd">  styling, locked header bands, and formula integrity.</span>
+
+<span class="sd">- **PDF**: Hardened PDF export with embedded vector styles for</span>
+<span class="sd">  executive submission.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">    # Generate Format 1 report as Excel</span>
+<span class="sd">    GET /api/v1/reports/evm/ipmr/format1?project_id={uuid}&amp;reporting_period=2026-10&amp;status_date=2026-10-24</span>
+
+<span class="sd">    # Generate Format 5 report as PDF</span>
+<span class="sd">    GET /api/v1/reports/evm/ipmr/format5?project_id={uuid}&amp;reporting_period=2026-10&amp;status_date=2026-10-24&amp;export_format=pdf</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">Query</span><span class="p">,</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">Response</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">PortfolioNode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.ipmr_generator</span><span class="w"> </span><span class="kn">import</span> <span class="n">IPMRGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.ipmr_schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">IPMRExportResponse</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="generate_format1">
+<a class="viewcode-back" href="../../../modules.html#app.routers.ipmr_reports.generate_format1">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/ipmr/format1"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_format1</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"UUID of the root PortfolioNode for the programme"</span><span class="p">),</span>
+    <span class="n">reporting_period</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Reporting month in YYYY-MM format (e.g., 2026-10)"</span><span class="p">),</span>
+    <span class="n">status_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Status date for the report in ISO format"</span><span class="p">),</span>
+    <span class="n">export_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="s2">"xlsx"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Export format: 'xlsx' or 'pdf'"</span><span class="p">),</span>
+    <span class="n">currency_code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="s2">"GBP"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Currency code (e.g., GBP, USD)"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Generate and export IPMR Format 1 WBS time-phased matrix report.</span>
+
+<span class="sd">    Format 1 is the core EVM reporting table.  It presents time-phased</span>
+<span class="sd">    cost data for each WBS element, showing Budgeted Cost for Work</span>
+<span class="sd">    Scheduled (BCWS/PV), Budgeted Cost for Work Performed (BCWP/EV),</span>
+<span class="sd">    and Actual Cost of Work Performed (ACWP/AC).</span>
+
+<span class="sd">    The report derives Cost Variance (CV = EV - AC), Schedule Variance</span>
+<span class="sd">    (SV = EV - PV), Variance at Completion (VAC = BAC - EAC), and</span>
+<span class="sd">    percentage calculations (CPI, SPI).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    project_id : UUID</span>
+<span class="sd">        UUID of the root PortfolioNode for the programme.</span>
+<span class="sd">    reporting_period : str</span>
+<span class="sd">        Reporting month in 'YYYY-MM' format.</span>
+<span class="sd">    status_date : str</span>
+<span class="sd">        Status date for the report in ISO format.</span>
+<span class="sd">    export_format : str</span>
+<span class="sd">        Export format: 'xlsx' (default) or 'pdf'.</span>
+<span class="sd">    currency_code : str</span>
+<span class="sd">        Currency code (default 'GBP').</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Response</span>
+<span class="sd">        File download with appropriate MIME type and content disposition.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if project not found, 500 on generation error.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">generator</span> <span class="o">=</span> <span class="n">IPMRGenerator</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_format1</span><span class="p">(</span>
+            <span class="n">project_id</span><span class="o">=</span><span class="n">project_id</span><span class="p">,</span>
+            <span class="n">reporting_period</span><span class="o">=</span><span class="n">reporting_period</span><span class="p">,</span>
+            <span class="n">status_date</span><span class="o">=</span><span class="n">status_date</span><span class="p">,</span>
+            <span class="n">currency_code</span><span class="o">=</span><span class="n">currency_code</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">export_format</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"pdf"</span><span class="p">:</span>
+            <span class="n">file_content</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">export_pdf</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">currency_code</span><span class="p">)</span>
+            <span class="n">media_type</span> <span class="o">=</span> <span class="s2">"application/pdf"</span>
+            <span class="n">extension</span> <span class="o">=</span> <span class="s2">"pdf"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">file_content</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">export_xlsx</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">currency_code</span><span class="p">)</span>
+            <span class="n">media_type</span> <span class="o">=</span> <span class="s2">"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"</span>
+            <span class="n">extension</span> <span class="o">=</span> <span class="s2">"xlsx"</span>
+
+        <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"IPMR_Format1_</span><span class="si">{</span><span class="n">reporting_period</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">extension</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+            <span class="n">content</span><span class="o">=</span><span class="n">file_content</span><span class="p">,</span>
+            <span class="n">media_type</span><span class="o">=</span><span class="n">media_type</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"Content-Disposition"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"attachment; filename=</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"X-Report-Format"</span><span class="p">:</span> <span class="s2">"FORMAT1"</span><span class="p">,</span>
+                <span class="s2">"X-Row-Count"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">rows</span><span class="p">)),</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Report generation failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generate_format5">
+<a class="viewcode-back" href="../../../modules.html#app.routers.ipmr_reports.generate_format5">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/ipmr/format5"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_format5</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"UUID of the root PortfolioNode for the programme"</span><span class="p">),</span>
+    <span class="n">reporting_period</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Reporting month in YYYY-MM format"</span><span class="p">),</span>
+    <span class="n">status_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Status date for the report in ISO format"</span><span class="p">),</span>
+    <span class="n">export_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="s2">"xlsx"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Export format: 'xlsx' or 'pdf'"</span><span class="p">),</span>
+    <span class="n">cost_variance_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="mf">25000.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Cost variance threshold in absolute amount"</span><span class="p">),</span>
+    <span class="n">schedule_variance_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Schedule variance threshold in percentage"</span><span class="p">),</span>
+    <span class="n">currency_code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="s2">"GBP"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Currency code"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Generate and export IPMR Format 5 Variance Analysis Narrative report.</span>
+
+<span class="sd">    Format 5 auto-extracts tasks exceeding predefined variance thresholds</span>
+<span class="sd">    and pre-populates the standard defence variance reporting template</span>
+<span class="sd">    with Problem/Cause, Impact, and Corrective Action Plan.</span>
+
+<span class="sd">    Thresholds:</span>
+<span class="sd">    - Cost Variance: Tasks with |CV| &gt; cost_variance_threshold are flagged.</span>
+<span class="sd">    - Schedule Variance: Tasks with |SV|/PV &gt; schedule_variance_threshold%</span>
+<span class="sd">      are flagged.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    project_id : UUID</span>
+<span class="sd">        UUID of the root PortfolioNode.</span>
+<span class="sd">    reporting_period : str</span>
+<span class="sd">        Reporting month in 'YYYY-MM' format.</span>
+<span class="sd">    status_date : str</span>
+<span class="sd">        Status date for the report.</span>
+<span class="sd">    export_format : str</span>
+<span class="sd">        Export format: 'xlsx' (default) or 'pdf'.</span>
+<span class="sd">    cost_variance_threshold : float</span>
+<span class="sd">        Cost variance threshold (default £25,000).</span>
+<span class="sd">    schedule_variance_threshold : float</span>
+<span class="sd">        Schedule variance threshold percentage (default 10%).</span>
+<span class="sd">    currency_code : str</span>
+<span class="sd">        Currency code (default 'GBP').</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Response</span>
+<span class="sd">        File download with appropriate MIME type.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if project not found, 500 on generation error.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">generator</span> <span class="o">=</span> <span class="n">IPMRGenerator</span><span class="p">(</span><span class="n">db</span><span class="p">)</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">generate_format5</span><span class="p">(</span>
+            <span class="n">project_id</span><span class="o">=</span><span class="n">project_id</span><span class="p">,</span>
+            <span class="n">reporting_period</span><span class="o">=</span><span class="n">reporting_period</span><span class="p">,</span>
+            <span class="n">status_date</span><span class="o">=</span><span class="n">status_date</span><span class="p">,</span>
+            <span class="n">cost_variance_threshold</span><span class="o">=</span><span class="n">cost_variance_threshold</span><span class="p">,</span>
+            <span class="n">schedule_variance_threshold</span><span class="o">=</span><span class="n">schedule_variance_threshold</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">export_format</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">"pdf"</span><span class="p">:</span>
+            <span class="n">file_content</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">export_pdf</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">currency_code</span><span class="p">)</span>
+            <span class="n">media_type</span> <span class="o">=</span> <span class="s2">"application/pdf"</span>
+            <span class="n">extension</span> <span class="o">=</span> <span class="s2">"pdf"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">file_content</span> <span class="o">=</span> <span class="n">generator</span><span class="o">.</span><span class="n">export_xlsx</span><span class="p">(</span><span class="n">report</span><span class="p">,</span> <span class="n">currency_code</span><span class="p">)</span>
+            <span class="n">media_type</span> <span class="o">=</span> <span class="s2">"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"</span>
+            <span class="n">extension</span> <span class="o">=</span> <span class="s2">"xlsx"</span>
+
+        <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"IPMR_Format5_</span><span class="si">{</span><span class="n">reporting_period</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">extension</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+            <span class="n">content</span><span class="o">=</span><span class="n">file_content</span><span class="p">,</span>
+            <span class="n">media_type</span><span class="o">=</span><span class="n">media_type</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">"Content-Disposition"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"attachment; filename=</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="s2">"X-Report-Format"</span><span class="p">:</span> <span class="s2">"FORMAT5"</span><span class="p">,</span>
+                <span class="s2">"X-Variance-Items"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">report</span><span class="o">.</span><span class="n">variance_items</span><span class="p">)),</span>
+            <span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Report generation failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

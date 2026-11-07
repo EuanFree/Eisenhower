@@ -1,0 +1,842 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.merkle_sync &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.merkle_sync</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.merkle_sync</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Merkle tree synchronization router for offline multi-site reconciliation.</span>
+
+<span class="sd">This module provides the API endpoints for synchronising disconnected</span>
+<span class="sd">air-gapped instances of the Eisenhower Portfolio Manager using</span>
+<span class="sd">cryptographic Merkle trees.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">---------</span>
+
+<span class="sd">All endpoints are JWT-authenticated and require the caller to have</span>
+<span class="sd">sufficient clearance to access the target programme sub-tree.</span>
+
+<span class="sd">**GET /api/v1/merkle-sync/manifest**</span>
+<span class="sd">    Generate and return the current Merkle tree manifest for a programme</span>
+<span class="sd">    sub-tree.  The root hash can be compared with a manifest from another</span>
+<span class="sd">    site to determine if the two instances are in sync.</span>
+
+<span class="sd">**POST /api/v1/merkle-sync/reconcile-delta**</span>
+<span class="sd">    Ingest an offline ``.merklepack`` bundle and reconcile it with the</span>
+<span class="sd">    local database using three-way version tracking.  Conflicts are</span>
+<span class="sd">    staged into isolated SandboxScenarios for review.</span>
+
+<span class="sd">**POST /api/v1/merkle-sync/compare**</span>
+<span class="sd">    Compare a remote Merkle manifest against the local state and return</span>
+<span class="sd">    a detailed divergence report.</span>
+
+<span class="sd">**POST /api/v1/merkle-sync/export-delta**</span>
+<span class="sd">    Export only the divergent records as a signed ``.merklepack`` file</span>
+<span class="sd">    for transfer to another air-gapped site.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">.. code-block:: bash</span>
+
+<span class="sd">    # Generate local manifest</span>
+<span class="sd">    curl -H "Authorization: Bearer $TOKEN" \</span>
+<span class="sd">         "http://localhost:8000/api/v1/merkle-sync/manifest?root_node_id=$UUID"</span>
+
+<span class="sd">    # Ingest remote delta pack</span>
+<span class="sd">    curl -H "Authorization: Bearer $TOKEN" \</span>
+<span class="sd">         -F "file=@remote.merklepack" \</span>
+<span class="sd">         "http://localhost:8000/api/v1/merkle-sync/reconcile-delta"</span>
+
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">Form</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">UploadFile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.ext.asyncio</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncSession</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MerkleManifestResponse</span><span class="p">,</span>
+    <span class="n">MerkleComparisonResponse</span><span class="p">,</span>
+    <span class="n">MerkleDeltaExportResponse</span><span class="p">,</span>
+    <span class="n">MerkleReconcileResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.merkle_sync</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MerkleSyncService</span><span class="p">,</span>
+    <span class="n">MerkleManifest</span><span class="p">,</span>
+    <span class="n">MerkleReconciliationEngine</span><span class="p">,</span>
+    <span class="n">ThreeWayReconciliationResult</span><span class="p">,</span>
+    <span class="n">MerkleMergeStaging</span><span class="p">,</span>
+    <span class="n">CCBMergeCommit</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Pydantic schemas for CCB arbitration endpoints</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="CCBResolveRequest">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.CCBResolveRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CCBResolveRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">resolution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"KEEP_LOCAL, ACCEPT_REMOTE, or SYNTHESIZE"</span><span class="p">)</span>
+    <span class="n">synthesized_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Required if resolution is SYNTHESIZE"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="CCBSignRequest">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.CCBSignRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CCBSignRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">officer_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Officer number (1 or 2)"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="CCBCommitRequest">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.CCBCommitRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CCBCommitRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">entry_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"List of staging entry IDs to commit"</span><span class="p">)</span></div>
+
+
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="get_merkle_manifest">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.get_merkle_manifest">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/manifest"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">MerkleManifestResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_merkle_manifest</span><span class="p">(</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">site_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Generate the current Merkle tree manifest for a programme sub-tree.</span>
+
+<span class="sd">    This endpoint traverses the entire sub-tree rooted at the given</span>
+<span class="sd">    PortfolioNode, computing SHA-256 leaf hashes for every node,</span>
+<span class="sd">    dependency link, and resource assignment.  It then recursively</span>
+<span class="sd">    combines hashes upward along the ltree hierarchy to produce a</span>
+<span class="sd">    single root Merkle digest.</span>
+
+<span class="sd">    The root hash can be compared with a manifest from another site</span>
+<span class="sd">    to determine if the two instances are in perfect sync (identical</span>
+<span class="sd">    root hashes) or have diverged.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        The root PortfolioNode whose sub-tree should be included in</span>
+<span class="sd">        the manifest.</span>
+<span class="sd">    site_id : str</span>
+<span class="sd">        Optional identifier of the local site (e.g., 'Warton').</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MerkleManifestResponse</span>
+<span class="sd">        Complete manifest with root hash, entity counts, and the</span>
+<span class="sd">        full Merkle tree structure.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the root node is not found.</span>
+<span class="sd">        403 if the user lacks clearance to access the root node.</span>
+<span class="sd">    """</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">MerkleSyncService</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">site_id</span><span class="o">=</span><span class="n">site_id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">manifest</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">generate_subsystem_merkle_tree</span><span class="p">(</span><span class="n">root_node_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">MerkleManifestResponse</span><span class="p">(</span><span class="o">**</span><span class="n">manifest</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="reconcile_delta_pack">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.reconcile_delta_pack">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/reconcile-delta"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">MerkleReconcileResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">reconcile_delta_pack</span><span class="p">(</span>
+    <span class="n">file</span><span class="p">:</span> <span class="n">UploadFile</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"The .merklepack file to ingest"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Ingest an offline .merklepack bundle with three-way version tracking.</span>
+
+<span class="sd">    This endpoint accepts a ``.merklepack`` file (ZIP archive) containing</span>
+<span class="sd">    divergent records from a remote air-gapped site.  It verifies the</span>
+<span class="sd">    embedded SHA-256 signature, then resolves each mutation using</span>
+<span class="sd">    three-way version tracking:</span>
+
+<span class="sd">    1. **Forward Mutation** — If the incoming ``version_id`` is greater</span>
+<span class="sd">       than the local version and parentage is unchanged, the mutation</span>
+<span class="sd">       is applied directly.</span>
+
+<span class="sd">    2. **Conflict Staging** — If both local and incoming branches were</span>
+<span class="sd">       mutated concurrently, the conflict is staged into an isolated</span>
+<span class="sd">       SandboxScenario for the Lead Systems Engineer to review.</span>
+
+<span class="sd">    3. **Parentage Change** — If the incoming node's ltree path differs</span>
+<span class="sd">       from the local path, the conflict is staged into a SandboxScenario.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file : UploadFile</span>
+<span class="sd">        The ``.merklepack`` ZIP archive to ingest.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MerkleReconcileResponse</span>
+<span class="sd">        Detailed result with counts of applied mutations, staged</span>
+<span class="sd">        conflicts, sandbox scenario IDs, and any errors.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if the file is not a valid .merklepack archive.</span>
+<span class="sd">        403 if the user lacks clearance to perform reconciliation.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".merklepack"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"File must be a .merklepack archive."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">delta_pack_bytes</span> <span class="o">=</span> <span class="k">await</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">delta_pack_bytes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Uploaded file is empty."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">service</span> <span class="o">=</span> <span class="n">MerkleSyncService</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">ingest_merkle_delta_pack</span><span class="p">(</span>
+        <span class="n">delta_pack_bytes</span><span class="p">,</span>
+        <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">MerkleReconcileResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="compare_manifests">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.compare_manifests">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/compare"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">MerkleComparisonResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">compare_manifests</span><span class="p">(</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Root node UUID for comparison"</span><span class="p">),</span>
+    <span class="n">remote_manifest_json</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Remote Merkle manifest as JSON string"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Compare a remote Merkle manifest against the local state.</span>
+
+<span class="sd">    This endpoint generates a fresh local manifest for the specified</span>
+<span class="sd">    root node, then compares it against the remote manifest provided</span>
+<span class="sd">    as a JSON string.  It returns a detailed divergence report</span>
+<span class="sd">    identifying exactly which nodes, dependencies, and assignments</span>
+<span class="sd">    differ between the two instances.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        The root PortfolioNode for comparison.</span>
+<span class="sd">    remote_manifest_json : str</span>
+<span class="sd">        The remote Merkle manifest as a JSON-encoded string.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MerkleComparisonResponse</span>
+<span class="sd">        Detailed comparison with lists of added, removed, modified,</span>
+<span class="sd">        and divergent entities.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if the remote manifest is not valid JSON.</span>
+<span class="sd">        404 if the root node is not found.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">remote_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">remote_manifest_json</span><span class="p">)</span>
+        <span class="n">remote_manifest</span> <span class="o">=</span> <span class="n">MerkleManifest</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">remote_data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid remote manifest: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">service</span> <span class="o">=</span> <span class="n">MerkleSyncService</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">local_manifest</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">generate_subsystem_merkle_tree</span><span class="p">(</span><span class="n">root_node_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="n">comparison</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">compare_merkle_manifests</span><span class="p">(</span><span class="n">local_manifest</span><span class="p">,</span> <span class="n">remote_manifest</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">MerkleComparisonResponse</span><span class="p">(</span><span class="o">**</span><span class="n">comparison</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="export_delta_pack">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.export_delta_pack">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/export-delta"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">MerkleDeltaExportResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">export_delta_pack</span><span class="p">(</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Root node UUID for delta export"</span><span class="p">),</span>
+    <span class="n">remote_manifest_json</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Remote Merkle manifest as JSON string"</span><span class="p">),</span>
+    <span class="n">site_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Local site identifier"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Export only the divergent records as a signed .merklepack file.</span>
+
+<span class="sd">    This endpoint compares the local state against a remote manifest,</span>
+<span class="sd">    identifies all divergent records, and packages them into a</span>
+<span class="sd">    cryptographically signed ``.merklepack`` archive for transfer</span>
+<span class="sd">    to another air-gapped site.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        The root PortfolioNode for delta export.</span>
+<span class="sd">    remote_manifest_json : str</span>
+<span class="sd">        The remote Merkle manifest as a JSON-encoded string.</span>
+<span class="sd">    site_id : str</span>
+<span class="sd">        Optional identifier of the local site.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    MerkleDeltaExportResponse</span>
+<span class="sd">        Metadata about the exported delta pack (counts, size, signature).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if the remote manifest is not valid JSON.</span>
+<span class="sd">        404 if the root node is not found.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">remote_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">remote_manifest_json</span><span class="p">)</span>
+        <span class="n">remote_manifest</span> <span class="o">=</span> <span class="n">MerkleManifest</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">remote_data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid remote manifest: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">service</span> <span class="o">=</span> <span class="n">MerkleSyncService</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">site_id</span><span class="o">=</span><span class="n">site_id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">local_manifest</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">generate_subsystem_merkle_tree</span><span class="p">(</span><span class="n">root_node_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="n">comparison</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">compare_merkle_manifests</span><span class="p">(</span><span class="n">local_manifest</span><span class="p">,</span> <span class="n">remote_manifest</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">comparison</span><span class="o">.</span><span class="n">identical</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Local and remote manifests are identical — no delta to export."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">delta_pack</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">export_merkle_delta_pack</span><span class="p">(</span>
+        <span class="n">divergent_node_ids</span><span class="o">=</span><span class="n">comparison</span><span class="o">.</span><span class="n">divergent_node_ids</span><span class="p">,</span>
+        <span class="n">divergent_dependency_ids</span><span class="o">=</span><span class="n">comparison</span><span class="o">.</span><span class="n">divergent_dependency_ids</span><span class="p">,</span>
+        <span class="n">divergent_assignment_ids</span><span class="o">=</span><span class="n">comparison</span><span class="o">.</span><span class="n">divergent_assignment_ids</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">MerkleDeltaExportResponse</span><span class="p">(</span>
+        <span class="n">node_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">comparison</span><span class="o">.</span><span class="n">divergent_node_ids</span><span class="p">),</span>
+        <span class="n">dependency_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">comparison</span><span class="o">.</span><span class="n">divergent_dependency_ids</span><span class="p">),</span>
+        <span class="n">assignment_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">comparison</span><span class="o">.</span><span class="n">divergent_assignment_ids</span><span class="p">),</span>
+        <span class="n">pack_size_bytes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">delta_pack</span><span class="p">),</span>
+        <span class="n">signature</span><span class="o">=</span><span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">delta_pack</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">(),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># CCB Arbitration Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="c1"># In-memory store for reconciliation engines keyed by session ID</span>
+<span class="n">_reconciliation_engines</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="get_ccb_staging">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.get_ccb_staging">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/ccb-staging"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_ccb_staging</span><span class="p">(</span>
+    <span class="n">session_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get all staged Merkle merge conflicts requiring CCB arbitration.</span>
+
+<span class="sd">    Returns the reconciliation result including auto-merged count,</span>
+<span class="sd">    conflicts staged, and all staging entries with their current status.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    session_id : str or None</span>
+<span class="sd">        Optional session ID to filter by reconciliation session.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Reconciliation result with staging entries.</span>
+<span class="sd">    """</span>
+    <span class="c1"># If no session provided, return empty result</span>
+    <span class="k">if</span> <span class="n">session_id</span> <span class="ow">and</span> <span class="n">session_id</span> <span class="ow">in</span> <span class="n">_reconciliation_engines</span><span class="p">:</span>
+        <span class="n">engine</span> <span class="o">=</span> <span class="n">_reconciliation_engines</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">get_staging_entries</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"ancestor_hash"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"auto_merged_count"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"conflicts_staged"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">),</span>
+            <span class="s2">"staging_entries"</span><span class="p">:</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">],</span>
+            <span class="s2">"divergent_paths"</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">"errors"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"ancestor_hash"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"auto_merged_count"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"conflicts_staged"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"staging_entries"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"divergent_paths"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"errors"</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="reconcile_three_way">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.reconcile_three_way">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/reconcile-three-way"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">reconcile_three_way</span><span class="p">(</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Root node UUID for reconciliation"</span><span class="p">),</span>
+    <span class="n">remote_manifest_json</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Remote Merkle manifest as JSON string"</span><span class="p">),</span>
+    <span class="n">site_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Local site identifier"</span><span class="p">),</span>
+    <span class="n">remote_site_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Remote site identifier"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Perform 3-way reconciliation between local and remote manifests.</span>
+
+<span class="sd">    Computes the common ancestor, auto-merges non-conflicting branches,</span>
+<span class="sd">    and quarantines conflicts for CCB arbitration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root_node_id : str</span>
+<span class="sd">        Root node UUID for reconciliation.</span>
+<span class="sd">    remote_manifest_json : str</span>
+<span class="sd">        Remote Merkle manifest as JSON string.</span>
+<span class="sd">    site_id : str</span>
+<span class="sd">        Local site identifier.</span>
+<span class="sd">    remote_site_id : str</span>
+<span class="sd">        Remote site identifier.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Three-way reconciliation result.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">json_mod</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">remote_data</span> <span class="o">=</span> <span class="n">json_mod</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">remote_manifest_json</span><span class="p">)</span>
+        <span class="n">remote_manifest</span> <span class="o">=</span> <span class="n">MerkleManifest</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">remote_data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">json_mod</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid remote manifest: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">service</span> <span class="o">=</span> <span class="n">MerkleSyncService</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">site_id</span><span class="o">=</span><span class="n">site_id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">local_manifest</span> <span class="o">=</span> <span class="k">await</span> <span class="n">service</span><span class="o">.</span><span class="n">generate_subsystem_merkle_tree</span><span class="p">(</span>
+            <span class="n">PyUUID</span><span class="p">(</span><span class="n">root_node_id</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="c1"># Create reconciliation engine</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">MerkleReconciliationEngine</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">local_site_id</span><span class="o">=</span><span class="n">site_id</span><span class="p">,</span>
+        <span class="n">remote_site_id</span><span class="o">=</span><span class="n">remote_site_id</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">reconcile_three_way</span><span class="p">(</span><span class="n">local_manifest</span><span class="p">,</span> <span class="n">remote_manifest</span><span class="p">)</span>
+
+    <span class="c1"># Store engine for later CCB operations</span>
+    <span class="n">session_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">_reconciliation_engines</span><span class="p">[</span><span class="n">session_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">engine</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="o">**</span><span class="n">result</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+        <span class="s2">"session_id"</span><span class="p">:</span> <span class="n">session_id</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_ccb_conflict">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.resolve_ccb_conflict">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/ccb-resolve/</span><span class="si">{entry_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">resolve_ccb_conflict</span><span class="p">(</span>
+    <span class="n">entry_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">CCBResolveRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Resolve a single CCB conflict entry.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    entry_id : str</span>
+<span class="sd">        The ID of the staging entry to resolve.</span>
+<span class="sd">    request : CCBResolveRequest</span>
+<span class="sd">        Resolution choice and optional synthesized state.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Updated staging entry.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Find the engine containing this entry</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">eng</span> <span class="ow">in</span> <span class="n">_reconciliation_engines</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">get_staging_entry</span><span class="p">(</span><span class="n">entry_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">engine</span> <span class="o">=</span> <span class="n">eng</span>
+            <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">engine</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Staging entry </span><span class="si">{</span><span class="n">entry_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resolved</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">resolve_conflict</span><span class="p">(</span>
+            <span class="n">entry_id</span><span class="p">,</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">resolution</span><span class="p">,</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">synthesized_state</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">resolved</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="sign_ccb_entry">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.sign_ccb_entry">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/ccb-sign/</span><span class="si">{entry_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">sign_ccb_entry</span><span class="p">(</span>
+    <span class="n">entry_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">CCBSignRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Stage a CCB officer signature on a resolved conflict entry.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    entry_id : str</span>
+<span class="sd">        The ID of the staging entry.</span>
+<span class="sd">    request : CCBSignRequest</span>
+<span class="sd">        Officer number for the signature.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Updated staging entry.</span>
+<span class="sd">    """</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">eng</span> <span class="ow">in</span> <span class="n">_reconciliation_engines</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">get_staging_entry</span><span class="p">(</span><span class="n">entry_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">engine</span> <span class="o">=</span> <span class="n">eng</span>
+            <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">engine</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Staging entry </span><span class="si">{</span><span class="n">entry_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Generate a simple signature token</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">hl</span>
+        <span class="n">signature</span> <span class="o">=</span> <span class="n">hl</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">entry_id</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">officer_number</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+        <span class="n">signed</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">stage_ccb_signature</span><span class="p">(</span>
+            <span class="n">entry_id</span><span class="p">,</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">officer_number</span><span class="p">,</span>
+            <span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">signature</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">signed</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="commit_ccb_merge">
+<a class="viewcode-back" href="../../../modules.html#app.routers.merkle_sync.commit_ccb_merge">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/ccb-commit"</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">commit_ccb_merge</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">CCBCommitRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">AsyncSession</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Commit resolved and signed CCB entries.</span>
+
+<span class="sd">    Validates dual-officer signatures and applies the resolved changes</span>
+<span class="sd">    in an atomic database transaction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : CCBCommitRequest</span>
+<span class="sd">        List of staging entry IDs to commit.</span>
+<span class="sd">    db : AsyncSession</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        List of merge commit records.</span>
+<span class="sd">    """</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">eng</span> <span class="ow">in</span> <span class="n">_reconciliation_engines</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">entry_id</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">entry_ids</span><span class="p">:</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">eng</span><span class="o">.</span><span class="n">get_staging_entry</span><span class="p">(</span><span class="n">entry_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">engine</span> <span class="o">=</span> <span class="n">eng</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">engine</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">engine</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"No staging entries found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">commits</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">commit_resolved_entries</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">entry_ids</span><span class="p">)</span>
+
+        <span class="c1"># Log forensic audit entries</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ForensicAuditLog</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">uuid_mod</span>
+
+        <span class="k">for</span> <span class="n">commit</span> <span class="ow">in</span> <span class="n">commits</span><span class="p">:</span>
+            <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+                <span class="n">transaction_id</span><span class="o">=</span><span class="n">commit</span><span class="o">.</span><span class="n">commit_id</span><span class="p">,</span>
+                <span class="n">user_upn</span><span class="o">=</span><span class="sa">f</span><span class="s2">"user-</span><span class="si">{</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">client_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">action_type</span><span class="o">=</span><span class="s2">"MERKLE_CCB_MERGE_COMMITTED"</span><span class="p">,</span>
+                <span class="n">entity_type</span><span class="o">=</span><span class="s2">"MerkleSync"</span><span class="p">,</span>
+                <span class="n">entity_id</span><span class="o">=</span><span class="n">commit</span><span class="o">.</span><span class="n">reconciliation_id</span><span class="p">,</span>
+                <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">"resolution"</span><span class="p">:</span> <span class="s2">"committed"</span><span class="p">,</span>
+                    <span class="s2">"officer_1"</span><span class="p">:</span> <span class="n">commit</span><span class="o">.</span><span class="n">officer_1_user_id</span><span class="p">,</span>
+                    <span class="s2">"officer_2"</span><span class="p">:</span> <span class="n">commit</span><span class="o">.</span><span class="n">officer_2_user_id</span><span class="p">,</span>
+                    <span class="s2">"audit_block_hash"</span><span class="p">:</span> <span class="n">commit</span><span class="o">.</span><span class="n">audit_block_hash</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+
+        <span class="k">await</span> <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"commits"</span><span class="p">:</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">commits</span><span class="p">],</span>
+            <span class="s2">"entries_committed"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">commits</span><span class="p">),</span>
+        <span class="p">}</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

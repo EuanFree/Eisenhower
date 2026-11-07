@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.facilities &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.facilities</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.facilities</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Facility reservation and timeline API endpoints.</span>
+
+<span class="sd">This router provides endpoints for managing chamber reservations and</span>
+<span class="sd">viewing facility timelines.  It is the primary interface for booking</span>
+<span class="sd">high-demand physical resources (EMC Anechoic Chambers, Thermal Vacuum</span>
+<span class="sd">Chambers, HIL rigs) and checking their availability.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">~~~~~~~~~</span>
+
+<span class="sd">- **POST /reservations** — Create a new chamber reservation with full</span>
+<span class="sd">  validation (capability gate, calibration gate, buffer enforcement).</span>
+<span class="sd">- **GET /locations/{id}/timeline** — Retrieve the time-phased reservation</span>
+<span class="sd">  timeline for a facility, including buffer/cooldown slots.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All endpoints require JWT authentication via :func:`app.utils.auth.get_current_user`.</span>
+<span class="sd">The authenticated user's clearance level is checked against the facility's</span>
+<span class="sd">security classification before returning reservation data.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ChamberReservationCreate</span><span class="p">,</span>
+    <span class="n">ChamberReservationResponse</span><span class="p">,</span>
+    <span class="n">FacilityTimelineResponse</span><span class="p">,</span>
+    <span class="n">FacilityValidationResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.facility_telemetry</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">create_chamber_reservation</span><span class="p">,</span>
+    <span class="n">get_facility_timeline</span><span class="p">,</span>
+    <span class="n">validate_chamber_feasibility</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="create_reservation">
+<a class="viewcode-back" href="../../../modules.html#app.routers.facilities.create_reservation">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/reservations"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ChamberReservationResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Create a chamber reservation"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Create a new reservation for a high-demand physical resource "</span>
+        <span class="s2">"(e.g., EMC Anechoic Chamber, Thermal Vacuum Chamber).  Before "</span>
+        <span class="s2">"committing, the reservation is validated through three gates:</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"1. **Capability Gate** — The task's environmental envelope must "</span>
+        <span class="s2">"fit within the chamber's capabilities.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"2. **Calibration Gate** — The reservation must not exceed the "</span>
+        <span class="s2">"chamber's calibration expiry date.</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"3. **Buffer Enforcement** — Warmup/cooldown buffer windows are "</span>
+        <span class="s2">"checked against existing reservations.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"If any gate fails, HTTP 422 is returned with explicit error "</span>
+        <span class="s2">"messages."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_reservation</span><span class="p">(</span>
+    <span class="n">reservation_data</span><span class="p">:</span> <span class="n">ChamberReservationCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ChamberReservationResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a new chamber reservation.</span>
+
+<span class="sd">    This endpoint validates the reservation through all three gates</span>
+<span class="sd">    (capability, calibration, buffer) before committing it to the</span>
+<span class="sd">    database.  If validation passes, a :class:`ChamberReservation`</span>
+<span class="sd">    record is created and returned with calculated buffer windows.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    reservation_data : ChamberReservationCreate</span>
+<span class="sd">        Request body with location, task, time window, and operator.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session injected by FastAPI.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user creating the reservation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ChamberReservationResponse</span>
+<span class="sd">        The created reservation with buffer windows and location details.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        422 if any validation gate fails, with error details in the</span>
+<span class="sd">        response body.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">reservation</span> <span class="o">=</span> <span class="k">await</span> <span class="n">create_chamber_reservation</span><span class="p">(</span>
+            <span class="n">reservation_data</span><span class="o">=</span><span class="n">reservation_data</span><span class="p">,</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">reservation</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">error_msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">422</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_timeline">
+<a class="viewcode-back" href="../../../modules.html#app.routers.facilities.get_timeline">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/locations/</span><span class="si">{location_id}</span><span class="s2">/timeline"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">FacilityTimelineResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Get facility reservation timeline"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Retrieve the time-phased reservation timeline for a facility.  "</span>
+        <span class="s2">"Returns all reservations and their associated buffer/cooldown "</span>
+        <span class="s2">"windows, sorted by start time.  The timeline is used by the "</span>
+        <span class="s2">"Gantt/calendar display to show reservation bands and cooldown "</span>
+        <span class="s2">"blocks.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"The response includes:</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"- Location metadata (code, name, chamber capabilities)</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"- Calibration expiry date</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"- Warmup/cooldown buffer hours</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"- List of reservation slots</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"- List of buffer slots for visual display"</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_timeline</span><span class="p">(</span>
+    <span class="n">location_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FacilityTimelineResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the reservation timeline for a facility.</span>
+
+<span class="sd">    This endpoint returns all reservations and buffer windows for a</span>
+<span class="sd">    given location, sorted by start time.  It is used by the frontend</span>
+<span class="sd">    Gantt/calendar view to display facility availability.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    location_id : str</span>
+<span class="sd">        UUID of the LocationNode to query.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session injected by FastAPI.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user requesting the timeline.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FacilityTimelineResponse</span>
+<span class="sd">        Full timeline data including location metadata, reservations,</span>
+<span class="sd">        and buffer slots.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the location is not found.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">timeline</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_facility_timeline</span><span class="p">(</span>
+            <span class="n">location_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">location_id</span><span class="p">),</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">timeline</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_reservation">
+<a class="viewcode-back" href="../../../modules.html#app.routers.facilities.validate_reservation">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/validate"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">FacilityValidationResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Validate chamber feasibility"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Validate whether a chamber reservation is feasible without "</span>
+        <span class="s2">"creating the reservation.  This is a dry-run endpoint that "</span>
+        <span class="s2">"runs all three validation gates (capability, calibration, "</span>
+        <span class="s2">"buffer) and returns the result.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"Use this endpoint to check availability before committing "</span>
+        <span class="s2">"a reservation."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">validate_reservation</span><span class="p">(</span>
+    <span class="n">location_node_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"UUID of the chamber location"</span><span class="p">),</span>
+    <span class="n">portfolio_node_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"UUID of the testing task"</span><span class="p">),</span>
+    <span class="n">reserved_start</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"ISO 8601 start datetime (UTC)"</span><span class="p">),</span>
+    <span class="n">reserved_end</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"ISO 8601 end datetime (UTC)"</span><span class="p">),</span>
+    <span class="n">power_profile_kw</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Expected power draw in kilowatts"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FacilityValidationResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Validate chamber feasibility without creating a reservation.</span>
+
+<span class="sd">    This endpoint performs a dry-run validation of all three gates</span>
+<span class="sd">    (capability, calibration, buffer) and returns the result without</span>
+<span class="sd">    committing any data to the database.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    location_node_id : str</span>
+<span class="sd">        UUID of the LocationNode (chamber, rig, etc.).</span>
+<span class="sd">    portfolio_node_id : str</span>
+<span class="sd">        UUID of the PortfolioNode representing the testing activity.</span>
+<span class="sd">    reserved_start : str</span>
+<span class="sd">        ISO 8601 start datetime (UTC).</span>
+<span class="sd">    reserved_end : str</span>
+<span class="sd">        ISO 8601 end datetime (UTC).</span>
+<span class="sd">    power_profile_kw : float or None</span>
+<span class="sd">        Expected power draw in kilowatts.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session injected by FastAPI.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user requesting validation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FacilityValidationResponse</span>
+<span class="sd">        Validation result with gate status and error messages.</span>
+<span class="sd">    """</span>
+    <span class="n">requested_start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">reserved_start</span><span class="p">)</span>
+    <span class="n">requested_end</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">reserved_end</span><span class="p">)</span>
+
+    <span class="n">validation</span> <span class="o">=</span> <span class="n">validate_chamber_feasibility</span><span class="p">(</span>
+        <span class="n">task_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+        <span class="n">location_id</span><span class="o">=</span><span class="n">UUID</span><span class="p">(</span><span class="n">location_node_id</span><span class="p">),</span>
+        <span class="n">requested_start</span><span class="o">=</span><span class="n">requested_start</span><span class="p">,</span>
+        <span class="n">requested_end</span><span class="o">=</span><span class="n">requested_end</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">power_profile_kw</span><span class="o">=</span><span class="n">power_profile_kw</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">validation</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

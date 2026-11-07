@@ -1,0 +1,622 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.reserve_governance &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.reserve_governance</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.reserve_governance</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Management Reserve governance service.</span>
+
+<span class="sd">This module implements the formal drawdown process for Management Reserve (MR)</span>
+<span class="sd">budgets held outside the Performance Measurement Baseline (PMB).</span>
+
+<span class="sd">Management Reserve Overview</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">In defence programme management, the PMB contains the budget for known,</span>
+<span class="sd">planned work.  Management Reserve is a separate pool of contingency funds</span>
+<span class="sd">held at the project or programme level to address **unknown-unknowns** —</span>
+<span class="sd">risks that cannot be quantified at the time of baseline creation.</span>
+
+<span class="sd">When a risk materialises, a formal drawdown process transfers funds from</span>
+<span class="sd">the MR into the PMB by increasing the Budget at Completion (BAC) of the</span>
+<span class="sd">affected work package.  This process is governed by strict controls:</span>
+
+<span class="sd">1. **Sufficient balance** — The reserve pool must have enough</span>
+<span class="sd">   ``current_balance`` to cover the drawdown amount.</span>
+
+<span class="sd">2. **Authorised BCR** — An approved BaselineChangeRequest (Tier 2 or</span>
+<span class="sd">   Tier 3) must authorise the budget transfer.  Tier 1 (local CAM) is</span>
+<span class="sd">   not sufficient for MR drawdowns.</span>
+
+<span class="sd">3. **Atomic execution** — The drawdown atomically:</span>
+
+<span class="sd">   - Decrements the pool's ``current_balance``.</span>
+<span class="sd">   - Increments the target node's ``bac_cost``.</span>
+<span class="sd">   - Records a ``ManagementReserveTransaction`` ledger entry.</span>
+<span class="sd">   - Logs the event in ``ForensicAuditLog``.</span>
+
+<span class="sd">Transaction Types</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- **INITIAL_ALLOCATION** — Create or top up a reserve pool.</span>
+<span class="sd">- **DRAWDOWN_TO_WBS** — Transfer funds from the reserve to a WBS work</span>
+<span class="sd">  package, increasing its BAC.</span>
+<span class="sd">- **RETURN_TO_RESERVE** — Return funds from a work package back to the</span>
+<span class="sd">  reserve (e.g., a risk did not fully materialise).</span>
+<span class="sd">- **CUSTOMER_DE_OBLIGATION** — The customer formally releases the</span>
+<span class="sd">  organisation from an obligation, removing the associated reserve.</span>
+
+<span class="sd">Drawdown Workflow</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">1. A risk materialises affecting a specific work package.</span>
+<span class="sd">2. The project manager creates a BaselineChangeRequest (BCR) justifying</span>
+<span class="sd">   the need for additional budget.</span>
+<span class="sd">3. The BCR is reviewed and approved at Tier 2 (Project CCB) or Tier 3</span>
+<span class="sd">   (Programme Board) level.</span>
+<span class="sd">4. The approved BCR is used to execute ``execute_mr_drawdown()``, which</span>
+<span class="sd">   transfers the authorised amount from the MR to the work package.</span>
+<span class="sd">5. The work package's BAC is increased, and the change is reflected in</span>
+<span class="sd">   all EVM calculations (CPI, SPI, EAC, etc.).</span>
+
+<span class="sd">Error Handling</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">- ``HTTPException(400)`` — Insufficient balance in the reserve pool.</span>
+<span class="sd">- ``HTTPException(400)`` — BCR is not approved or is below the required</span>
+<span class="sd">  tier (Tier 2 or Tier 3).</span>
+<span class="sd">- ``HTTPException(404)`` — Pool, node, or BCR not found.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">and_</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ManagementReservePool</span><span class="p">,</span>
+    <span class="n">ManagementReserveTransaction</span><span class="p">,</span>
+    <span class="n">TransactionType</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">BaselineChangeRequest</span><span class="p">,</span>
+    <span class="n">BaselineChangeRequestStatus</span><span class="p">,</span>
+    <span class="n">BaselineTier</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="execute_mr_drawdown">
+<a class="viewcode-back" href="../../../modules.html#app.services.reserve_governance.execute_mr_drawdown">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">execute_mr_drawdown</span><span class="p">(</span>
+    <span class="n">pool_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">bcr_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">justification</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ManagementReserveTransaction</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Execute an authorised Management Reserve drawdown.</span>
+
+<span class="sd">    This is the core governance function that transfers funds from the</span>
+<span class="sd">    Management Reserve pool to a specific work package in the WBS.  The</span>
+<span class="sd">    function enforces all governance controls before executing the transfer.</span>
+
+<span class="sd">    Governance Controls</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    1. **Pool existence** — The reserve pool must exist and be accessible.</span>
+<span class="sd">    2. **Sufficient balance** — The pool's ``current_balance`` must be</span>
+<span class="sd">       greater than or equal to the drawdown amount.</span>
+<span class="sd">    3. **BCR authorisation** — A drawdown (DRAWDOWN_TO_WBS) requires an</span>
+<span class="sd">       approved BaselineChangeRequest of Tier 2 or Tier 3.  Tier 1</span>
+<span class="sd">       (local CAM) is not sufficient for MR drawdowns.</span>
+<span class="sd">    4. **Target node existence** — The work package receiving the budget</span>
+<span class="sd">       must exist.</span>
+
+<span class="sd">    Atomic Operations</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    If all checks pass, the function executes the following operations</span>
+<span class="sd">    within a single database transaction:</span>
+
+<span class="sd">    - Decrement the pool's ``current_balance`` by the drawdown amount.</span>
+<span class="sd">    - Increment the target node's ``bac_cost`` by the drawdown amount.</span>
+<span class="sd">    - Create a ``ManagementReserveTransaction`` ledger entry of type</span>
+<span class="sd">      ``DRAWDOWN_TO_WBS``.</span>
+<span class="sd">    - Record a ``ForensicAuditLog`` entry with action type ``MR_DRAWDOWN``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pool_id : str</span>
+<span class="sd">        UUID of the Management Reserve pool to draw from.</span>
+<span class="sd">    target_node_id : str</span>
+<span class="sd">        UUID of the PortfolioNode work package receiving the budget.</span>
+<span class="sd">    amount : float</span>
+<span class="sd">        Monetary amount to draw down from the reserve.  Must be positive.</span>
+<span class="sd">    bcr_id : str or None</span>
+<span class="sd">        UUID of the approved BaselineChangeRequest authorising this</span>
+<span class="sd">        drawdown.  Required for DRAWDOWN_TO_WBS transactions.</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        ID of the user authorising this drawdown.</span>
+<span class="sd">    justification : str</span>
+<span class="sd">        Human-readable explanation of why this drawdown is being executed.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ManagementReserveTransaction</span>
+<span class="sd">        The newly created transaction ledger entry.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException(404)</span>
+<span class="sd">        Pool, target node, user, or BCR not found.</span>
+<span class="sd">    HTTPException(400)</span>
+<span class="sd">        Insufficient balance in the reserve pool.</span>
+<span class="sd">    HTTPException(400)</span>
+<span class="sd">        BCR is not approved or is below the required tier.</span>
+<span class="sd">    HTTPException(400)</span>
+<span class="sd">        BCR is required but not provided for DRAWDOWN_TO_WBS.</span>
+<span class="sd">    """</span>
+    <span class="c1"># --- Validate amount ---</span>
+    <span class="n">amount_decimal</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">amount</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">amount_decimal</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Drawdown amount must be positive."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># --- Fetch the reserve pool ---</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ManagementReservePool</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ManagementReservePool</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">pool_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">pool</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Management Reserve pool </span><span class="si">{</span><span class="n">pool_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># --- Fetch the target node ---</span>
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">target_node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">target_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Target work package </span><span class="si">{</span><span class="n">target_node_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># --- Fetch the authorising user ---</span>
+    <span class="n">authorising_user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">authorising_user</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Authorising user </span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># --- Check sufficient balance ---</span>
+    <span class="k">if</span> <span class="n">pool</span><span class="o">.</span><span class="n">current_balance</span> <span class="o">&lt;</span> <span class="n">amount_decimal</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Insufficient reserve balance. "</span>
+                <span class="sa">f</span><span class="s2">"Available: </span><span class="si">{</span><span class="n">pool</span><span class="o">.</span><span class="n">currency_code</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">pool</span><span class="o">.</span><span class="n">current_balance</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"Requested: </span><span class="si">{</span><span class="n">pool</span><span class="o">.</span><span class="n">currency_code</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">amount_decimal</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># --- Validate BCR for drawdown ---</span>
+    <span class="n">bcr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BaselineChangeRequest</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">bcr_id</span><span class="p">:</span>
+        <span class="n">bcr</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">BaselineChangeRequest</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">bcr_id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">bcr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"BaselineChangeRequest </span><span class="si">{</span><span class="n">bcr_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check BCR is approved</span>
+        <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">BaselineChangeRequestStatus</span><span class="o">.</span><span class="n">APPROVED</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"BCR </span><span class="si">{</span><span class="n">bcr</span><span class="o">.</span><span class="n">bcr_number</span><span class="si">}</span><span class="s2"> is not approved. "</span>
+                    <span class="sa">f</span><span class="s2">"Current status: </span><span class="si">{</span><span class="n">bcr</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="sa">f</span><span class="s2">"Only approved BCRs can authorise MR drawdowns."</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check BCR tier — must be Tier 2 or Tier 3</span>
+        <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">tier</span> <span class="o">==</span> <span class="n">BaselineTier</span><span class="o">.</span><span class="n">TIER_1_LOCAL_CAM</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"BCR </span><span class="si">{</span><span class="n">bcr</span><span class="o">.</span><span class="n">bcr_number</span><span class="si">}</span><span class="s2"> is Tier 1 (local CAM). "</span>
+                    <span class="sa">f</span><span class="s2">"MR drawdowns require Tier 2 (Project CCB) or "</span>
+                    <span class="sa">f</span><span class="s2">"Tier 3 (Programme Board) authorisation."</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+    <span class="c1"># --- Create the transaction ledger entry ---</span>
+    <span class="n">transaction</span> <span class="o">=</span> <span class="n">ManagementReserveTransaction</span><span class="p">(</span>
+        <span class="n">pool_id</span><span class="o">=</span><span class="n">pool_id</span><span class="p">,</span>
+        <span class="n">bcr_id</span><span class="o">=</span><span class="n">bcr_id</span><span class="p">,</span>
+        <span class="n">transaction_type</span><span class="o">=</span><span class="n">TransactionType</span><span class="o">.</span><span class="n">DRAWDOWN_TO_WBS</span><span class="p">,</span>
+        <span class="n">amount</span><span class="o">=</span><span class="n">amount_decimal</span><span class="p">,</span>
+        <span class="n">target_portfolio_node_id</span><span class="o">=</span><span class="n">target_node_id</span><span class="p">,</span>
+        <span class="n">justification</span><span class="o">=</span><span class="n">justification</span><span class="p">,</span>
+        <span class="n">authorized_by_user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="n">transaction_timestamp</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">transaction</span><span class="p">)</span>
+
+    <span class="c1"># --- Decrement pool balance ---</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">current_balance</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">current_balance</span> <span class="o">-</span> <span class="n">amount_decimal</span>
+    <span class="n">pool</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+
+    <span class="c1"># --- Increment target node BAC ---</span>
+    <span class="k">if</span> <span class="n">target_node</span><span class="o">.</span><span class="n">bac_cost</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">target_node</span><span class="o">.</span><span class="n">bac_cost</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.00"</span><span class="p">)</span>
+    <span class="n">target_node</span><span class="o">.</span><span class="n">bac_cost</span> <span class="o">=</span> <span class="n">target_node</span><span class="o">.</span><span class="n">bac_cost</span> <span class="o">+</span> <span class="n">amount_decimal</span>
+
+    <span class="c1"># --- Record in ForensicAuditLog ---</span>
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">authorising_user</span><span class="o">.</span><span class="n">email</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"user:</span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"MR_DRAWDOWN"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"ManagementReserveTransaction"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">transaction</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"pool_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">pool_id</span><span class="p">),</span>
+            <span class="s2">"target_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_node_id</span><span class="p">),</span>
+            <span class="s2">"amount"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">amount_decimal</span><span class="p">),</span>
+            <span class="s2">"bcr_id"</span><span class="p">:</span> <span class="n">bcr_id</span><span class="p">,</span>
+            <span class="s2">"justification"</span><span class="p">:</span> <span class="n">justification</span><span class="p">,</span>
+            <span class="s2">"pool_balance_before"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">current_balance</span> <span class="o">+</span> <span class="n">amount_decimal</span><span class="p">),</span>
+            <span class="s2">"pool_balance_after"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">current_balance</span><span class="p">),</span>
+            <span class="s2">"target_node_bac_before"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_node</span><span class="o">.</span><span class="n">bac_cost</span> <span class="o">-</span> <span class="n">amount_decimal</span><span class="p">),</span>
+            <span class="s2">"target_node_bac_after"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">target_node</span><span class="o">.</span><span class="n">bac_cost</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="sa">f</span><span class="s2">"MR_DRAWDOWN: </span><span class="si">{</span><span class="n">pool</span><span class="o">.</span><span class="n">currency_code</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">amount_decimal</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+
+    <span class="c1"># --- Commit the transaction ---</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">transaction</span></div>
+
+
+
+<div class="viewcode-block" id="get_reserve_status">
+<a class="viewcode-back" href="../../../modules.html#app.services.reserve_governance.get_reserve_status">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_reserve_status</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Get the current status of a project's Management Reserve.</span>
+
+<span class="sd">    Returns the reserve pool details, total amounts drawn down and returned,</span>
+<span class="sd">    and a list of all transactions ordered by timestamp.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    project_id : str</span>
+<span class="sd">        UUID of the root Project/Programme node.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing:</span>
+
+<span class="sd">        - **pool** : dict or None — Reserve pool details (id,</span>
+<span class="sd">          portfolio_node_id, total_initial_budget, current_balance,</span>
+<span class="sd">          currency_code, created_at, updated_at).</span>
+<span class="sd">        - **total_drawn_down** : float — Total amount drawn down from</span>
+<span class="sd">          the reserve (sum of DRAWDOWN_TO_WBS transactions).</span>
+<span class="sd">        - **total_returned** : float — Total amount returned to the</span>
+<span class="sd">          reserve (sum of RETURN_TO_RESERVE transactions).</span>
+<span class="sd">        - **transactions** : list[dict] — List of all transactions</span>
+<span class="sd">          ordered by timestamp (newest first).</span>
+<span class="sd">    """</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ManagementReservePool</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ManagementReservePool</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">project_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">pool</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"pool"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"total_drawn_down"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">"total_returned"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">"transactions"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+
+    <span class="c1"># Fetch all transactions for this pool</span>
+    <span class="n">transactions</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ManagementReserveTransaction</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ManagementReserveTransaction</span><span class="o">.</span><span class="n">pool_id</span> <span class="o">==</span> <span class="n">pool</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ManagementReserveTransaction</span><span class="o">.</span><span class="n">transaction_timestamp</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Calculate totals by transaction type</span>
+    <span class="n">total_drawn_down</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.00"</span><span class="p">)</span>
+    <span class="n">total_returned</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.00"</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">tx</span> <span class="ow">in</span> <span class="n">transactions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tx</span><span class="o">.</span><span class="n">transaction_type</span> <span class="o">==</span> <span class="n">TransactionType</span><span class="o">.</span><span class="n">DRAWDOWN_TO_WBS</span><span class="p">:</span>
+            <span class="n">total_drawn_down</span> <span class="o">+=</span> <span class="n">tx</span><span class="o">.</span><span class="n">amount</span>
+        <span class="k">elif</span> <span class="n">tx</span><span class="o">.</span><span class="n">transaction_type</span> <span class="o">==</span> <span class="n">TransactionType</span><span class="o">.</span><span class="n">RETURN_TO_RESERVE</span><span class="p">:</span>
+            <span class="n">total_returned</span> <span class="o">+=</span> <span class="n">tx</span><span class="o">.</span><span class="n">amount</span>
+
+    <span class="c1"># Build pool response</span>
+    <span class="n">pool_data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+        <span class="s2">"total_initial_budget"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">total_initial_budget</span><span class="p">),</span>
+        <span class="s2">"current_balance"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">current_balance</span><span class="p">),</span>
+        <span class="s2">"currency_code"</span><span class="p">:</span> <span class="n">pool</span><span class="o">.</span><span class="n">currency_code</span><span class="p">,</span>
+        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">pool</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">pool</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"updated_at"</span><span class="p">:</span> <span class="n">pool</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">pool</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Build transaction list</span>
+    <span class="n">transaction_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">tx</span> <span class="ow">in</span> <span class="n">transactions</span><span class="p">:</span>
+        <span class="n">transaction_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"pool_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">pool_id</span><span class="p">),</span>
+            <span class="s2">"transaction_type"</span><span class="p">:</span> <span class="n">tx</span><span class="o">.</span><span class="n">transaction_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s2">"amount"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">amount</span><span class="p">),</span>
+            <span class="s2">"target_portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">target_portfolio_node_id</span><span class="p">),</span>
+            <span class="s2">"bcr_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">bcr_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">tx</span><span class="o">.</span><span class="n">bcr_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"risk_item_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">tx</span><span class="o">.</span><span class="n">risk_item_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">tx</span><span class="o">.</span><span class="n">risk_item_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"justification"</span><span class="p">:</span> <span class="n">tx</span><span class="o">.</span><span class="n">justification</span><span class="p">,</span>
+            <span class="s2">"authorized_by_user_id"</span><span class="p">:</span> <span class="n">tx</span><span class="o">.</span><span class="n">authorized_by_user_id</span><span class="p">,</span>
+            <span class="s2">"transaction_timestamp"</span><span class="p">:</span> <span class="p">(</span>
+                <span class="n">tx</span><span class="o">.</span><span class="n">transaction_timestamp</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">tx</span><span class="o">.</span><span class="n">transaction_timestamp</span>
+                <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+        <span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"pool"</span><span class="p">:</span> <span class="n">pool_data</span><span class="p">,</span>
+        <span class="s2">"total_drawn_down"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_drawn_down</span><span class="p">),</span>
+        <span class="s2">"total_returned"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_returned</span><span class="p">),</span>
+        <span class="s2">"transactions"</span><span class="p">:</span> <span class="n">transaction_list</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="create_reserve_pool">
+<a class="viewcode-back" href="../../../modules.html#app.services.reserve_governance.create_reserve_pool">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_reserve_pool</span><span class="p">(</span>
+    <span class="n">portfolio_node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">total_initial_budget</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">currency_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ManagementReservePool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a new Management Reserve pool for a project.</span>
+
+<span class="sd">    Initialises a reserve pool with the specified budget and records an</span>
+<span class="sd">    INITIAL_ALLOCATION transaction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    portfolio_node_id : str</span>
+<span class="sd">        UUID of the root Project/Programme node owning this reserve.</span>
+<span class="sd">    total_initial_budget : float</span>
+<span class="sd">        Initial budget allocated to the reserve pool.</span>
+<span class="sd">    currency_code : str</span>
+<span class="sd">        3-letter ISO currency code (default 'GBP').</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        ID of the user creating the pool.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ManagementReservePool</span>
+<span class="sd">        The newly created reserve pool.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException(400)</span>
+<span class="sd">        A reserve pool already exists for this project.</span>
+<span class="sd">    HTTPException(404)</span>
+<span class="sd">        The target portfolio node was not found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check for existing pool</span>
+    <span class="n">existing_pool</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ManagementReservePool</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ManagementReservePool</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">portfolio_node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">existing_pool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"A Management Reserve pool already exists for project "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">portfolio_node_id</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Verify the target node exists</span>
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">portfolio_node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">target_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Portfolio node </span><span class="si">{</span><span class="n">portfolio_node_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">budget_decimal</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">total_initial_budget</span><span class="p">))</span>
+
+    <span class="c1"># Create the pool</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="n">ManagementReservePool</span><span class="p">(</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+        <span class="n">total_initial_budget</span><span class="o">=</span><span class="n">budget_decimal</span><span class="p">,</span>
+        <span class="n">current_balance</span><span class="o">=</span><span class="n">budget_decimal</span><span class="p">,</span>
+        <span class="n">currency_code</span><span class="o">=</span><span class="n">currency_code</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Record the initial allocation transaction</span>
+    <span class="n">initial_tx</span> <span class="o">=</span> <span class="n">ManagementReserveTransaction</span><span class="p">(</span>
+        <span class="n">pool_id</span><span class="o">=</span><span class="n">pool</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">transaction_type</span><span class="o">=</span><span class="n">TransactionType</span><span class="o">.</span><span class="n">INITIAL_ALLOCATION</span><span class="p">,</span>
+        <span class="n">amount</span><span class="o">=</span><span class="n">budget_decimal</span><span class="p">,</span>
+        <span class="n">target_portfolio_node_id</span><span class="o">=</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+        <span class="n">justification</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Initial Management Reserve allocation: </span><span class="si">{</span><span class="n">currency_code</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">budget_decimal</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">authorized_by_user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="n">transaction_timestamp</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">initial_tx</span><span class="p">)</span>
+
+    <span class="c1"># Record in ForensicAuditLog</span>
+    <span class="n">authorising_user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">authorising_user</span><span class="o">.</span><span class="n">email</span> <span class="k">if</span> <span class="n">authorising_user</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"user:</span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"MR_POOL_CREATED"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"ManagementReservePool"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+            <span class="s2">"total_initial_budget"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">budget_decimal</span><span class="p">),</span>
+            <span class="s2">"currency_code"</span><span class="p">:</span> <span class="n">currency_code</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="sa">f</span><span class="s2">"MR_POOL_CREATED: </span><span class="si">{</span><span class="n">currency_code</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">budget_decimal</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">pool</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

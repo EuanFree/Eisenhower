@@ -1,0 +1,1152 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.core.abac &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.core.abac</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.core.abac</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Attribute-Based Access Control (ABAC) for classified node access.</span>
+
+<span class="sd">This module implements an Attribute-Based Access Control (ABAC) system that enforces</span>
+<span class="sd">security clearance policies on hierarchical nodes within the Eisenhower Portfolio</span>
+<span class="sd">Management System. It is designed for defence and government projects where information</span>
+<span class="sd">compartmentalisation is mandatory.</span>
+
+<span class="sd">Core Concepts</span>
+<span class="sd">~~~~~~~~~~~~~</span>
+
+<span class="sd">**Security Classification Levels**</span>
+
+<span class="sd">Nodes are assigned a security classification from a predefined hierarchy:</span>
+
+<span class="sd">- ``OFFICIAL`` (Level 0) — Unrestricted public information.</span>
+<span class="sd">- ``OFFICIAL_SENSITIVE`` (Level 1) — Sensitive but unclassified information.</span>
+<span class="sd">- ``SECRET`` (Level 2) — Classified information requiring appropriate clearance.</span>
+<span class="sd">- ``TOP_SECRET`` (Level 3) — Highest classification level requiring top-secret clearance.</span>
+
+<span class="sd">A user can access a node only if their clearance level is greater than or equal to</span>
+<span class="sd">the node's classification level.</span>
+
+<span class="sd">**Caveats**</span>
+
+<span class="sd">In addition to clearance levels, nodes may have caveats (e.g., ``NOFORN``,</span>
+<span class="sd">``ORCON``, ``TS//SI``) that further restrict access. A user must possess ALL</span>
+<span class="sd">caveats assigned to a node to gain access. Caveats are checked as a subset:</span>
+<span class="sd">the node's caveats must be a subset of the user's caveats.</span>
+
+<span class="sd">**Ghost-Node Masking**</span>
+
+<span class="sd">When a user lacks clearance for a parent node but has clearance for some</span>
+<span class="sd">descendant nodes, the system preserves the tree hierarchy by returning a</span>
+<span class="sd">masked "ghost" representation of the classified node. The ghost node retains</span>
+<span class="sd">structural information (ID, path, parent reference) but replaces all sensitive</span>
+<span class="sd">data with ``[RESTRICTED]``. This ensures the tree structure remains navigable</span>
+<span class="sd">while preventing unauthorized data disclosure.</span>
+
+<span class="sd">Architecture</span>
+<span class="sd">~~~~~~~~~~~~~</span>
+
+<span class="sd">The module provides three layers of functionality:</span>
+
+<span class="sd">1. **Clearance Checks** — Low-level functions for comparing clearance levels</span>
+<span class="sd">   and caveats between users and nodes.</span>
+
+<span class="sd">2. **Node Visibility** — Higher-level functions that combine clearance and</span>
+<span class="sd">   caveat checks to determine overall node visibility.</span>
+
+<span class="sd">3. **ABAC Filtering** — Batch processing functions that apply ABAC rules to</span>
+<span class="sd">   entire node trees, creating ghost nodes where needed.</span>
+
+<span class="sd">4. **FastAPI Dependencies** — Ready-to-use dependency injectors for</span>
+<span class="sd">   enforcing ABAC rules in API endpoints.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">The primary entry point for filtering node trees is :func:`apply_abac_filtering`.</span>
+<span class="sd">For individual node checks, use :func:`is_node_visible`.</span>
+
+<span class="sd">For FastAPI endpoints, use the dependency functions:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    @router.get("/nodes/{node_id}")</span>
+<span class="sd">    def get_node(</span>
+<span class="sd">        node_id: str,</span>
+<span class="sd">        user_clearance: SecurityClassification = Depends(get_user_clearance),</span>
+<span class="sd">        db: Session = Depends(get_db),</span>
+<span class="sd">    ):</span>
+<span class="sd">        node = db.query(UniversalBreakdownNode).get(node_id)</span>
+<span class="sd">        return check_node_access(node, user_clearance[0], user_clearance[1])</span>
+
+<span class="sd">Security Considerations</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- This module enforces access control at the application level. Database-level</span>
+<span class="sd">  row security should also be implemented for defence-in-depth.</span>
+<span class="sd">- Ghost nodes reveal the existence of classified content. For systems requiring</span>
+<span class="sd">  complete deniability, consider filtering out classified nodes entirely.</span>
+<span class="sd">- Caveat checking is case-sensitive. Ensure caveats are normalised at the</span>
+<span class="sd">  data entry level.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SecurityClassification</span><span class="p">,</span> <span class="n">UniversalBreakdownNode</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Clearance level hierarchy</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="n">CLEARANCE_LEVELS</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">SecurityClassification</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL_SENSITIVE</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">SECRET</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">TOP_SECRET</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="sd">"""Mapping of security classification levels to numeric hierarchy values.</span>
+
+<span class="sd">This dictionary defines the ordering of security classifications from lowest</span>
+<span class="sd">(OFFICIAL = 0) to highest (TOP_SECRET = 3). Clearance checks compare these</span>
+<span class="sd">numeric values to determine if a user's clearance is sufficient for a node's</span>
+<span class="sd">classification.</span>
+
+<span class="sd">The numeric values allow simple integer comparison: a user can access a node</span>
+<span class="sd">if their clearance level number is greater than or equal to the node's</span>
+<span class="sd">classification number.</span>
+
+<span class="sd">Example</span>
+<span class="sd">~~~~~~~</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    # A TOP_SECRET user (level 3) can access a SECRET node (level 2)</span>
+<span class="sd">    user_level = CLEARANCE_LEVELS[SecurityClassification.TOP_SECRET]   # 3</span>
+<span class="sd">    node_level = CLEARANCE_LEVELS[SecurityClassification.SECRET]       # 2</span>
+<span class="sd">    has_access = user_level &gt;= node_level  # True</span>
+<span class="sd">"""</span>
+
+
+<div class="viewcode-block" id="has_sufficient_clearance">
+<a class="viewcode-back" href="../../../modules.html#app.core.abac.has_sufficient_clearance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">has_sufficient_clearance</span><span class="p">(</span>
+    <span class="n">user_clearance</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">node_classification</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if a user's clearance level is sufficient to access a classified node.</span>
+
+<span class="sd">    This function performs the fundamental clearance comparison that underpins</span>
+<span class="sd">    all ABAC decisions in the system. It converts both the user's clearance</span>
+<span class="sd">    level and the node's classification into numeric values using the</span>
+<span class="sd">    :data:`CLEARANCE_LEVELS` mapping, then compares them numerically.</span>
+
+<span class="sd">    The clearance model follows a simple hierarchy: higher clearance levels</span>
+<span class="sd">    grant access to lower-classified content. For example, a user with</span>
+<span class="sd">    ``TOP_SECRET`` clearance (level 3) can access nodes classified as</span>
+<span class="sd">    ``SECRET`` (level 2), ``OFFICIAL_SENSITIVE`` (level 1), or ``OFFICIAL``</span>
+<span class="sd">    (level 0).</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. Look up the numeric value for ``user_clearance`` in :data:`CLEARANCE_LEVELS`.</span>
+<span class="sd">       If the clearance level is not found, default to ``0`` (OFFICIAL).</span>
+<span class="sd">    2. Look up the numeric value for ``node_classification`` in :data:`CLEARANCE_LEVELS`.</span>
+<span class="sd">       If the classification is not found, default to ``0`` (OFFICIAL).</span>
+<span class="sd">    3. Return ``True`` if user level &gt;= node level, otherwise ``False``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        user_clearance: The security clearance level of the authenticated user,</span>
+<span class="sd">            represented as a :class:`SecurityClassification` enum value.</span>
+<span class="sd">            Valid values are ``OFFICIAL``, ``OFFICIAL_SENSITIVE``, ``SECRET``,</span>
+<span class="sd">            and ``TOP_SECRET``.</span>
+<span class="sd">        node_classification: The security classification of the target node,</span>
+<span class="sd">            represented as a :class:`SecurityClassification` enum value.</span>
+<span class="sd">            This indicates the minimum clearance required to access the node.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``True`` if the user's clearance level is greater than or equal to</span>
+<span class="sd">        the node's classification level, indicating the user has sufficient</span>
+<span class="sd">        clearance to access the node. Returns ``False`` if the user's</span>
+<span class="sd">        clearance is below the required level.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    ~~~~~~~</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from app.models.models import SecurityClassification</span>
+<span class="sd">        from app.core.abac import has_sufficient_clearance</span>
+
+<span class="sd">        # TOP_SECRET user accessing a SECRET node</span>
+<span class="sd">        result = has_sufficient_clearance(</span>
+<span class="sd">            SecurityClassification.TOP_SECRET,</span>
+<span class="sd">            SecurityClassification.SECRET,</span>
+<span class="sd">        )</span>
+<span class="sd">        print(result)  # True</span>
+
+<span class="sd">        # OFFICIAL user accessing a SECRET node</span>
+<span class="sd">        result = has_sufficient_clearance(</span>
+<span class="sd">            SecurityClassification.OFFICIAL,</span>
+<span class="sd">            SecurityClassification.SECRET,</span>
+<span class="sd">        )</span>
+<span class="sd">        print(result)  # False</span>
+<span class="sd">    """</span>
+    <span class="n">user_level</span> <span class="o">=</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">node_level</span> <span class="o">=</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_classification</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">user_level</span> <span class="o">&gt;=</span> <span class="n">node_level</span></div>
+
+
+
+<div class="viewcode-block" id="has_required_caveats">
+<a class="viewcode-back" href="../../../modules.html#app.core.abac.has_required_caveats">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">has_required_caveats</span><span class="p">(</span>
+    <span class="n">user_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">node_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if a user possesses all the security caveats required to access a node.</span>
+
+<span class="sd">    Security caveats are additional restrictions beyond the basic clearance level.</span>
+<span class="sd">    Common caveats include:</span>
+
+<span class="sd">    - ``NOFORN`` — Not releasable to foreign nationals.</span>
+<span class="sd">    - ``ORCON`` — Originator-controlled distribution.</span>
+<span class="sd">    - ``TS//SI`` — Top Secret/Sensitive Compartmented Information.</span>
+<span class="sd">    - ``TS//SCI`` — Top Secret/Special Compartmented Information.</span>
+<span class="sd">    - ``REL TO`` — Releasable only to specific countries or agencies.</span>
+
+<span class="sd">    This function implements a subset check: the node's caveats must be a</span>
+<span class="sd">    complete subset of the user's caveats. In other words, the user must hold</span>
+<span class="sd">    EVERY caveat that the node requires. Having extra caveats beyond what the</span>
+<span class="sd">    node requires does not cause a failure — it only matters that all required</span>
+<span class="sd">    caveats are present.</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. If ``node_caveats`` is ``None`` or empty, return ``True`` immediately.</span>
+<span class="sd">       A node with no caveats imposes no additional restrictions beyond</span>
+<span class="sd">       the clearance level check.</span>
+<span class="sd">    2. If ``user_caveats`` is ``None`` or empty but the node requires caveats,</span>
+<span class="sd">       return ``False`` — the user cannot satisfy any caveat requirement.</span>
+<span class="sd">    3. Convert both lists to sets for efficient subset comparison.</span>
+<span class="sd">    4. Return ``True`` if node caveats are a subset of user caveats,</span>
+<span class="sd">       otherwise ``False``.</span>
+
+<span class="sd">    Edge Cases</span>
+<span class="sd">    ~~~~~~~~~~</span>
+
+<span class="sd">    - **Empty node caveats**: Treated as "no additional restrictions"; any</span>
+<span class="sd">      user with sufficient clearance passes this check.</span>
+<span class="sd">    - **Empty user caveats**: If the node requires any caveats, a user with</span>
+<span class="sd">      no caveats fails the check. If the node has no caveats, the user passes.</span>
+<span class="sd">    - **Case sensitivity**: Caveat comparison is case-sensitive. ``NOFORN``</span>
+<span class="sd">      and ``noforn`` are treated as different caveats. Ensure data entry</span>
+<span class="sd">      normalises caveat strings to a consistent case.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        user_caveats: A list of caveat strings that the authenticated user</span>
+<span class="sd">            holds, or ``None`` if the user has no caveats. Each string</span>
+<span class="sd">            represents a specific security caveat (e.g., ``"NOFORN"``).</span>
+<span class="sd">        node_caveats: A list of caveat strings required to access the target</span>
+<span class="sd">            node, or ``None`` if the node has no caveat requirements.</span>
+<span class="sd">            Each string represents a specific security caveat that must be</span>
+<span class="sd">            held by the accessing user.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``True`` if the user holds all caveats required by the node, meaning</span>
+<span class="sd">        the node's caveat set is a subset of the user's caveat set. Returns</span>
+<span class="sd">        ``False`` if the user is missing one or more required caveats.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    ~~~~~~~</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from app.core.abac import has_required_caveats</span>
+
+<span class="sd">        # User has NOFORN and ORCON; node requires NOFORN only</span>
+<span class="sd">        result = has_required_caveats(</span>
+<span class="sd">            user_caveats=["NOFORN", "ORCON"],</span>
+<span class="sd">            node_caveats=["NOFORN"],</span>
+<span class="sd">        )</span>
+<span class="sd">        print(result)  # True</span>
+
+<span class="sd">        # User has NOFORN; node requires NOFORN and ORCON</span>
+<span class="sd">        result = has_required_caveats(</span>
+<span class="sd">            user_caveats=["NOFORN"],</span>
+<span class="sd">            node_caveats=["NOFORN", "ORCON"],</span>
+<span class="sd">        )</span>
+<span class="sd">        print(result)  # False — user missing ORCON</span>
+
+<span class="sd">        # Node has no caveats; user has no caveats</span>
+<span class="sd">        result = has_required_caveats(</span>
+<span class="sd">            user_caveats=[],</span>
+<span class="sd">            node_caveats=[],</span>
+<span class="sd">        )</span>
+<span class="sd">        print(result)  # True — no restrictions</span>
+<span class="sd">    """</span>
+    <span class="c1"># If node has no caveats, anyone with sufficient clearance can access</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node_caveats</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># If user has no caveats but node requires some, deny access</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user_caveats</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Check if node caveats are a subset of user caveats</span>
+    <span class="n">user_caveat_set</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">user_caveats</span><span class="p">)</span>
+    <span class="n">node_caveat_set</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">node_caveats</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">node_caveat_set</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">user_caveat_set</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="is_node_visible">
+<a class="viewcode-back" href="../../../modules.html#app.core.abac.is_node_visible">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_node_visible</span><span class="p">(</span>
+    <span class="n">user_clearance</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">user_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Determine if a node is fully visible to a user based on ABAC rules.</span>
+
+<span class="sd">    This is the primary visibility check function that combines both clearance</span>
+<span class="sd">    level and caveat checks into a single decision. A node is considered</span>
+<span class="sd">    visible only when BOTH conditions are met:</span>
+
+<span class="sd">    1. The user's clearance level is greater than or equal to the node's</span>
+<span class="sd">       security classification (checked via :func:`has_sufficient_clearance`).</span>
+<span class="sd">    2. The user holds all caveats required by the node (checked via</span>
+<span class="sd">       :func:`has_required_caveats`).</span>
+
+<span class="sd">    If either check fails, the node is not visible to the user. This function</span>
+<span class="sd">    uses short-circuit evaluation: if the clearance check fails, the caveat</span>
+<span class="sd">    check is not performed, as there is no need to continue.</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. Call :func:`has_sufficient_clearance` with the user's clearance and</span>
+<span class="sd">       the node's security classification.</span>
+<span class="sd">    2. If clearance is insufficient, return ``False`` immediately.</span>
+<span class="sd">    3. Call :func:`has_required_caveats` with the user's caveats and the</span>
+<span class="sd">       node's caveats.</span>
+<span class="sd">    4. If caveats are insufficient, return ``False``.</span>
+<span class="sd">    5. If both checks pass, return ``True``.</span>
+
+<span class="sd">    This function is used by :func:`apply_abac_filtering` to determine</span>
+<span class="sd">    whether each node in a tree should be returned as a full node, a ghost</span>
+<span class="sd">    node, or excluded entirely.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        user_clearance: The security clearance level of the authenticated user,</span>
+<span class="sd">            represented as a :class:`SecurityClassification` enum value.</span>
+<span class="sd">            This determines the maximum classification level the user can access.</span>
+<span class="sd">        user_caveats: A list of caveat strings that the authenticated user</span>
+<span class="sd">            holds, or ``None`` if the user has no caveats. These are compared</span>
+<span class="sd">            against the node's required caveats.</span>
+<span class="sd">        node: The :class:`UniversalBreakdownNode` instance to check visibility for.</span>
+<span class="sd">            This object contains the node's security classification and caveat</span>
+<span class="sd">            requirements that are compared against the user's credentials.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``True`` if the node is fully visible to the user, meaning the user</span>
+<span class="sd">        has both sufficient clearance level and all required caveats. Returns</span>
+<span class="sd">        ``False`` if the user lacks either the required clearance level or</span>
+<span class="sd">        one or more required caveats.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    ~~~~~~~</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from app.models.models import SecurityClassification, UniversalBreakdownNode</span>
+<span class="sd">        from app.core.abac import is_node_visible</span>
+
+<span class="sd">        # Create a mock node classified as SECRET with NOFORN caveat</span>
+<span class="sd">        node = UniversalBreakdownNode(</span>
+<span class="sd">            security_classification=SecurityClassification.SECRET,</span>
+<span class="sd">            caveats=["NOFORN"],</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # TOP_SECRET user with NOFORN caveat — should see the node</span>
+<span class="sd">        result = is_node_visible(</span>
+<span class="sd">            user_clearance=SecurityClassification.TOP_SECRET,</span>
+<span class="sd">            user_caveats=["NOFORN"],</span>
+<span class="sd">            node=node,</span>
+<span class="sd">        )</span>
+<span class="sd">        print(result)  # True</span>
+
+<span class="sd">        # SECRET user without NOFORN caveat — should NOT see the node</span>
+<span class="sd">        result = is_node_visible(</span>
+<span class="sd">            user_clearance=SecurityClassification.SECRET,</span>
+<span class="sd">            user_caveats=[],</span>
+<span class="sd">            node=node,</span>
+<span class="sd">        )</span>
+<span class="sd">        print(result)  # False — missing NOFORN caveat</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check clearance level first — short-circuit if insufficient</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_sufficient_clearance</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Check caveats — only reached if clearance is sufficient</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_required_caveats</span><span class="p">(</span><span class="n">user_caveats</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">caveats</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Ghost-Node masking for hierarchy preservation</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="create_ghost_node">
+<a class="viewcode-back" href="../../../modules.html#app.core.abac.create_ghost_node">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_ghost_node</span><span class="p">(</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Create a masked 'ghost' representation of a classified node for hierarchy preservation.</span>
+
+<span class="sd">    When a user lacks the security clearance to view a node's content but has</span>
+<span class="sd">    clearance to view some of its descendant nodes, the system cannot simply</span>
+<span class="sd">    remove the classified node from the tree — doing so would break the</span>
+<span class="sd">    hierarchical structure and make descendant nodes appear as orphans.</span>
+
+<span class="sd">    Instead, this function creates a "ghost" node that preserves the structural</span>
+<span class="sd">    information (ID, parent reference, tree path, and type) while replacing</span>
+<span class="sd">    all sensitive content with the placeholder string ``[RESTRICTED]``. The</span>
+<span class="sd">    ghost node includes an ``is_masked: True`` flag so the frontend can render</span>
+<span class="sd">    it differently (e.g., greyed out with a lock icon).</span>
+
+<span class="sd">    Fields Preserved in Ghost Nodes</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    The following fields are preserved to maintain tree structure:</span>
+
+<span class="sd">    - ``id`` — Unique identifier for the node.</span>
+<span class="sd">    - ``parent_id`` — Reference to the parent node, or ``None`` for root nodes.</span>
+<span class="sd">    - ``tree_type`` — Type of the tree (WBS, RBS, LBS, etc.).</span>
+<span class="sd">    - ``path`` — Hierarchical path string for tree navigation.</span>
+<span class="sd">    - ``is_active`` — Whether the node is active (structural, not sensitive).</span>
+<span class="sd">    - ``created_at`` / ``updated_at`` — Timestamps (metadata, not content).</span>
+
+<span class="sd">    Fields Masked in Ghost Nodes</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    The following fields are replaced with ``[RESTRICTED]``:</span>
+
+<span class="sd">    - ``code`` — Node code/identifier.</span>
+<span class="sd">    - ``name`` — Human-readable node name.</span>
+<span class="sd">    - ``security_classification`` — Classification level.</span>
+<span class="sd">    - ``caveats`` — Security caveats.</span>
+<span class="sd">    - ``custom_attributes`` — Any custom attributes.</span>
+<span class="sd">    - All node-specific fields (delivery mode, dates, percent complete, etc.).</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. Create a base dictionary with structural fields from the node.</span>
+<span class="sd">    2. Replace all sensitive content fields with ``[RESTRICTED]``.</span>
+<span class="sd">    3. Set ``is_masked`` to ``True`` to flag this as a ghost node.</span>
+<span class="sd">    4. Check for node-specific fields using ``hasattr`` and mask them if present.</span>
+<span class="sd">       This handles different node types (portfolio, resource, location) that</span>
+<span class="sd">       have additional fields beyond the base UniversalBreakdownNode.</span>
+<span class="sd">    5. Return the ghost dictionary.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        node: The :class:`UniversalBreakdownNode` instance to mask. This node</span>
+<span class="sd">            exists in the database and has sensitive content that the current</span>
+<span class="sd">            user is not authorised to view, but its descendants may be visible.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary representing the masked ghost node. The dictionary contains</span>
+<span class="sd">        the same keys as a full node representation (from :func:`node_to_dict`),</span>
+<span class="sd">        but all sensitive values are replaced with ``[RESTRICTED]``. The key</span>
+<span class="sd">        ``is_masked`` is set to ``True`` to indicate this is a ghost node.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    ~~~~~~~</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from app.models.models import UniversalBreakdownNode</span>
+<span class="sd">        from app.core.abac import create_ghost_node</span>
+
+<span class="sd">        # Create a mock classified node</span>
+<span class="sd">        node = UniversalBreakdownNode(</span>
+<span class="sd">            id="abc123",</span>
+<span class="sd">            code="A1.2",</span>
+<span class="sd">            name="Classified Subsystem",</span>
+<span class="sd">            path="1.A1.A1.2",</span>
+<span class="sd">        )</span>
+
+<span class="sd">        ghost = create_ghost_node(node)</span>
+<span class="sd">        print(ghost["code"])       # "[RESTRICTED]"</span>
+<span class="sd">        print(ghost["name"])       # "[RESTRICTED]"</span>
+<span class="sd">        print(ghost["id"])         # "abc123" (preserved)</span>
+<span class="sd">        print(ghost["is_masked"])  # True</span>
+<span class="sd">    """</span>
+    <span class="c1"># Get the base attributes from the node</span>
+    <span class="n">ghost</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"parent_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">parent_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"tree_type"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">tree_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">tree_type</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"code"</span><span class="p">:</span> <span class="s2">"[RESTRICTED]"</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"[RESTRICTED]"</span><span class="p">,</span>
+        <span class="s2">"path"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>  <span class="c1"># Keep path for tree structure</span>
+        <span class="s2">"security_classification"</span><span class="p">:</span> <span class="s2">"[RESTRICTED]"</span><span class="p">,</span>
+        <span class="s2">"caveats"</span><span class="p">:</span> <span class="s2">"[RESTRICTED]"</span><span class="p">,</span>
+        <span class="s2">"odac_permissions"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"custom_attributes"</span><span class="p">:</span> <span class="s2">"[RESTRICTED]"</span><span class="p">,</span>
+        <span class="s2">"is_active"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="s2">"is_masked"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># Flag indicating this is a masked node</span>
+        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"updated_at"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Add node-specific fields if they exist (for different node types)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'delivery_mode'</span><span class="p">):</span>
+        <span class="n">ghost</span><span class="p">[</span><span class="s2">"delivery_mode"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"[RESTRICTED]"</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'planned_start_date'</span><span class="p">):</span>
+        <span class="n">ghost</span><span class="p">[</span><span class="s2">"planned_start_date"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"[RESTRICTED]"</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'planned_end_date'</span><span class="p">):</span>
+        <span class="n">ghost</span><span class="p">[</span><span class="s2">"planned_end_date"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"[RESTRICTED]"</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'percent_complete'</span><span class="p">):</span>
+        <span class="n">ghost</span><span class="p">[</span><span class="s2">"percent_complete"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"[RESTRICTED]"</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'resource_type'</span><span class="p">):</span>
+        <span class="n">ghost</span><span class="p">[</span><span class="s2">"resource_type"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"[RESTRICTED]"</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'tier'</span><span class="p">):</span>
+        <span class="n">ghost</span><span class="p">[</span><span class="s2">"tier"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"[RESTRICTED]"</span>
+
+    <span class="k">return</span> <span class="n">ghost</span></div>
+
+
+
+<div class="viewcode-block" id="apply_abac_filtering">
+<a class="viewcode-back" href="../../../modules.html#app.core.abac.apply_abac_filtering">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_abac_filtering</span><span class="p">(</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">],</span>
+    <span class="n">user_clearance</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">user_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Apply ABAC filtering to an entire list of nodes, producing a visibility-aware result.</span>
+
+<span class="sd">    This is the main entry point for filtering node trees based on a user's</span>
+<span class="sd">    security credentials. It processes a flat list of nodes and returns a</span>
+<span class="sd">    filtered list where each node is represented according to the user's</span>
+<span class="sd">    access level:</span>
+
+<span class="sd">    - **Full visibility**: If the user has sufficient clearance and all required</span>
+<span class="sd">      caveats, the node is returned as a complete dictionary with all fields.</span>
+<span class="sd">    - **Partial visibility (ghost node)**: If the user lacks access to the node</span>
+<span class="sd">      but has access to at least one descendant, a masked "ghost" representation</span>
+<span class="sd">      is returned to preserve the tree structure.</span>
+<span class="sd">    - **No visibility**: If the user has no access to the node or any of its</span>
+<span class="sd">      descendants, the node is excluded from the results entirely.</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. **Build children map**: Construct a dictionary mapping each parent ID to</span>
+<span class="sd">       its list of child nodes. This enables efficient traversal of the tree</span>
+<span class="sd">       hierarchy without additional database queries.</span>
+
+<span class="sd">    2. **Define descendant visibility check**: Create a nested recursive function</span>
+<span class="sd">       ``has_visible_descendants`` that determines whether a node has any</span>
+<span class="sd">       visible descendants (direct children or deeper descendants).</span>
+
+<span class="sd">    3. **Process each node**: Iterate through the input node list and apply the</span>
+<span class="sd">       filtering logic:</span>
+
+<span class="sd">       a. Check if the node is fully visible using :func:`is_node_visible`.</span>
+<span class="sd">          If yes, convert it to a dictionary using :func:`node_to_dict` and</span>
+<span class="sd">          add to results.</span>
+
+<span class="sd">       b. If not fully visible, check if the node has any visible descendants</span>
+<span class="sd">          using ``has_visible_descendants``. If yes, create a ghost node using</span>
+<span class="sd">          :func:`create_ghost_node` and add to results.</span>
+
+<span class="sd">       c. If neither condition is met, exclude the node from results.</span>
+
+<span class="sd">    4. Return the filtered list of node dictionaries.</span>
+
+<span class="sd">    Performance Considerations</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    - The children map is built once and reused for all descendant checks.</span>
+<span class="sd">    - The ``has_visible_descendants`` function uses short-circuit evaluation:</span>
+<span class="sd">      it returns ``True`` as soon as it finds the first visible descendant,</span>
+<span class="sd">      avoiding unnecessary traversal.</span>
+<span class="sd">    - For very large trees (thousands of nodes), consider caching results</span>
+<span class="sd">      or using database-level filtering to reduce the initial node list.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        nodes: A list of :class:`UniversalBreakdownNode` instances to filter.</span>
+<span class="sd">            This should represent a complete tree or subtree, including all</span>
+<span class="sd">            ancestor and descendant relationships. The list is typically</span>
+<span class="sd">            retrieved from the database via a query that fetches all nodes</span>
+<span class="sd">            under a specific root.</span>
+<span class="sd">        user_clearance: The security clearance level of the authenticated user,</span>
+<span class="sd">            represented as a :class:`SecurityClassification` enum value.</span>
+<span class="sd">            This determines the maximum classification level the user can access.</span>
+<span class="sd">        user_caveats: A list of caveat strings that the authenticated user</span>
+<span class="sd">            holds, or ``None`` if the user has no caveats. These are compared</span>
+<span class="sd">            against each node's required caveats.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A list of dictionaries, where each dictionary represents a node.</span>
+<span class="sd">        The list contains only nodes that are either fully visible to the</span>
+<span class="sd">        user or have visible descendants (returned as ghost nodes). Nodes</span>
+<span class="sd">        that are completely invisible to the user are excluded. Each</span>
+<span class="sd">        dictionary has an ``is_masked`` key: ``False`` for full nodes,</span>
+<span class="sd">        ``True`` for ghost nodes.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    ~~~~~~~</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from app.models.models import SecurityClassification</span>
+<span class="sd">        from app.core.abac import apply_abac_filtering</span>
+
+<span class="sd">        # Assume we have a tree of nodes fetched from the database</span>
+<span class="sd">        nodes = db.query(UniversalBreakdownNode).all()</span>
+
+<span class="sd">        # Filter for a SECRET user with NOFORN caveat</span>
+<span class="sd">        filtered = apply_abac_filtering(</span>
+<span class="sd">            nodes=nodes,</span>
+<span class="sd">            user_clearance=SecurityClassification.SECRET,</span>
+<span class="sd">            user_caveats=["NOFORN"],</span>
+<span class="sd">        )</span>
+
+<span class="sd">        for node in filtered:</span>
+<span class="sd">            if node["is_masked"]:</span>
+<span class="sd">                print(f"Ghost node: {node['id']}")</span>
+<span class="sd">            else:</span>
+<span class="sd">                print(f"Visible node: {node['name']}")</span>
+<span class="sd">    """</span>
+    <span class="c1"># Build a map of parent_id to children for determining visibility</span>
+    <span class="n">children_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">parent_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">parent_id</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">parent_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">children_map</span><span class="p">:</span>
+            <span class="n">children_map</span><span class="p">[</span><span class="n">parent_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">children_map</span><span class="p">[</span><span class="n">parent_key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="c1"># Determine which nodes have visible descendants</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_visible_descendants</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Recursively check if a node has any visible descendants.</span>
+
+<span class="sd">        This nested function has access to the closure variables</span>
+<span class="sd">        ``children_map``, ``user_clearance``, and ``user_caveats``.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            node: The node to check for visible descendants.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ``True`` if the node has at least one visible descendant</span>
+<span class="sd">            (direct child or deeper), ``False`` otherwise.</span>
+<span class="sd">        """</span>
+        <span class="n">node_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">children_map</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children_map</span><span class="p">[</span><span class="n">node_key</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">has_visible_descendants</span><span class="p">(</span><span class="n">child</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Process each node and build the filtered result list</span>
+    <span class="n">result</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="c1"># Full visibility — convert node to complete dictionary</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_to_dict</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">has_visible_descendants</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="c1"># Partial visibility — create ghost node to preserve structure</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">create_ghost_node</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="c1"># Else: no visibility — exclude from results entirely</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="node_to_dict">
+<a class="viewcode-back" href="../../../modules.html#app.core.abac.node_to_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">node_to_dict</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Convert a UniversalBreakdownNode ORM instance to a serializable dictionary.</span>
+
+<span class="sd">    This function transforms a SQLAlchemy ORM model instance into a plain Python</span>
+<span class="sd">    dictionary that can be serialised to JSON for API responses. It handles the</span>
+<span class="sd">    polymorphic nature of the UniversalBreakdownNode model, which serves as a</span>
+<span class="sd">    base class for different node types (portfolio, resource, location, etc.).</span>
+
+<span class="sd">    The function uses ``hasattr`` checks to safely access node-specific fields</span>
+<span class="sd">    that may not exist on all node types. This ensures the function works</span>
+<span class="sd">    correctly regardless of the specific subclass of the node.</span>
+
+<span class="sd">    Fields Included</span>
+<span class="sd">    ~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    **Base fields** (always present):</span>
+
+<span class="sd">    - ``id`` — Unique node identifier as a string.</span>
+<span class="sd">    - ``parent_id`` — Parent node identifier as a string, or ``None`` for roots.</span>
+<span class="sd">    - ``version_id`` — Version number for optimistic locking (defaults to 1).</span>
+<span class="sd">    - ``tree_type`` — Type of tree (WBS, RBS, LBS, etc.) as a string value.</span>
+<span class="sd">    - ``code`` — Node code/identifier string.</span>
+<span class="sd">    - ``name`` — Human-readable node name.</span>
+<span class="sd">    - ``path`` — Hierarchical path string for tree navigation.</span>
+<span class="sd">    - ``security_classification`` — Classification level as a string value.</span>
+<span class="sd">    - ``caveats`` — List of security caveat strings.</span>
+<span class="sd">    - ``odac_permissions`` — Object-level access control permissions dictionary.</span>
+<span class="sd">    - ``custom_attributes`` — Dictionary of custom key-value attributes.</span>
+<span class="sd">    - ``is_active`` — Boolean indicating if the node is active.</span>
+<span class="sd">    - ``is_masked`` — Always ``False`` for full nodes (``True`` for ghost nodes).</span>
+<span class="sd">    - ``created_at`` — ISO 8601 timestamp string, or ``None``.</span>
+<span class="sd">    - ``updated_at`` — ISO 8601 timestamp string, or ``None``.</span>
+
+<span class="sd">    **Conditional fields** (present only if the node type has them):</span>
+
+<span class="sd">    - ``delivery_mode`` — Delivery mode enum value (portfolio nodes).</span>
+<span class="sd">    - ``planned_start_date`` — ISO 8601 planned start date (portfolio nodes).</span>
+<span class="sd">    - ``planned_end_date`` — ISO 8601 planned end date (portfolio nodes).</span>
+<span class="sd">    - ``actual_start_date`` — ISO 8601 actual start date (portfolio nodes).</span>
+<span class="sd">    - ``actual_end_date`` — ISO 8601 actual end date (portfolio nodes).</span>
+<span class="sd">    - ``percent_complete`` — Float percentage of completion (portfolio nodes).</span>
+<span class="sd">    - ``pv`` — Planned Value for EVM calculations (portfolio nodes).</span>
+<span class="sd">    - ``ev`` — Earned Value for EVM calculations (portfolio nodes).</span>
+<span class="sd">    - ``ac`` — Actual Cost for EVM calculations (portfolio nodes).</span>
+<span class="sd">    - ``resource_type`` — Resource type enum value (resource nodes).</span>
+<span class="sd">    - ``standard_hourly_rate`` — Hourly rate for cost calculations (resource nodes).</span>
+<span class="sd">    - ``is_generic_placeholder`` — Boolean for placeholder resources (resource nodes).</span>
+<span class="sd">    - ``current_location_id`` — Current location reference (resource nodes).</span>
+<span class="sd">    - ``tier`` — Location tier enum value (location nodes).</span>
+<span class="sd">    - ``is_scif_or_tempest`` — Boolean for SCIF/TEMpest facilities (location nodes).</span>
+<span class="sd">    - ``escort_required`` — Boolean for escort requirements (location nodes).</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. Create a base dictionary with all common fields from the node.</span>
+<span class="sd">    2. Convert enum values to their string representations using ``.value``.</span>
+<span class="sd">    3. Convert datetime objects to ISO 8601 strings using ``.isoformat()``.</span>
+<span class="sd">    4. Convert UUID fields to strings using ``str()``.</span>
+<span class="sd">    5. Check for node-specific fields using ``hasattr`` and add them if present.</span>
+<span class="sd">    6. Return the complete dictionary.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        node: The :class:`UniversalBreakdownNode` ORM instance to convert.</span>
+<span class="sd">            This can be any subclass of UniversalBreakdownNode (e.g.,</span>
+<span class="sd">            PortfolioNode, ResourceNode, LocationNode). The function handles</span>
+<span class="sd">            all subclasses by checking for the presence of type-specific fields.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary containing all fields of the node, suitable for JSON</span>
+<span class="sd">        serialisation and API responses. All enum values are converted to</span>
+<span class="sd">        strings, all datetime objects are converted to ISO 8601 strings,</span>
+<span class="sd">        and all UUID objects are converted to strings. The ``is_masked``</span>
+<span class="sd">        key is always set to ``False`` for full node representations.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    ~~~~~~~</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from app.models.models import UniversalBreakdownNode</span>
+<span class="sd">        from app.core.abac import node_to_dict</span>
+
+<span class="sd">        # Convert a portfolio node to dictionary</span>
+<span class="sd">        node = db.query(UniversalBreakdownNode).get(node_id)</span>
+<span class="sd">        node_dict = node_to_dict(node)</span>
+
+<span class="sd">        print(node_dict["name"])        # "Project Alpha"</span>
+<span class="sd">        print(node_dict["is_masked"])   # False</span>
+<span class="sd">        print(node_dict["percent_complete"])  # 75.5</span>
+<span class="sd">    """</span>
+    <span class="n">node_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"parent_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">parent_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"version_id"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">"version_id"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="s2">"tree_type"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">tree_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">tree_type</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"path"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+        <span class="s2">"security_classification"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"caveats"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span>
+        <span class="s2">"odac_permissions"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">odac_permissions</span><span class="p">,</span>
+        <span class="s2">"custom_attributes"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">,</span>
+        <span class="s2">"is_active"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="s2">"is_masked"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># Flag indicating this is not a masked node</span>
+        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"updated_at"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Add node-specific fields if they exist (for different node types)</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'delivery_mode'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"delivery_mode"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">delivery_mode</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">delivery_mode</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'planned_start_date'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"planned_start_date"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'planned_end_date'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"planned_end_date"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'actual_start_date'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"actual_start_date"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">actual_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">actual_start_date</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'actual_end_date'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"actual_end_date"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">actual_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">actual_end_date</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'percent_complete'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"percent_complete"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">percent_complete</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'pv'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"pv"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">pv</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'ev'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"ev"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ev</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'ac'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"ac"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ac</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'resource_type'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"resource_type"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">resource_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">resource_type</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'standard_hourly_rate'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"standard_hourly_rate"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">standard_hourly_rate</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'is_generic_placeholder'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"is_generic_placeholder"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">is_generic_placeholder</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'current_location_id'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"current_location_id"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">current_location_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">current_location_id</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'tier'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"tier"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">tier</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">tier</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'is_scif_or_tempest'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"is_scif_or_tempest"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">is_scif_or_tempest</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">'escort_required'</span><span class="p">):</span>
+        <span class="n">node_dict</span><span class="p">[</span><span class="s2">"escort_required"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">escort_required</span>
+
+    <span class="k">return</span> <span class="n">node_dict</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># FastAPI dependency for ABAC checks</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+
+
+<div class="viewcode-block" id="get_user_clearance">
+<a class="viewcode-back" href="../../../modules.html#app.core.abac.get_user_clearance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_user_clearance</span><span class="p">(</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Extract the authenticated user's clearance information for ABAC checks.</span>
+
+<span class="sd">    This FastAPI dependency injector automatically retrieves the current</span>
+<span class="sd">    authenticated user via :func:`app.utils.auth.get_current_user` and</span>
+<span class="sd">    extracts their security clearance level and caveat list.</span>
+
+<span class="sd">    It is designed to be used as a dependency in other ABAC-related</span>
+<span class="sd">    dependencies, providing a convenient way to access the user's</span>
+<span class="sd">    security credentials without repeating the authentication logic.</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. FastAPI calls :func:`app.utils.auth.get_current_user` to authenticate</span>
+<span class="sd">       the user from the JWT token in the request.</span>
+<span class="sd">    2. Extract the ``clearance_level`` attribute from the User model.</span>
+<span class="sd">    3. Extract the ``caveats`` attribute from the User model.</span>
+<span class="sd">    4. Return both values as a tuple.</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    ~~~~~</span>
+
+<span class="sd">    This function is typically used as a sub-dependency in other ABAC</span>
+<span class="sd">    checks, such as :func:`require_clearance`.</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        @router.get("/classified-data")</span>
+<span class="sd">        def get_data(</span>
+<span class="sd">            clearance_info: tuple = Depends(get_user_clearance),</span>
+<span class="sd">        ):</span>
+<span class="sd">            user_clearance, user_caveats = clearance_info</span>
+<span class="sd">            # Use clearance_info for ABAC checks</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        current_user: The authenticated :class:`app.models.models.User` instance,</span>
+<span class="sd">            automatically injected by FastAPI via the</span>
+<span class="sd">            :func:`app.utils.auth.get_current_user` dependency. This user</span>
+<span class="sd">            must have a valid JWT token and sufficient clearance to access</span>
+<span class="sd">            the endpoint.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A tuple of two elements:</span>
+
+<span class="sd">        - ``SecurityClassification``: The user's security clearance level.</span>
+<span class="sd">        - ``Optional[List[str]]``: A list of caveat strings the user holds,</span>
+<span class="sd">          or ``None`` if the user has no caveats.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: If the user is not authenticated (raised by the</span>
+<span class="sd">            underlying :func:`app.utils.auth.get_current_user` dependency).</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span></div>
+
+
+
+<div class="viewcode-block" id="require_clearance">
+<a class="viewcode-back" href="../../../modules.html#app.core.abac.require_clearance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">require_clearance</span><span class="p">(</span>
+    <span class="n">min_clearance</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">user_clearance</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">user_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_user_clearance</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""FastAPI dependency that enforces a minimum security clearance level.</span>
+
+<span class="sd">    This dependency can be injected into any FastAPI endpoint to ensure</span>
+<span class="sd">    that the requesting user has at least the specified minimum clearance</span>
+<span class="sd">    level before the endpoint logic is executed. If the user's clearance</span>
+<span class="sd">    is insufficient, the request is rejected with an HTTP 403 Forbidden</span>
+<span class="sd">    response.</span>
+
+<span class="sd">    Note that this function checks only the clearance level, not caveats.</span>
+<span class="sd">    For full ABAC checks including caveats, use :func:`check_node_access`</span>
+<span class="sd">    instead.</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. Compare the user's clearance level against the minimum required</span>
+<span class="sd">       clearance using :func:`has_sufficient_clearance`.</span>
+<span class="sd">    2. If the user's clearance is sufficient, the dependency passes and</span>
+<span class="sd">       the endpoint continues execution.</span>
+<span class="sd">    3. If the user's clearance is insufficient, raise an HTTP 403 error</span>
+<span class="sd">       with a descriptive message.</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    ~~~~~</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from app.models.models import SecurityClassification</span>
+<span class="sd">        from app.core.abac import require_clearance</span>
+
+<span class="sd">        @router.get("/secret-data")</span>
+<span class="sd">        def get_secret_data(</span>
+<span class="sd">            _=Depends(require_clearance(SecurityClassification.SECRET)),</span>
+<span class="sd">        ):</span>
+<span class="sd">            return {"data": "classified"}</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        min_clearance: The minimum :class:`SecurityClassification` level</span>
+<span class="sd">            required to access the protected resource. Users with a clearance</span>
+<span class="sd">            level equal to or higher than this value will be granted access.</span>
+<span class="sd">        user_clearance: The authenticated user's :class:`SecurityClassification`</span>
+<span class="sd">            level, automatically injected by FastAPI. This is compared against</span>
+<span class="sd">            ``min_clearance`` to determine access.</span>
+<span class="sd">        user_caveats: The authenticated user's list of caveat strings,</span>
+<span class="sd">            automatically injected by FastAPI via :func:`get_user_clearance`.</span>
+<span class="sd">            Note: caveats are not checked by this function; only the clearance</span>
+<span class="sd">            level is enforced.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: If the user's clearance level is below the minimum</span>
+<span class="sd">            required level. The exception has status code 403 (Forbidden)</span>
+<span class="sd">            and the detail message "Insufficient security clearance for</span>
+<span class="sd">            this resource".</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_sufficient_clearance</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">min_clearance</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for this resource"</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="check_node_access">
+<a class="viewcode-back" href="../../../modules.html#app.core.abac.check_node_access">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_node_access</span><span class="p">(</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">user_clearance</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">user_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UniversalBreakdownNode</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""FastAPI dependency that checks access to a specific node using full ABAC rules.</span>
+
+<span class="sd">    This dependency performs a complete ABAC check on a single node, including</span>
+<span class="sd">    both clearance level and caveat verification. It is designed to be used</span>
+<span class="sd">    after fetching a node from the database, ensuring that the requesting</span>
+<span class="sd">    user has full access to the node before the endpoint returns its data.</span>
+
+<span class="sd">    Unlike :func:`require_clearance`, which checks only the clearance level,</span>
+<span class="sd">    this function checks both clearance and caveats via :func:`is_node_visible`.</span>
+
+<span class="sd">    Process Flow</span>
+<span class="sd">    ~~~~~~~~~~~~</span>
+
+<span class="sd">    1. Call :func:`is_node_visible` with the user's clearance, caveats, and</span>
+<span class="sd">       the target node.</span>
+<span class="sd">    2. If the node is visible to the user, return the node object unchanged.</span>
+<span class="sd">       The endpoint can then safely access and return the node's data.</span>
+<span class="sd">    3. If the node is not visible to the user, raise an HTTP 403 error.</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    ~~~~~</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from app.core.abac import check_node_access</span>
+
+<span class="sd">        @router.get("/nodes/{node_id}")</span>
+<span class="sd">        def get_node(</span>
+<span class="sd">            node_id: str,</span>
+<span class="sd">            node: UniversalBreakdownNode = Depends(check_node_access),</span>
+<span class="sd">            db: Session = Depends(get_db),</span>
+<span class="sd">        ):</span>
+<span class="sd">            return node</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        node: The :class:`UniversalBreakdownNode` instance to check access for.</span>
+<span class="sd">            This node is typically fetched from the database using the node ID</span>
+<span class="sd">            from the request path. Its security classification and caveats are</span>
+<span class="sd">            compared against the user's credentials.</span>
+<span class="sd">        user_clearance: The authenticated user's :class:`SecurityClassification`</span>
+<span class="sd">            level. This is compared against the node's security classification</span>
+<span class="sd">            to determine if the user has sufficient clearance.</span>
+<span class="sd">        user_caveats: A list of caveat strings that the authenticated user</span>
+<span class="sd">            holds, or ``None`` if the user has no caveats. These are compared</span>
+<span class="sd">            against the node's required caveats.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The original :class:`UniversalBreakdownNode` instance if access is</span>
+<span class="sd">        granted. The node is returned unchanged, allowing the endpoint to</span>
+<span class="sd">        proceed with normal processing.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: If the user lacks access to the node (either insufficient</span>
+<span class="sd">            clearance level or missing required caveats). The exception has</span>
+<span class="sd">            status code 403 (Forbidden) and the detail message "Insufficient</span>
+<span class="sd">            security clearance for this resource".</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for this resource"</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">node</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

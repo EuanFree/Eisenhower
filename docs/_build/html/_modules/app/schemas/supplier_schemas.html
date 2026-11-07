@@ -1,0 +1,508 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.schemas.supplier_schemas &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.schemas.supplier_schemas</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.schemas.supplier_schemas</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Supplier Portal API schemas.</span>
+
+<span class="sd">This module defines the Pydantic request and response schemas for the</span>
+<span class="sd">isolated subcontractor supplier portal.  These schemas ensure that</span>
+<span class="sd">external vendors receive only the data fields they are authorised to</span>
+<span class="sd">see, with all prime contractor EVM cost rates and classified hierarchy</span>
+<span class="sd">information redacted.</span>
+
+<span class="sd">Schema Naming Convention</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- ``SupplierTaskResponse`` — A task node returned to a subcontractor</span>
+<span class="sd">  with all prime-sensitive fields masked.</span>
+<span class="sd">- ``SupplierProgressUpdate`` — Request body for logging progress.</span>
+<span class="sd">- ``SupplierCDRLSubmission`` — Request body for submitting SDRL documents.</span>
+
+<span class="sd">Security Considerations</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">All response schemas exclude the following fields that must never be</span>
+<span class="sd">visible to subcontractors:</span>
+
+<span class="sd">- ``bac_cost``, ``planned_value``, ``earned_value``, ``actual_cost``</span>
+<span class="sd">- ``odac_permissions``</span>
+<span class="sd">- Full ltree path (truncated to boundary node + descendant)</span>
+<span class="sd">- Any cost rate information in ``custom_attributes``</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Supplier Task Schemas</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="SupplierTaskResponse">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierTaskResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierTaskResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Task node returned to a subcontractor with prime data masked.</span>
+
+<span class="sd">    This is the primary response schema for ``GET /tasks``.  It includes</span>
+<span class="sd">    only the fields a subcontractor needs to track their contractual</span>
+<span class="sd">    work packages: identity, schedule dates, progress, and blockers.</span>
+
+<span class="sd">    All EVM cost data is replaced with ``'[RESTRICTED]'``.  The ltree</span>
+<span class="sd">    path is truncated to show only the boundary node and below.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    id : UUID</span>
+<span class="sd">        Unique node identifier.</span>
+<span class="sd">    code : str</span>
+<span class="sd">        Work package code (e.g., ``'WP-101'``).</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Task name (or ``'[RESTRICTED]'`` if classification exceeds user clearance).</span>
+<span class="sd">    path : str</span>
+<span class="sd">        Truncated ltree path showing only boundary node + descendant.</span>
+<span class="sd">    path_masked : bool</span>
+<span class="sd">        True if the full parent hierarchy has been hidden.</span>
+<span class="sd">    security_classification : str</span>
+<span class="sd">        Node classification level.</span>
+<span class="sd">    delivery_mode : Optional[str]</span>
+<span class="sd">        Delivery methodology (WATERFALL, AGILE, HYBRID).</span>
+<span class="sd">    planned_start_date : Optional[date]</span>
+<span class="sd">        Planned start date.</span>
+<span class="sd">    planned_end_date : Optional[date]</span>
+<span class="sd">        Planned end date.</span>
+<span class="sd">    actual_start_date : Optional[date]</span>
+<span class="sd">        Actual start date (if work has begun).</span>
+<span class="sd">    actual_end_date : Optional[date]</span>
+<span class="sd">        Actual end date (if work is complete).</span>
+<span class="sd">    percent_complete : float</span>
+<span class="sd">        Physical percent complete (0–100).</span>
+<span class="sd">    total_float : Optional[int]</span>
+<span class="sd">        Total float in days (None if CPM not yet calculated).</span>
+<span class="sd">    is_critical : bool</span>
+<span class="sd">        True if the task is on the critical path (TF ≤ 0).</span>
+<span class="sd">    has_active_blocker : bool</span>
+<span class="sd">        True if the task has unresolved blockers.</span>
+<span class="sd">    blockers_count : int</span>
+<span class="sd">        Number of active blockers on this task.</span>
+<span class="sd">    vendor_cage_code : Optional[str]</span>
+<span class="sd">        NATO/CAGE code of the vendor assigned to this work package.</span>
+<span class="sd">    linked_cdrl_code : Optional[str]</span>
+<span class="sd">        CDRL sequence number if a deliverable is linked.</span>
+<span class="sd">    vv_test_summary : Optional[Dict[str, int]]</span>
+<span class="sd">        V&amp;V test case summary: ``{"passed": N, "total": M}``.</span>
+<span class="sd">    version_id : int</span>
+<span class="sd">        Optimistic concurrency version number.</span>
+<span class="sd">    """</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="n">UUID</span>
+    <span class="n">code</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">path_masked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">security_classification</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">delivery_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">planned_start_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">planned_end_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">actual_start_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">actual_end_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">percent_complete</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">total_float</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">is_critical</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">has_active_blocker</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">blockers_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">vendor_cage_code</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">linked_cdrl_code</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">vv_test_summary</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">version_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">from_attributes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SupplierTaskListResponse">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierTaskListResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierTaskListResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response for ``GET /tasks`` — list of accessible tasks.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tasks : list of SupplierTaskResponse</span>
+<span class="sd">        Masked task nodes accessible to the subcontractor.</span>
+<span class="sd">    total_count : int</span>
+<span class="sd">        Total number of accessible tasks.</span>
+<span class="sd">    vendor_cage_code : str</span>
+<span class="sd">        The CAGE code of the requesting vendor.</span>
+<span class="sd">    """</span>
+    <span class="n">tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SupplierTaskResponse</span><span class="p">]</span>
+    <span class="n">total_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">vendor_cage_code</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Progress Update Schemas</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="SupplierProgressUpdate">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierProgressUpdate">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierProgressUpdate</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Request body for ``POST /tasks/{id}/progress``.</span>
+
+<span class="sd">    Subcontractors use this to log physical progress, update remaining</span>
+<span class="sd">    duration estimates, and add status notes.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    percent_complete : float</span>
+<span class="sd">        New physical percent complete (0–100).  Must not decrease.</span>
+<span class="sd">    remaining_duration_days : Optional[float]</span>
+<span class="sd">        Updated estimate of remaining work days.</span>
+<span class="sd">    notes : Optional[str]</span>
+<span class="sd">        Status notes or comments from the subcontractor.</span>
+<span class="sd">    hours_logged_today : Optional[float]</span>
+<span class="sd">        Direct labor hours logged for today.</span>
+<span class="sd">    forecast_finish_date : Optional[date]</span>
+<span class="sd">        Updated forecast of when the task will be physically complete.</span>
+<span class="sd">    """</span>
+    <span class="n">percent_complete</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
+    <span class="n">remaining_duration_days</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+    <span class="n">hours_logged_today</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">forecast_finish_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="SupplierProgressResponse">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierProgressResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierProgressResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response after a successful progress update.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : UUID</span>
+<span class="sd">        Updated task identifier.</span>
+<span class="sd">    previous_percent_complete : float</span>
+<span class="sd">        Progress before this update.</span>
+<span class="sd">    new_percent_complete : float</span>
+<span class="sd">        Progress after this update.</span>
+<span class="sd">    updated_at : datetime</span>
+<span class="sd">        Timestamp of the update.</span>
+<span class="sd">    message : str</span>
+<span class="sd">        Confirmation message.</span>
+<span class="sd">    """</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="n">UUID</span>
+    <span class="n">previous_percent_complete</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">new_percent_complete</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">updated_at</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># CDRL / SDRL Submission Schemas</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="SupplierCDRLSubmission">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierCDRLSubmission">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierCDRLSubmission</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Request body for ``POST /cdrl/{id}/submit``.</span>
+
+<span class="sd">    Subcontractors use this to submit SDRL (Subcontract Data Requirements</span>
+<span class="sd">    List) documents.  The submission triggers automated metadata</span>
+<span class="sd">    sanitization and malware scanning.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cdrl_id : UUID</span>
+<span class="sd">        ID of the ContractDeliverable being submitted.</span>
+<span class="sd">    file_name : str</span>
+<span class="sd">        Name of the submitted file.</span>
+<span class="sd">    file_size_bytes : int</span>
+<span class="sd">        Size of the file in bytes.</span>
+<span class="sd">    mime_type : str</span>
+<span class="sd">        MIME type of the submitted file.</span>
+<span class="sd">    sha256_checksum : str</span>
+<span class="sd">        SHA-256 cryptographic digest of the file payload.</span>
+<span class="sd">    s3_object_key : str</span>
+<span class="sd">        S3 object key where the file is stored.</span>
+<span class="sd">    submission_notes : Optional[str]</span>
+<span class="sd">        Notes from the subcontractor regarding the submission.</span>
+<span class="sd">    """</span>
+    <span class="n">cdrl_id</span><span class="p">:</span> <span class="n">UUID</span>
+    <span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+    <span class="n">file_size_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">mime_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">sha256_checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">min_length</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+    <span class="n">s3_object_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">submission_notes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_length</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SupplierCDRLResponse">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierCDRLResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierCDRLResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response after a successful CDRL submission.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cdrl_id : UUID</span>
+<span class="sd">        Deliverable identifier.</span>
+<span class="sd">    cdrl_sequence_number : str</span>
+<span class="sd">        CDRL sequence number (e.g., ``'CDRL-A004'``).</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Deliverable title.</span>
+<span class="sd">    previous_status : str</span>
+<span class="sd">        Status before submission.</span>
+<span class="sd">    new_status : str</span>
+<span class="sd">        Status after submission (typically ``'SUBMITTED'``).</span>
+<span class="sd">    submitted_at : datetime</span>
+<span class="sd">        Timestamp of the submission.</span>
+<span class="sd">    message : str</span>
+<span class="sd">        Confirmation message.</span>
+<span class="sd">    """</span>
+    <span class="n">cdrl_id</span><span class="p">:</span> <span class="n">UUID</span>
+    <span class="n">cdrl_sequence_number</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">previous_status</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">new_status</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">submitted_at</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+
+<div class="viewcode-block" id="SupplierCDRLItem">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierCDRLItem">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierCDRLItem</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""CDRL item in the deliverable in-tray.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    id : UUID</span>
+<span class="sd">        Deliverable identifier.</span>
+<span class="sd">    cdrl_sequence_number : str</span>
+<span class="sd">        CDRL/SDRL sequence number.</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Deliverable title.</span>
+<span class="sd">    did_reference : Optional[str]</span>
+<span class="sd">        DID reference (e.g., ``'DI-MGMT-81861'``).</span>
+<span class="sd">    revision : str</span>
+<span class="sd">        Current revision (e.g., ``'Rev A'``).</span>
+<span class="sd">    status : str</span>
+<span class="sd">        Current status (DRAFTING, SUBMITTED, UNDER_REVIEW, etc.).</span>
+<span class="sd">    contractual_due_date : Optional[date]</span>
+<span class="sd">        Contractual due date.</span>
+<span class="sd">    actual_submission_date : Optional[date]</span>
+<span class="sd">        Date the deliverable was submitted.</span>
+<span class="sd">    review_deadline_date : Optional[date]</span>
+<span class="sd">        Deadline for customer review.</span>
+<span class="sd">    days_until_review_deadline : Optional[int]</span>
+<span class="sd">        Remaining days until review deadline (negative = overdue).</span>
+<span class="sd">    """</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="n">UUID</span>
+    <span class="n">cdrl_sequence_number</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">did_reference</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">revision</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Rev A"</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">contractual_due_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">actual_submission_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">review_deadline_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">days_until_review_deadline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="SupplierCDRLListResponse">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierCDRLListResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierCDRLListResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response for ``GET /cdrl`` — list of deliverable items.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    deliverables : list of SupplierCDRLItem</span>
+<span class="sd">        CDRL items assigned to the subcontractor's work packages.</span>
+<span class="sd">    total_count : int</span>
+<span class="sd">        Total number of deliverables.</span>
+<span class="sd">    """</span>
+    <span class="n">deliverables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SupplierCDRLItem</span><span class="p">]</span>
+    <span class="n">total_count</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Schedule Upload Schemas</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="SupplierScheduleUploadResponse">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierScheduleUploadResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierScheduleUploadResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response after uploading a schedule file (.xer or .xml).</span>
+
+<span class="sd">    The upload triggers the automated subcontractor ingest pipeline,</span>
+<span class="sd">    which validates the schedule against contractual boundary gates.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : UUID</span>
+<span class="sd">        ID of the created SubcontractorSubmission record.</span>
+<span class="sd">    status : str</span>
+<span class="sd">        Initial status (RECEIVED or VALIDATING).</span>
+<span class="sd">    message : str</span>
+<span class="sd">        Confirmation message.</span>
+<span class="sd">    """</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="n">UUID</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Supplier Profile Schema</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="SupplierProfileResponse">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.supplier_schemas.SupplierProfileResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupplierProfileResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Supplier profile information returned on portal login.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        User account ID.</span>
+<span class="sd">    username : str</span>
+<span class="sd">        Login username.</span>
+<span class="sd">    full_name : Optional[str]</span>
+<span class="sd">        Display name.</span>
+<span class="sd">    vendor_cage_code : str</span>
+<span class="sd">        NATO/CAGE code of the vendor organisation.</span>
+<span class="sd">    employer_legal_entity : Optional[str]</span>
+<span class="sd">        Legal entity name.</span>
+<span class="sd">    clearance_level : str</span>
+<span class="sd">        Security clearance level.</span>
+<span class="sd">    caveats : Optional[List[str]]</span>
+<span class="sd">        Security caveats.</span>
+<span class="sd">    """</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">full_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">vendor_cage_code</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">employer_legal_entity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">clearance_level</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

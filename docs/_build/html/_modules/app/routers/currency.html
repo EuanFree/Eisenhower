@@ -1,0 +1,643 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.currency &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.currency</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.currency</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Currency exchange rate management API endpoints.</span>
+
+<span class="sd">This module provides the REST API for managing foreign currency exchange</span>
+<span class="sd">rates and performing currency conversions in the Eisenhower Portfolio Manager.</span>
+
+<span class="sd">Why Currency Endpoints?</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">International defence programmes involve multi-currency procurement.  These</span>
+<span class="sd">endpoints allow financial managers to:</span>
+
+<span class="sd">- **Maintain Exchange Rates** — Record contractual fixed rates, floating</span>
+<span class="sd">  spot rates, and forward hedge rates with effective date ranges.</span>
+
+<span class="sd">- **Test Conversions** — Validate that the correct rate is being applied</span>
+<span class="sd">  for a given currency pair and valuation date.</span>
+
+<span class="sd">- **Analyse FX Variance** — Separate standard Cost Variance from currency</span>
+<span class="sd">  fluctuation impact for accurate financial reporting.</span>
+
+<span class="sd">API Endpoints</span>
+<span class="sd">~~~~~~~~~~~~~</span>
+
+<span class="sd">All endpoints are mounted under ``/api/v1/currency``:</span>
+
+<span class="sd">- **POST /rates** — Create a new exchange rate record.</span>
+<span class="sd">- **GET /rates** — List all exchange rates (with optional filtering).</span>
+<span class="sd">- **GET /rates/{id}** — Get a specific exchange rate.</span>
+<span class="sd">- **PUT /rates/{id}** — Update an existing exchange rate.</span>
+<span class="sd">- **DELETE /rates/{id}** — Delete an exchange rate record.</span>
+<span class="sd">- **POST /convert** — Convert an amount between currencies.</span>
+<span class="sd">- **GET /tasks/{task_id}/fx-variance** — Analyse currency variance for a task.</span>
+
+<span class="sd">Authentication</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">All endpoints require a valid JWT token via the ``Authorization`` header.</span>
+<span class="sd">Only authenticated users can access currency data.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CurrencyExchangeRateCreate</span><span class="p">,</span>
+    <span class="n">CurrencyExchangeRateUpdate</span><span class="p">,</span>
+    <span class="n">CurrencyExchangeRateResponse</span><span class="p">,</span>
+    <span class="n">CurrencyExchangeRateListResponse</span><span class="p">,</span>
+    <span class="n">CurrencyConvertRequest</span><span class="p">,</span>
+    <span class="n">CurrencyConvertResponse</span><span class="p">,</span>
+    <span class="n">CurrencyVarianceResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">CurrencyExchangeRate</span><span class="p">,</span> <span class="n">ExchangeRateType</span><span class="p">,</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.currency</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_currency</span><span class="p">,</span> <span class="n">compute_currency_variance</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="create_exchange_rate">
+<a class="viewcode-back" href="../../../modules.html#app.routers.currency.create_exchange_rate">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/rates"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CurrencyExchangeRateResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_exchange_rate</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">CurrencyExchangeRateCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new currency exchange rate record.</span>
+
+<span class="sd">    Exchange rate records define the conversion factor between two currencies</span>
+<span class="sd">    for a specific time period.  For contractual fixed rates, the</span>
+<span class="sd">    effective_end_date is typically NULL, meaning the rate remains valid</span>
+<span class="sd">    indefinitely.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : CurrencyExchangeRateCreate</span>
+<span class="sd">        The exchange rate data including currency pair, rate type,</span>
+<span class="sd">        exchange rate value, and effective date range.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CurrencyExchangeRateResponse</span>
+<span class="sd">        The created exchange rate record.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if the rate type is invalid.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Validate rate type</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">rate_type</span> <span class="o">=</span> <span class="n">ExchangeRateType</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">rate_type</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid rate type: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">rate_type</span><span class="si">}</span><span class="s2">. "</span>
+                   <span class="sa">f</span><span class="s2">"Must be one of: CONTRACTUAL_FIXED, FLOATING_SPOT, FORWARD_HEDGE"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Parse dates</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">effective_start_date</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid effective_start_date format"</span><span class="p">)</span>
+
+    <span class="n">end_date</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">end_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">effective_end_date</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid effective_end_date format"</span><span class="p">)</span>
+
+    <span class="c1"># Create the record</span>
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">CurrencyExchangeRate</span><span class="p">(</span>
+        <span class="n">base_currency</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">base_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+        <span class="n">target_currency</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">target_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+        <span class="n">rate_type</span><span class="o">=</span><span class="n">rate_type</span><span class="p">,</span>
+        <span class="n">exchange_rate</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">exchange_rate</span><span class="p">,</span>
+        <span class="n">effective_start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
+        <span class="n">effective_end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CurrencyExchangeRateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">base_currency</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">base_currency</span><span class="p">,</span>
+        <span class="n">target_currency</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">target_currency</span><span class="p">,</span>
+        <span class="n">rate_type</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">rate_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">exchange_rate</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">exchange_rate</span><span class="p">),</span>
+        <span class="n">effective_start_date</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">effective_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">effective_end_date</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">effective_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">rate</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="list_exchange_rates">
+<a class="viewcode-back" href="../../../modules.html#app.routers.currency.list_exchange_rates">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/rates"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CurrencyExchangeRateListResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_exchange_rates</span><span class="p">(</span>
+    <span class="n">base_currency</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by base currency"</span><span class="p">),</span>
+    <span class="n">target_currency</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by target currency"</span><span class="p">),</span>
+    <span class="n">rate_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by rate type"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all currency exchange rate records.</span>
+
+<span class="sd">    Optionally filter by base currency, target currency, or rate type.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    base_currency : str or None</span>
+<span class="sd">        Filter by base currency code (e.g., 'GBP').</span>
+<span class="sd">    target_currency : str or None</span>
+<span class="sd">        Filter by target currency code (e.g., 'USD').</span>
+<span class="sd">    rate_type : str or None</span>
+<span class="sd">        Filter by rate type (CONTRACTUAL_FIXED, FLOATING_SPOT, FORWARD_HEDGE).</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CurrencyExchangeRateListResponse</span>
+<span class="sd">        List of exchange rate records matching the filters.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">base_currency</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">base_currency</span> <span class="o">==</span> <span class="n">base_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">target_currency</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">target_currency</span> <span class="o">==</span> <span class="n">target_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">rate_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">rate_type</span> <span class="o">==</span> <span class="n">ExchangeRateType</span><span class="p">(</span><span class="n">rate_type</span><span class="o">.</span><span class="n">upper</span><span class="p">()))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># Invalid rate type — return empty list</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">base_currency</span><span class="p">,</span> <span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">effective_start_date</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">rates</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">rate</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+        <span class="n">rates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CurrencyExchangeRateResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">base_currency</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">base_currency</span><span class="p">,</span>
+            <span class="n">target_currency</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">target_currency</span><span class="p">,</span>
+            <span class="n">rate_type</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">rate_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">exchange_rate</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">exchange_rate</span><span class="p">),</span>
+            <span class="n">effective_start_date</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">effective_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">effective_end_date</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">effective_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">rate</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">CurrencyExchangeRateListResponse</span><span class="p">(</span><span class="n">rates</span><span class="o">=</span><span class="n">rates</span><span class="p">,</span> <span class="n">total_rates</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rates</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="get_exchange_rate">
+<a class="viewcode-back" href="../../../modules.html#app.routers.currency.get_exchange_rate">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/rates/</span><span class="si">{rate_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CurrencyExchangeRateResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_exchange_rate</span><span class="p">(</span>
+    <span class="n">rate_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get a specific currency exchange rate record.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rate_id : str</span>
+<span class="sd">        UUID of the exchange rate record.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CurrencyExchangeRateResponse</span>
+<span class="sd">        The exchange rate record.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the rate record is not found.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">rate_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid rate ID format"</span><span class="p">)</span>
+
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="p">,</span> <span class="n">uid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Exchange rate not found"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CurrencyExchangeRateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">base_currency</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">base_currency</span><span class="p">,</span>
+        <span class="n">target_currency</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">target_currency</span><span class="p">,</span>
+        <span class="n">rate_type</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">rate_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">exchange_rate</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">exchange_rate</span><span class="p">),</span>
+        <span class="n">effective_start_date</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">effective_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">effective_end_date</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">effective_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">rate</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_exchange_rate">
+<a class="viewcode-back" href="../../../modules.html#app.routers.currency.update_exchange_rate">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/rates/</span><span class="si">{rate_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CurrencyExchangeRateResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_exchange_rate</span><span class="p">(</span>
+    <span class="n">rate_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">CurrencyExchangeRateUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update an existing currency exchange rate record.</span>
+
+<span class="sd">    Only the fields provided in the request body will be updated;</span>
+<span class="sd">    omitted fields remain unchanged.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rate_id : str</span>
+<span class="sd">        UUID of the exchange rate record to update.</span>
+<span class="sd">    data : CurrencyExchangeRateUpdate</span>
+<span class="sd">        The fields to update.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CurrencyExchangeRateResponse</span>
+<span class="sd">        The updated exchange rate record.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the rate record is not found.</span>
+<span class="sd">        400 if the rate type is invalid.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">rate_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid rate ID format"</span><span class="p">)</span>
+
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="p">,</span> <span class="n">uid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Exchange rate not found"</span><span class="p">)</span>
+
+    <span class="c1"># Update fields</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">rate_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rate</span><span class="o">.</span><span class="n">rate_type</span> <span class="o">=</span> <span class="n">ExchangeRateType</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">rate_type</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid rate type: </span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">rate_type</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">exchange_rate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rate</span><span class="o">.</span><span class="n">exchange_rate</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">exchange_rate</span>
+
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">effective_start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rate</span><span class="o">.</span><span class="n">effective_start_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">effective_start_date</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid effective_start_date format"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rate</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">effective_end_date</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid effective_end_date format"</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CurrencyExchangeRateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">base_currency</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">base_currency</span><span class="p">,</span>
+        <span class="n">target_currency</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">target_currency</span><span class="p">,</span>
+        <span class="n">rate_type</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">rate_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">exchange_rate</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">exchange_rate</span><span class="p">),</span>
+        <span class="n">effective_start_date</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">effective_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">effective_end_date</span><span class="o">=</span><span class="n">rate</span><span class="o">.</span><span class="n">effective_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">rate</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_exchange_rate">
+<a class="viewcode-back" href="../../../modules.html#app.routers.currency.delete_exchange_rate">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/rates/</span><span class="si">{rate_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_exchange_rate</span><span class="p">(</span>
+    <span class="n">rate_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete a currency exchange rate record.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rate_id : str</span>
+<span class="sd">        UUID of the exchange rate record to delete.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Confirmation message.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the rate record is not found.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">rate_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid rate ID format"</span><span class="p">)</span>
+
+    <span class="n">rate</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="p">,</span> <span class="n">uid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Exchange rate not found"</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">rate</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Exchange rate </span><span class="si">{</span><span class="n">rate_id</span><span class="si">}</span><span class="s2"> deleted"</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="convert_amount">
+<a class="viewcode-back" href="../../../modules.html#app.routers.currency.convert_amount">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/convert"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CurrencyConvertResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_amount</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">CurrencyConvertRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Convert an amount from one currency to another.</span>
+
+<span class="sd">    This endpoint resolves the applicable exchange rate effective on</span>
+<span class="sd">    the given valuation date and computes the converted amount.</span>
+
+<span class="sd">    The rate resolution algorithm:</span>
+
+<span class="sd">    1. **Same Currency** — If from_currency == to_currency, return</span>
+<span class="sd">       the amount unchanged with a rate of 1.0.</span>
+
+<span class="sd">    2. **Direct Rate** — Look for a CurrencyExchangeRate record where</span>
+<span class="sd">       base_currency == from_currency and target_currency == to_currency.</span>
+
+<span class="sd">    3. **Inverse Rate** — If no direct rate exists, look for the reverse</span>
+<span class="sd">       pair and invert the rate.</span>
+
+<span class="sd">    4. **Rate Type Preference** — If multiple rates match, prefer:</span>
+<span class="sd">       CONTRACTUAL_FIXED &gt; FORWARD_HEDGE &gt; FLOATING_SPOT.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : CurrencyConvertRequest</span>
+<span class="sd">        The conversion request including amount, currency pair,</span>
+<span class="sd">        valuation date, and optional rate type filter.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CurrencyConvertResponse</span>
+<span class="sd">        The conversion result including the converted amount,</span>
+<span class="sd">        exchange rate used, and rate type.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if the valuation date format is invalid.</span>
+<span class="sd">        404 if no applicable exchange rate is found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Parse valuation date</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">valuation_date</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">valuation_date</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid valuation_date format. Use YYYY-MM-DD."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">convert_currency</span><span class="p">(</span>
+            <span class="n">amount</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">amount</span><span class="p">,</span>
+            <span class="n">from_currency</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">from_currency</span><span class="p">,</span>
+            <span class="n">to_currency</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">to_currency</span><span class="p">,</span>
+            <span class="n">valuation_date</span><span class="o">=</span><span class="n">valuation_date</span><span class="p">,</span>
+            <span class="n">rate_type</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">rate_type</span><span class="p">,</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">CurrencyConvertResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="get_fx_variance">
+<a class="viewcode-back" href="../../../modules.html#app.routers.currency.get_fx_variance">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{task_id}</span><span class="s2">/fx-variance"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CurrencyVarianceResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_fx_variance</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Analyse currency variance for a task.</span>
+
+<span class="sd">    This endpoint separates standard Cost Variance (CV) from currency</span>
+<span class="sd">    fluctuation impact (FX Variance), allowing programme managers to</span>
+<span class="sd">    distinguish between genuine cost overruns and currency-driven variances.</span>
+
+<span class="sd">    The algorithm:</span>
+
+<span class="sd">    1. Look up the task's currency and linked exchange rate.</span>
+<span class="sd">    2. Find the project root's base currency.</span>
+<span class="sd">    3. If the task's currency differs from the base currency:</span>
+<span class="sd">       a. Resolve the baseline rate (from the task's contract_exchange_rate_id).</span>
+<span class="sd">       b. Resolve the actual rate (current spot rate on today's date).</span>
+<span class="sd">       c. Compute FX Variance = (Rate_actual - Rate_baseline) × Direct.</span>
+<span class="sd">    4. Compute standard CV = EV - AC from the task's EVM fields.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : str</span>
+<span class="sd">        UUID of the PortfolioNode to analyse.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    CurrencyVarianceResponse</span>
+<span class="sd">        The variance analysis including baseline rate, actual rate,</span>
+<span class="sd">        cost variance, FX variance, and total variance.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the task is not found.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">uid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">task_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid task ID format"</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">compute_currency_variance</span><span class="p">(</span><span class="n">task_id</span><span class="o">=</span><span class="n">uid</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">CurrencyVarianceResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

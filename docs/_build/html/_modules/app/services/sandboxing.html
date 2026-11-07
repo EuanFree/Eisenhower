@@ -1,0 +1,883 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.sandboxing &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.sandboxing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.sandboxing</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Sandbox scenario service for isolated What-If schedule planning.</span>
+
+<span class="sd">This module provides the core logic for creating, comparing, and merging</span>
+<span class="sd">sandbox scenarios.  A sandbox scenario is an isolated clone of a live WBS</span>
+<span class="sd">sub-tree that allows planners to explore "What-If" questions without</span>
+<span class="sd">affecting the operational schedule.</span>
+
+<span class="sd">Workflow</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">1. **Fork** — ``fork_sandbox_branch()`` clones a live sub-tree into</span>
+<span class="sd">   sandbox nodes with ``is_sandbox_branch = True``.  The ltree path is</span>
+<span class="sd">   rewritten with a sandbox namespace prefix.</span>
+
+<span class="sd">2. **Diff** — ``compute_three_way_diff()`` compares the sandbox branch</span>
+<span class="sd">   against the current live schedule and the frozen baseline snapshot,</span>
+<span class="sd">   returning a categorised list of changes.</span>
+
+<span class="sd">3. **Merge** — ``merge_sandbox_to_live()`` applies approved changes from</span>
+<span class="sd">   the sandbox back to live PortfolioNode records in a single atomic</span>
+<span class="sd">   transaction, triggers CPM recalculation, and records a</span>
+<span class="sd">   ``SANDBOX_MERGE`` entry in the ForensicAuditLog.</span>
+
+<span class="sd">Sandbox Isolation</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Sandbox nodes are completely isolated from live nodes:</span>
+
+<span class="sd">- CPM calculations on live nodes ignore sandbox branches.</span>
+<span class="sd">- Resource assignments on sandbox nodes do not affect live capacity.</span>
+<span class="sd">- ABAC clearance checks apply normally to sandbox nodes.</span>
+
+<span class="sd">The ltree path prefix (e.g., ``sandbox_&lt;scenario_id&gt;.1.2.3``) ensures</span>
+<span class="sd">that sandbox nodes never collide with live nodes in path-based queries.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span><span class="p">,</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">and_</span><span class="p">,</span> <span class="n">or_</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">DependencyLink</span><span class="p">,</span>
+    <span class="n">SandboxScenario</span><span class="p">,</span>
+    <span class="n">SandboxScenarioStatus</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span>
+    <span class="n">BaselineNodeSnapshot</span><span class="p">,</span>
+    <span class="n">PortfolioBaseline</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Helper: clone a single node into the sandbox</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_clone_node</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">scenario_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">new_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UniversalBreakdownNode</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Clone a single UniversalBreakdownNode into the sandbox namespace.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source : UniversalBreakdownNode</span>
+<span class="sd">        The live node to clone.</span>
+<span class="sd">    scenario_id : UUID</span>
+<span class="sd">        UUID of the SandboxScenario this clone belongs to.</span>
+<span class="sd">    new_path : str</span>
+<span class="sd">        The sandbox-prefixed ltree path for the clone.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    UniversalBreakdownNode</span>
+<span class="sd">        The newly created sandbox clone (flushed but not committed).</span>
+<span class="sd">    """</span>
+    <span class="c1"># Determine the subclass type</span>
+    <span class="n">node_type</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="vm">__class__</span>
+
+    <span class="c1"># Build the base kwargs common to all node types</span>
+    <span class="n">base_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"parent_id"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># Set after flush</span>
+        <span class="s2">"tree_type"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">tree_type</span><span class="p">,</span>
+        <span class="s2">"code"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"path"</span><span class="p">:</span> <span class="n">new_path</span><span class="p">,</span>
+        <span class="s2">"security_classification"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span>
+        <span class="s2">"caveats"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span>
+        <span class="s2">"odac_permissions"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">odac_permissions</span><span class="p">,</span>
+        <span class="s2">"export_control_regime"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">export_control_regime</span><span class="p">,</span>
+        <span class="s2">"eccn_or_usml_category"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">eccn_or_usml_category</span><span class="p">,</span>
+        <span class="s2">"authorized_nationalities"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">authorized_nationalities</span><span class="p">,</span>
+        <span class="s2">"taa_mla_reference"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">taa_mla_reference</span><span class="p">,</span>
+        <span class="s2">"custom_attributes"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">,</span>
+        <span class="s2">"is_active"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="s2">"is_sandbox_branch"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">"sandbox_scenario_id"</span><span class="p">:</span> <span class="n">scenario_id</span><span class="p">,</span>
+        <span class="s2">"origin_node_id"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Build subclass-specific kwargs</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">):</span>
+        <span class="n">pn_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"delivery_mode"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">delivery_mode</span><span class="p">,</span>
+            <span class="s2">"planned_start_date"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span>
+            <span class="s2">"planned_end_date"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+            <span class="s2">"actual_start_date"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">actual_start_date</span><span class="p">,</span>
+            <span class="s2">"actual_end_date"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">actual_end_date</span><span class="p">,</span>
+            <span class="s2">"percent_complete"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">percent_complete</span><span class="p">,</span>
+            <span class="s2">"pv"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">pv</span><span class="p">,</span>
+            <span class="s2">"ev"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">ev</span><span class="p">,</span>
+            <span class="s2">"ac"</span><span class="p">:</span> <span class="n">source</span><span class="o">.</span><span class="n">ac</span><span class="p">,</span>
+            <span class="s2">"requires_vv_signoff"</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="s2">"requires_vv_signoff"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="n">base_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">pn_kwargs</span><span class="p">)</span>
+        <span class="n">clone</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">(</span><span class="o">**</span><span class="n">base_kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">clone</span> <span class="o">=</span> <span class="n">node_type</span><span class="p">(</span><span class="o">**</span><span class="n">base_kwargs</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">clone</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">clone</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Fork: clone a live sub-tree into a sandbox scenario</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="fork_sandbox_branch">
+<a class="viewcode-back" href="../../../modules.html#app.services.sandboxing.fork_sandbox_branch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fork_sandbox_branch</span><span class="p">(</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">scenario_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Clone a live WBS sub-tree into an isolated sandbox scenario.</span>
+
+<span class="sd">    This function creates a new SandboxScenario and clones the entire</span>
+<span class="sd">    sub-tree rooted at ``root_node_id``.  Each cloned node receives:</span>
+
+<span class="sd">    - ``is_sandbox_branch = True``</span>
+<span class="sd">    - ``sandbox_scenario_id`` bound to the new scenario</span>
+<span class="sd">    - ``origin_node_id`` pointing back to the live source node</span>
+<span class="sd">    - A sandbox-prefixed ltree path (e.g., ``sandbox_&lt;id&gt;.1.2.3``)</span>
+
+<span class="sd">    Dependency links within the sub-tree are also cloned, with predecessor</span>
+<span class="sd">    and successor IDs remapped to the new sandbox node UUIDs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root_node_id : str</span>
+<span class="sd">        UUID of the live PortfolioNode to fork.</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        ID of the user creating the sandbox.</span>
+<span class="sd">    scenario_name : str</span>
+<span class="sd">        Human-readable name for the sandbox scenario.</span>
+<span class="sd">    description : str or None</span>
+<span class="sd">        Optional description of the scenario.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing:</span>
+<span class="sd">        - ``scenario_id``: UUID of the new SandboxScenario</span>
+<span class="sd">        - ``scenario_name``: Name of the scenario</span>
+<span class="sd">        - ``root_node_id``: UUID of the live node that was forked</span>
+<span class="sd">        - ``sandbox_root_id``: UUID of the new sandbox root node</span>
+<span class="sd">        - ``nodes_cloned``: Number of nodes cloned</span>
+<span class="sd">        - ``dependencies_cloned``: Number of dependency links cloned</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the root node does not exist or is already a sandbox branch.</span>
+<span class="sd">    """</span>
+    <span class="n">root_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">root_node_id</span><span class="p">)</span>
+
+    <span class="c1"># Verify the root node exists and is a live node</span>
+    <span class="n">live_root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_uuid</span><span class="p">,</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_sandbox_branch</span> <span class="o">==</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">live_root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Live node </span><span class="si">{</span><span class="n">root_node_id</span><span class="si">}</span><span class="s2"> not found or is already a sandbox branch."</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Create the sandbox scenario</span>
+    <span class="n">scenario</span> <span class="o">=</span> <span class="n">SandboxScenario</span><span class="p">(</span>
+        <span class="n">root_portfolio_node_id</span><span class="o">=</span><span class="n">root_uuid</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">scenario_name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">created_by_user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">SandboxScenarioStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">scenario</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Collect all descendants of the live root using path prefix matching</span>
+    <span class="n">live_prefix</span> <span class="o">=</span> <span class="n">live_root</span><span class="o">.</span><span class="n">path</span>
+    <span class="n">live_descendants</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">and_</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">live_prefix</span><span class="si">}</span><span class="s2">.%"</span><span class="p">),</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_sandbox_branch</span> <span class="o">==</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Include the root itself</span>
+    <span class="n">all_live_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">live_root</span><span class="p">]</span> <span class="o">+</span> <span class="n">live_descendants</span>
+
+    <span class="c1"># Map from live node ID to sandbox clone</span>
+    <span class="n">id_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Clone each node, preserving tree order</span>
+    <span class="k">for</span> <span class="n">live_node</span> <span class="ow">in</span> <span class="n">all_live_nodes</span><span class="p">:</span>
+        <span class="c1"># Compute the sandbox-prefixed path</span>
+        <span class="n">sandbox_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"sandbox_</span><span class="si">{</span><span class="n">scenario</span><span class="o">.</span><span class="n">id</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">live_node</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span>
+
+        <span class="n">clone</span> <span class="o">=</span> <span class="n">_clone_node</span><span class="p">(</span><span class="n">live_node</span><span class="p">,</span> <span class="n">scenario</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">sandbox_path</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+        <span class="n">id_map</span><span class="p">[</span><span class="n">live_node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">clone</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Set parent relationships for cloned nodes</span>
+    <span class="k">for</span> <span class="n">live_node</span> <span class="ow">in</span> <span class="n">all_live_nodes</span><span class="p">:</span>
+        <span class="n">clone</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">id_map</span><span class="p">[</span><span class="n">live_node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">live_node</span><span class="o">.</span><span class="n">parent_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">live_node</span><span class="o">.</span><span class="n">parent_id</span> <span class="ow">in</span> <span class="n">id_map</span><span class="p">:</span>
+            <span class="n">clone</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">id_map</span><span class="p">[</span><span class="n">live_node</span><span class="o">.</span><span class="n">parent_id</span><span class="p">]</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Clone dependency links within the sub-tree</span>
+    <span class="n">cloned_deps</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">live_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">id_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="c1"># Find all dependency links where both predecessor and successor are in the sub-tree</span>
+    <span class="n">deps</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">and_</span><span class="p">(</span>
+            <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">live_ids</span><span class="p">),</span>
+            <span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">live_ids</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="n">new_dep</span> <span class="o">=</span> <span class="n">DependencyLink</span><span class="p">(</span>
+            <span class="n">predecessor_id</span><span class="o">=</span><span class="n">id_map</span><span class="p">[</span><span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">],</span>
+            <span class="n">successor_id</span><span class="o">=</span><span class="n">id_map</span><span class="p">[</span><span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">],</span>
+            <span class="n">dependency_type</span><span class="o">=</span><span class="n">dep</span><span class="o">.</span><span class="n">dependency_type</span><span class="p">,</span>
+            <span class="n">lag_days</span><span class="o">=</span><span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_dep</span><span class="p">)</span>
+        <span class="n">cloned_deps</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="n">sandbox_root_id</span> <span class="o">=</span> <span class="n">id_map</span><span class="p">[</span><span class="n">root_uuid</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"scenario_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">scenario</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"scenario_name"</span><span class="p">:</span> <span class="n">scenario_name</span><span class="p">,</span>
+        <span class="s2">"root_node_id"</span><span class="p">:</span> <span class="n">root_node_id</span><span class="p">,</span>
+        <span class="s2">"sandbox_root_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">sandbox_root_id</span><span class="p">),</span>
+        <span class="s2">"nodes_cloned"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_live_nodes</span><span class="p">),</span>
+        <span class="s2">"dependencies_cloned"</span><span class="p">:</span> <span class="n">cloned_deps</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Diff: three-way comparison (sandbox vs live vs baseline)</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="compute_three_way_diff">
+<a class="viewcode-back" href="../../../modules.html#app.services.sandboxing.compute_three_way_diff">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_three_way_diff</span><span class="p">(</span>
+    <span class="n">sandbox_scenario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Compute a three-way diff between sandbox, live, and baseline.</span>
+
+<span class="sd">    For each sandbox node, this function compares it against:</span>
+
+<span class="sd">    1. The corresponding live node (via ``origin_node_id``)</span>
+<span class="sd">    2. The frozen baseline snapshot (via ``BaselineNodeSnapshot``)</span>
+
+<span class="sd">    Each node is categorised as:</span>
+
+<span class="sd">    - **ADDED** — Sandbox node has no corresponding live node (new addition).</span>
+<span class="sd">    - **MODIFIED_DATES** — Only date fields differ from live.</span>
+<span class="sd">    - **MODIFIED_LOGIC** — Non-date fields (code, name, dependencies) differ.</span>
+<span class="sd">    - **DELETED** — Live node was deleted (sandbox node marked inactive while</span>
+<span class="sd">      live node no longer exists).</span>
+<span class="sd">    - **CONFLICT_LIVE_MUTATED** — Live node changed concurrently with sandbox.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sandbox_scenario_id : str</span>
+<span class="sd">        UUID of the SandboxScenario to diff.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing:</span>
+<span class="sd">        - ``scenario_id``: UUID of the sandbox scenario</span>
+<span class="sd">        - ``scenario_name``: Name of the scenario</span>
+<span class="sd">        - ``diff_entries``: List of per-node diff entries</span>
+<span class="sd">        - ``summary``: Summary counts by category</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the sandbox scenario does not exist.</span>
+<span class="sd">    """</span>
+    <span class="n">scenario_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">sandbox_scenario_id</span><span class="p">)</span>
+
+    <span class="n">scenario</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SandboxScenario</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">SandboxScenario</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">scenario_uuid</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">scenario</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Sandbox scenario </span><span class="si">{</span><span class="n">sandbox_scenario_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">)</span>
+
+    <span class="c1"># Get all sandbox nodes for this scenario</span>
+    <span class="n">sandbox_nodes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">sandbox_scenario_id</span> <span class="o">==</span> <span class="n">scenario_uuid</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Get the baseline for the root node, if any</span>
+    <span class="n">baseline</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">and_</span><span class="p">(</span>
+            <span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">root_portfolio_node_id</span> <span class="o">==</span> <span class="n">scenario</span><span class="o">.</span><span class="n">root_portfolio_node_id</span><span class="p">,</span>
+            <span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">is_active_target</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="n">diff_entries</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">summary</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Date fields to check for MODIFIED_DATES</span>
+    <span class="n">date_fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"planned_start_date"</span><span class="p">,</span>
+        <span class="s2">"planned_end_date"</span><span class="p">,</span>
+        <span class="s2">"actual_start_date"</span><span class="p">,</span>
+        <span class="s2">"actual_end_date"</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Logic fields to check for MODIFIED_LOGIC</span>
+    <span class="n">logic_fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"code"</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">,</span>
+        <span class="s2">"security_classification"</span><span class="p">,</span>
+        <span class="s2">"caveats"</span><span class="p">,</span>
+        <span class="s2">"custom_attributes"</span><span class="p">,</span>
+        <span class="s2">"percent_complete"</span><span class="p">,</span>
+        <span class="s2">"delivery_mode"</span><span class="p">,</span>
+        <span class="s2">"pv"</span><span class="p">,</span>
+        <span class="s2">"ev"</span><span class="p">,</span>
+        <span class="s2">"ac"</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">sandbox_node</span> <span class="ow">in</span> <span class="n">sandbox_nodes</span><span class="p">:</span>
+        <span class="n">origin_id</span> <span class="o">=</span> <span class="n">sandbox_node</span><span class="o">.</span><span class="n">origin_node_id</span>
+        <span class="n">field_diffs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Check if the live node still exists</span>
+        <span class="n">live_node</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">live_node_exists</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">origin_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">live_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">and_</span><span class="p">(</span>
+                    <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">origin_id</span><span class="p">,</span>
+                    <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_sandbox_branch</span> <span class="o">==</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="n">live_node_exists</span> <span class="o">=</span> <span class="n">live_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="c1"># Check baseline snapshot</span>
+        <span class="n">baseline_node_exists</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">baseline</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">origin_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">snapshot</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">BaselineNodeSnapshot</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">and_</span><span class="p">(</span>
+                    <span class="n">BaselineNodeSnapshot</span><span class="o">.</span><span class="n">baseline_id</span> <span class="o">==</span> <span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">BaselineNodeSnapshot</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">origin_id</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="n">baseline_node_exists</span> <span class="o">=</span> <span class="n">snapshot</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="c1"># Determine the category</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="s2">"ADDED"</span>
+
+        <span class="k">if</span> <span class="n">origin_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># No origin — this is a new node added in the sandbox</span>
+            <span class="n">category</span> <span class="o">=</span> <span class="s2">"ADDED"</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">live_node_exists</span><span class="p">:</span>
+            <span class="c1"># Live node no longer exists</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sandbox_node</span><span class="o">.</span><span class="n">is_active</span><span class="p">:</span>
+                <span class="n">category</span> <span class="o">=</span> <span class="s2">"DELETED"</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">category</span> <span class="o">=</span> <span class="s2">"DELETED"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Compare sandbox vs live</span>
+            <span class="n">dates_differ</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">logic_differs</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">date_fields</span><span class="p">:</span>
+                <span class="n">sandbox_val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sandbox_node</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">live_val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">live_node</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">sandbox_val</span> <span class="o">!=</span> <span class="n">live_val</span><span class="p">:</span>
+                    <span class="n">dates_differ</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">field_diffs</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">"sandbox"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">sandbox_val</span><span class="p">)</span> <span class="k">if</span> <span class="n">sandbox_val</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">"live"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">live_val</span><span class="p">)</span> <span class="k">if</span> <span class="n">live_val</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">logic_fields</span><span class="p">:</span>
+                <span class="n">sandbox_val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sandbox_node</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="n">live_val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">live_node</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">sandbox_val</span> <span class="o">!=</span> <span class="n">live_val</span><span class="p">:</span>
+                    <span class="n">logic_differs</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">field_diffs</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">"sandbox"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">sandbox_val</span><span class="p">)</span> <span class="k">if</span> <span class="n">sandbox_val</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="s2">"live"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">live_val</span><span class="p">)</span> <span class="k">if</span> <span class="n">live_val</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="p">}</span>
+
+            <span class="k">if</span> <span class="n">dates_differ</span> <span class="ow">and</span> <span class="n">logic_differs</span><span class="p">:</span>
+                <span class="n">category</span> <span class="o">=</span> <span class="s2">"MODIFIED_LOGIC"</span>
+            <span class="k">elif</span> <span class="n">dates_differ</span><span class="p">:</span>
+                <span class="n">category</span> <span class="o">=</span> <span class="s2">"MODIFIED_DATES"</span>
+            <span class="k">elif</span> <span class="n">logic_differs</span><span class="p">:</span>
+                <span class="n">category</span> <span class="o">=</span> <span class="s2">"MODIFIED_LOGIC"</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Check if live node differs from baseline (concurrent mutation)</span>
+                <span class="k">if</span> <span class="n">baseline_node_exists</span><span class="p">:</span>
+                    <span class="n">category</span> <span class="o">=</span> <span class="s2">"CONFLICT_LIVE_MUTATED"</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">category</span> <span class="o">=</span> <span class="s2">"MODIFIED_DATES"</span>
+
+        <span class="n">entry</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">sandbox_node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"origin_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">origin_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">origin_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"category"</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
+            <span class="s2">"field_diffs"</span><span class="p">:</span> <span class="n">field_diffs</span><span class="p">,</span>
+            <span class="s2">"live_node_exists"</span><span class="p">:</span> <span class="n">live_node_exists</span><span class="p">,</span>
+            <span class="s2">"baseline_node_exists"</span><span class="p">:</span> <span class="n">baseline_node_exists</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">diff_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+
+        <span class="n">summary</span><span class="p">[</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">category</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"scenario_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">scenario</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"scenario_name"</span><span class="p">:</span> <span class="n">scenario</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"diff_entries"</span><span class="p">:</span> <span class="n">diff_entries</span><span class="p">,</span>
+        <span class="s2">"summary"</span><span class="p">:</span> <span class="n">summary</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Merge: apply sandbox changes back to the live schedule</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="merge_sandbox_to_live">
+<a class="viewcode-back" href="../../../modules.html#app.services.sandboxing.merge_sandbox_to_live">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge_sandbox_to_live</span><span class="p">(</span>
+    <span class="n">sandbox_scenario_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">cherry_picked_node_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Merge approved sandbox changes back to the live operational schedule.</span>
+
+<span class="sd">    This function applies changes from the sandbox branch to the corresponding</span>
+<span class="sd">    live PortfolioNode records.  The merge process:</span>
+
+<span class="sd">    1. Identifies which sandbox nodes to merge (all or cherry-picked).</span>
+<span class="sd">    2. For each sandbox node with an ``origin_node_id``, updates the live</span>
+<span class="sd">       node with the sandbox's date and logic changes.</span>
+<span class="sd">    3. For sandbox nodes without an ``origin_node_id``, creates new live</span>
+<span class="sd">       nodes (ADDED nodes).</span>
+<span class="sd">    4. Updates dependency links to reflect sandbox changes.</span>
+<span class="sd">    5. Triggers a live CPM forward/backward recalculation.</span>
+<span class="sd">    6. Records a ``SANDBOX_MERGE`` entry in the ForensicAuditLog.</span>
+<span class="sd">    7. Sets the scenario status to ``COMMITTED``.</span>
+
+<span class="sd">    All database changes are performed in a single transaction.  If any</span>
+<span class="sd">    step fails, the entire merge is rolled back.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sandbox_scenario_id : str</span>
+<span class="sd">        UUID of the SandboxScenario to merge.</span>
+<span class="sd">    cherry_picked_node_ids : list[str] or None</span>
+<span class="sd">        Optional list of sandbox node UUIDs to merge.  If None, all</span>
+<span class="sd">        sandbox nodes are merged.</span>
+<span class="sd">    user_id : int or None</span>
+<span class="sd">        ID of the user performing the merge (for audit logging).</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary containing:</span>
+<span class="sd">        - ``scenario_id``: UUID of the merged sandbox scenario</span>
+<span class="sd">        - ``nodes_updated``: Number of live nodes updated</span>
+<span class="sd">        - ``nodes_added``: Number of new live nodes created</span>
+<span class="sd">        - ``nodes_deleted``: Number of live nodes deleted</span>
+<span class="sd">        - ``dependencies_updated``: Number of dependency links updated</span>
+<span class="sd">        - ``cpm_recalculated``: Whether CPM was recalculated</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the sandbox scenario does not exist or is not ACTIVE.</span>
+<span class="sd">    """</span>
+    <span class="n">scenario_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">sandbox_scenario_id</span><span class="p">)</span>
+
+    <span class="n">scenario</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SandboxScenario</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">SandboxScenario</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">scenario_uuid</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">scenario</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Sandbox scenario </span><span class="si">{</span><span class="n">sandbox_scenario_id</span><span class="si">}</span><span class="s2"> not found."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">scenario</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">SandboxScenarioStatus</span><span class="o">.</span><span class="n">ACTIVE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Sandbox scenario is </span><span class="si">{</span><span class="n">scenario</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, not ACTIVE. "</span>
+            <span class="s2">"Only active scenarios can be merged."</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Get all sandbox nodes for this scenario</span>
+    <span class="n">sandbox_nodes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">sandbox_scenario_id</span> <span class="o">==</span> <span class="n">scenario_uuid</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Filter to cherry-picked nodes if specified</span>
+    <span class="k">if</span> <span class="n">cherry_picked_node_ids</span><span class="p">:</span>
+        <span class="n">picked_uuids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">UUID</span><span class="p">(</span><span class="n">nid</span><span class="p">)</span> <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">cherry_picked_node_ids</span><span class="p">)</span>
+        <span class="n">sandbox_nodes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">sandbox_nodes</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">picked_uuids</span>
+        <span class="p">]</span>
+
+    <span class="c1"># Build ID map: sandbox node ID -&gt; origin live node ID</span>
+    <span class="n">id_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">nodes_updated</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nodes_added</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nodes_deleted</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># Fields to merge from sandbox to live</span>
+    <span class="n">merge_fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"planned_start_date"</span><span class="p">,</span>
+        <span class="s2">"planned_end_date"</span><span class="p">,</span>
+        <span class="s2">"actual_start_date"</span><span class="p">,</span>
+        <span class="s2">"actual_end_date"</span><span class="p">,</span>
+        <span class="s2">"percent_complete"</span><span class="p">,</span>
+        <span class="s2">"code"</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">,</span>
+        <span class="s2">"delivery_mode"</span><span class="p">,</span>
+        <span class="s2">"pv"</span><span class="p">,</span>
+        <span class="s2">"ev"</span><span class="p">,</span>
+        <span class="s2">"ac"</span><span class="p">,</span>
+        <span class="s2">"custom_attributes"</span><span class="p">,</span>
+        <span class="s2">"requires_vv_signoff"</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">sandbox_node</span> <span class="ow">in</span> <span class="n">sandbox_nodes</span><span class="p">:</span>
+        <span class="n">origin_id</span> <span class="o">=</span> <span class="n">sandbox_node</span><span class="o">.</span><span class="n">origin_node_id</span>
+
+        <span class="k">if</span> <span class="n">origin_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># New node — create it in the live tree</span>
+            <span class="n">parent_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">sandbox_node</span><span class="o">.</span><span class="n">parent_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Find the origin of the parent</span>
+                <span class="n">parent_sandbox</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">sandbox_node</span><span class="o">.</span><span class="n">parent_id</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">parent_sandbox</span> <span class="ow">and</span> <span class="n">parent_sandbox</span><span class="o">.</span><span class="n">origin_node_id</span><span class="p">:</span>
+                    <span class="n">parent_id</span> <span class="o">=</span> <span class="n">parent_sandbox</span><span class="o">.</span><span class="n">origin_node_id</span>
+
+            <span class="c1"># Find the live parent to compute the path</span>
+            <span class="n">live_path</span> <span class="o">=</span> <span class="n">sandbox_node</span><span class="o">.</span><span class="n">path</span>
+            <span class="c1"># Strip the sandbox prefix</span>
+            <span class="k">if</span> <span class="s2">"."</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">live_path</span><span class="p">):</span>
+                <span class="n">parts</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">live_path</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">live_path</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">new_live_node</span> <span class="o">=</span> <span class="n">_clone_node</span><span class="p">(</span>
+                <span class="n">sandbox_node</span><span class="p">,</span>
+                <span class="kc">None</span><span class="p">,</span>  <span class="c1"># No scenario for live node</span>
+                <span class="n">live_path</span><span class="p">,</span>
+                <span class="n">db</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># Override sandbox-specific fields</span>
+            <span class="n">new_live_node</span><span class="o">.</span><span class="n">is_sandbox_branch</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">new_live_node</span><span class="o">.</span><span class="n">sandbox_scenario_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">new_live_node</span><span class="o">.</span><span class="n">origin_node_id</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">new_live_node</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">parent_id</span>
+
+            <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_live_node</span><span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            <span class="n">id_map</span><span class="p">[</span><span class="n">sandbox_node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_live_node</span><span class="o">.</span><span class="n">id</span>
+            <span class="n">nodes_added</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">elif</span> <span class="n">sandbox_node</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="c1"># Sandbox node is inactive — mark live node for deletion</span>
+            <span class="n">live_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">and_</span><span class="p">(</span>
+                    <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">origin_id</span><span class="p">,</span>
+                    <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_sandbox_branch</span> <span class="o">==</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">live_node</span><span class="p">:</span>
+                <span class="n">live_node</span><span class="o">.</span><span class="n">is_active</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">nodes_deleted</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">id_map</span><span class="p">[</span><span class="n">sandbox_node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">origin_id</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Update existing live node</span>
+            <span class="n">live_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">and_</span><span class="p">(</span>
+                    <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">origin_id</span><span class="p">,</span>
+                    <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_sandbox_branch</span> <span class="o">==</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">live_node</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">merge_fields</span><span class="p">:</span>
+                    <span class="n">sandbox_val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sandbox_node</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">sandbox_val</span> <span class="o">!=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">live_node</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                        <span class="nb">setattr</span><span class="p">(</span><span class="n">live_node</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">sandbox_val</span><span class="p">)</span>
+
+                <span class="n">live_node</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+                <span class="n">nodes_updated</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="n">id_map</span><span class="p">[</span><span class="n">sandbox_node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">origin_id</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Update dependency links</span>
+    <span class="n">dependencies_updated</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">sandbox_deps</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">or_</span><span class="p">(</span>
+            <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">id_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())),</span>
+            <span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">id_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())),</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Find dependencies that involve sandbox nodes</span>
+    <span class="n">sandbox_dep_predecessors</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">sandbox_nodes</span><span class="p">))</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">sandbox_dep_successors</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">sandbox_nodes</span><span class="p">))</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Get all dependency links within the sandbox</span>
+    <span class="n">sandbox_node_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">sandbox_nodes</span><span class="p">)</span>
+    <span class="n">sandbox_links</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">and_</span><span class="p">(</span>
+            <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">sandbox_node_ids</span><span class="p">),</span>
+            <span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">sandbox_node_ids</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">sandbox_link</span> <span class="ow">in</span> <span class="n">sandbox_links</span><span class="p">:</span>
+        <span class="n">pred_live_id</span> <span class="o">=</span> <span class="n">id_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sandbox_link</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">)</span>
+        <span class="n">succ_live_id</span> <span class="o">=</span> <span class="n">id_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sandbox_link</span><span class="o">.</span><span class="n">successor_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pred_live_id</span> <span class="ow">and</span> <span class="n">succ_live_id</span><span class="p">:</span>
+            <span class="c1"># Check if a live dependency already exists</span>
+            <span class="n">existing</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">and_</span><span class="p">(</span>
+                    <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span> <span class="o">==</span> <span class="n">pred_live_id</span><span class="p">,</span>
+                    <span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span> <span class="o">==</span> <span class="n">succ_live_id</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">existing</span><span class="p">:</span>
+                <span class="c1"># Update existing dependency</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">existing</span><span class="o">.</span><span class="n">dependency_type</span> <span class="o">!=</span> <span class="n">sandbox_link</span><span class="o">.</span><span class="n">dependency_type</span> <span class="ow">or</span>
+                        <span class="n">existing</span><span class="o">.</span><span class="n">lag_days</span> <span class="o">!=</span> <span class="n">sandbox_link</span><span class="o">.</span><span class="n">lag_days</span><span class="p">):</span>
+                    <span class="n">existing</span><span class="o">.</span><span class="n">dependency_type</span> <span class="o">=</span> <span class="n">sandbox_link</span><span class="o">.</span><span class="n">dependency_type</span>
+                    <span class="n">existing</span><span class="o">.</span><span class="n">lag_days</span> <span class="o">=</span> <span class="n">sandbox_link</span><span class="o">.</span><span class="n">lag_days</span>
+                    <span class="n">dependencies_updated</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Create new dependency</span>
+                <span class="n">new_dep</span> <span class="o">=</span> <span class="n">DependencyLink</span><span class="p">(</span>
+                    <span class="n">predecessor_id</span><span class="o">=</span><span class="n">pred_live_id</span><span class="p">,</span>
+                    <span class="n">successor_id</span><span class="o">=</span><span class="n">succ_live_id</span><span class="p">,</span>
+                    <span class="n">dependency_type</span><span class="o">=</span><span class="n">sandbox_link</span><span class="o">.</span><span class="n">dependency_type</span><span class="p">,</span>
+                    <span class="n">lag_days</span><span class="o">=</span><span class="n">sandbox_link</span><span class="o">.</span><span class="n">lag_days</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_dep</span><span class="p">)</span>
+                <span class="n">dependencies_updated</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Record SANDBOX_MERGE in ForensicAuditLog</span>
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">()),</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="sa">f</span><span class="s2">"user-</span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">user_id</span> <span class="k">else</span> <span class="s2">"system"</span><span class="p">,</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"SANDBOX_MERGE"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"SandboxScenario"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">scenario_uuid</span><span class="p">,</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"scenario_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">scenario</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"nodes_updated"</span><span class="p">:</span> <span class="n">nodes_updated</span><span class="p">,</span>
+            <span class="s2">"nodes_added"</span><span class="p">:</span> <span class="n">nodes_added</span><span class="p">,</span>
+            <span class="s2">"nodes_deleted"</span><span class="p">:</span> <span class="n">nodes_deleted</span><span class="p">,</span>
+            <span class="s2">"dependencies_updated"</span><span class="p">:</span> <span class="n">dependencies_updated</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="s2">"SANDBOX_MERGE"</span><span class="p">,</span>
+        <span class="n">db_session</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Mark scenario as committed</span>
+    <span class="n">scenario</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">SandboxScenarioStatus</span><span class="o">.</span><span class="n">COMMITTED</span>
+    <span class="n">scenario</span><span class="o">.</span><span class="n">updated_at</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Attempt CPM recalculation on the live root</span>
+    <span class="n">cpm_recalculated</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.cpm_engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">calculate_cpm</span>
+        <span class="n">root_uuid</span> <span class="o">=</span> <span class="n">scenario</span><span class="o">.</span><span class="n">root_portfolio_node_id</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">calculate_cpm</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">root_uuid</span><span class="p">),</span> <span class="n">db</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">cpm_recalculated</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="c1"># CPM recalculation failure should not block the merge</span>
+        <span class="n">cpm_recalculated</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"scenario_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">scenario</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"nodes_updated"</span><span class="p">:</span> <span class="n">nodes_updated</span><span class="p">,</span>
+        <span class="s2">"nodes_added"</span><span class="p">:</span> <span class="n">nodes_added</span><span class="p">,</span>
+        <span class="s2">"nodes_deleted"</span><span class="p">:</span> <span class="n">nodes_deleted</span><span class="p">,</span>
+        <span class="s2">"dependencies_updated"</span><span class="p">:</span> <span class="n">dependencies_updated</span><span class="p">,</span>
+        <span class="s2">"cpm_recalculated"</span><span class="p">:</span> <span class="n">cpm_recalculated</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

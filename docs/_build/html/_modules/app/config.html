@@ -1,0 +1,432 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.config &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.config</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.config</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Application configuration loaded from environment variables.</span>
+
+<span class="sd">This module provides a centralised configuration object that reads settings</span>
+<span class="sd">from environment variables or a ``.env`` file.  This follows the</span>
+<span class="sd">12-factor app methodology: configuration is separated from code.</span>
+
+<span class="sd">Configuration Categories</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- **Application** — Name, debug mode, JWT secret key, token expiry.</span>
+<span class="sd">- **Database** — PostgreSQL connection string.</span>
+<span class="sd">- **CORS** — Allowed origins for cross-origin requests.</span>
+
+<span class="sd">Environment Variables</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">All settings can be overridden via environment variables or a ``.env``</span>
+<span class="sd">file in the project root.  Example ``.env`` file::</span>
+
+<span class="sd">    APP_NAME=Eisenhower Portfolio Manager</span>
+<span class="sd">    DEBUG=false</span>
+<span class="sd">    SECRET_KEY=your-very-secret-key-here</span>
+<span class="sd">    ACCESS_TOKEN_EXPIRE_MINUTES=1440</span>
+<span class="sd">    DATABASE_URL=postgresql+psycopg2://user:pass@localhost:5432/eisenhower</span>
+<span class="sd">    ALLOWED_ORIGINS=http://localhost:3000</span>
+
+<span class="sd">Security Warning</span>
+<span class="sd">~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The default ``SECRET_KEY`` is **not secure for production**.  Always</span>
+<span class="sd">set a strong, random secret key in production environments.  Use</span>
+<span class="sd">``python -c "import secrets; print(secrets.token_urlsafe(32))"`` to</span>
+<span class="sd">generate one.</span>
+
+<span class="sd">In production mode (``ENVIRONMENT=production``), the application will</span>
+<span class="sd">refuse to start if ``SECRET_KEY`` is a known default value or contains</span>
+<span class="sd">less than 256 bits of entropy (minimum 44 characters of base64-safe text).</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">string</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic_settings</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseSettings</span><span class="p">,</span> <span class="n">SettingsConfigDict</span>
+
+
+<span class="c1"># Well-known default or weak secret keys that must never be used in production</span>
+<span class="n">DEFAULT_SECRET_KEYS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"change-me-in-production"</span><span class="p">,</span>
+    <span class="s2">"change-me-in-production-use-secrets-token-urlsafe-32"</span><span class="p">,</span>
+    <span class="s2">"your-very-secret-key-here"</span><span class="p">,</span>
+    <span class="s2">"CHANGE_ME_GENERATE_RANDOM_SECRET"</span><span class="p">,</span>
+    <span class="s2">"secret"</span><span class="p">,</span>
+    <span class="s2">"changeme"</span><span class="p">,</span>
+    <span class="s2">"default"</span><span class="p">,</span>
+    <span class="s2">"placeholder"</span><span class="p">,</span>
+    <span class="s2">"replace-me"</span><span class="p">,</span>
+    <span class="s2">"your-secret-key-here"</span><span class="p">,</span>
+    <span class="s2">""</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># Minimum character length for a production SECRET_KEY (≈256 bits of entropy</span>
+<span class="c1"># when drawn from a urlsafe base64 alphabet maps to ~44 characters)</span>
+<span class="n">MIN_SECRET_KEY_LENGTH</span> <span class="o">=</span> <span class="mi">44</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_estimate_secret_entropy</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Estimate the Shannon entropy (in bits) of a secret string.</span>
+
+<span class="sd">    Uses the size of the character pool actually present in the secret</span>
+<span class="sd">    multiplied by the string length.  This is a conservative upper bound;</span>
+<span class="sd">    real entropy may be lower if the secret is not uniformly random.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">secret</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="n">pool</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span>
+    <span class="n">pool_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pool_size</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">pool_size</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Settings">
+<a class="viewcode-back" href="../../modules.html#app.config.Settings">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Settings</span><span class="p">(</span><span class="n">BaseSettings</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Application settings loaded from environment variables.</span>
+
+<span class="sd">    This class reads configuration from environment variables or a</span>
+<span class="sd">    ``.env`` file.  It provides type-safe access to all application</span>
+<span class="sd">    settings with sensible defaults for development.</span>
+
+<span class="sd">    In production mode (``ENVIRONMENT=production``), the constructor will</span>
+<span class="sd">    raise a ``RuntimeError`` if ``SECRET_KEY`` is a known default value</span>
+<span class="sd">    or contains less than 256 bits of estimated entropy.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    APP_NAME : str</span>
+<span class="sd">        Human-readable application name used in API documentation.</span>
+<span class="sd">    DEBUG : bool</span>
+<span class="sd">        Enable debug mode.  Should be ``False`` in production.</span>
+<span class="sd">    SECRET_KEY : str</span>
+<span class="sd">        Cryptographic secret key used for JWT token signing.</span>
+<span class="sd">        **Must be changed from the default in production.**</span>
+<span class="sd">    ACCESS_TOKEN_EXPIRE_MINUTES : int</span>
+<span class="sd">        JWT token lifetime in minutes (default: 1440 = 24 hours).</span>
+<span class="sd">    DATABASE_URL : str</span>
+<span class="sd">        PostgreSQL connection string (e.g.,</span>
+<span class="sd">        ``postgresql+psycopg2://user:pass@host:5432/dbname``).</span>
+<span class="sd">    DATABASE_SSL_MODE : str</span>
+<span class="sd">        SSL mode for the database connection: ``require``, ``verify-ca``,</span>
+<span class="sd">        ``verify-full``, or ``disable``.  Defaults to ``disable`` for local</span>
+<span class="sd">        development.  In production, use ``verify-ca`` or ``verify-full``.</span>
+<span class="sd">    ALLOWED_ORIGINS : str</span>
+<span class="sd">        Comma-separated list of allowed CORS origins, or ``*`` for</span>
+<span class="sd">        all origins.</span>
+<span class="sd">    TLS_ENABLED : bool</span>
+<span class="sd">        Enable TLS/SSL for the application.  Defaults to ``True``.</span>
+<span class="sd">    TLS_CERT_PATH : str</span>
+<span class="sd">        Path to the TLS certificate file.</span>
+<span class="sd">    TLS_KEY_PATH : str</span>
+<span class="sd">        Path to the TLS private key file.</span>
+<span class="sd">    TLS_CA_PATH : str</span>
+<span class="sd">        Path to the CA certificate file for certificate verification.</span>
+<span class="sd">    REDIS_URL : str</span>
+<span class="sd">        Redis connection URL.</span>
+<span class="sd">    REDIS_SSL : bool</span>
+<span class="sd">        Enable SSL for Redis connections.</span>
+<span class="sd">    S3_ENDPOINT_URL : str</span>
+<span class="sd">        MinIO / S3 endpoint URL.</span>
+<span class="sd">    S3_USE_SSL : bool</span>
+<span class="sd">        Enable SSL for S3 connections.</span>
+<span class="sd">    HSM_ENABLED : bool</span>
+<span class="sd">        Enable HSM-based cryptographic signing for forensic audit ledger.</span>
+<span class="sd">        Defaults to ``False`` (software Ed25519 signing in development).</span>
+<span class="sd">    HSM_PKCS11_LIB_PATH : str</span>
+<span class="sd">        Path to the PKCS#11 shared library (e.g., ``/usr/lib/libykcs11.so``</span>
+<span class="sd">        for YubiHSM2, ``/usr/lib/softhsm2/libsofthsm2.so`` for SoftHSM2).</span>
+<span class="sd">    HSM_SLOT_ID : int</span>
+<span class="sd">        The PKCS#11 slot index containing the HSM token.</span>
+<span class="sd">    HSM_TOKEN_LABEL : str</span>
+<span class="sd">        Human-readable label of the HSM token to use.</span>
+<span class="sd">    HSM_PIN : str</span>
+<span class="sd">        PIN for authenticating to the HSM token.</span>
+<span class="sd">    HSM_KEY_LABEL : str</span>
+<span class="sd">        Label of the RSA-4096 or ECDSA P-384 private signing key on the token.</span>
+<span class="sd">    DIODE_ENABLED : bool</span>
+<span class="sd">        Enable the data diode directory polling daemon for air-gapped</span>
+<span class="sd">        environments.  Defaults to ``False``.</span>
+<span class="sd">    DIODE_DROP_DIR : str</span>
+<span class="sd">        Path to the diode dropzone spool directory where incoming</span>
+<span class="sd">        ``.defpack`` or ``.merklepack`` archives are placed.</span>
+<span class="sd">    DIODE_QUARANTINE_DIR : str</span>
+<span class="sd">        Path to the quarantine staging directory.  Files are moved here</span>
+<span class="sd">        for verification before ingestion.</span>
+<span class="sd">    DIODE_POLL_INTERVAL_SECONDS : float</span>
+<span class="sd">        Interval between directory polls in seconds (default: 5.0).</span>
+<span class="sd">    DIODE_PUBLIC_KEY_DIR : str</span>
+<span class="sd">        Directory containing public signing keys for verifying bundle</span>
+<span class="sd">        signatures from originating sovereign sites.</span>
+<span class="sd">    DIODE_MAX_ARCHIVE_SIZE_MB : int</span>
+<span class="sd">        Maximum allowed archive size in megabytes (default: 500).</span>
+<span class="sd">    DIODE_ZIP_BOMB_RATIO : float</span>
+<span class="sd">        Maximum allowed compression ratio for zip-bomb detection</span>
+<span class="sd">        (default: 100.0).  Archives exceeding this ratio are rejected.</span>
+<span class="sd">    """</span>
+
+    <span class="c1"># Application</span>
+    <span class="n">APP_NAME</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Eisenhower Portfolio Manager"</span>
+    <span class="n">DEBUG</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">SECRET_KEY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"change-me-in-production"</span>
+    <span class="n">ACCESS_TOKEN_EXPIRE_MINUTES</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">24</span>  <span class="c1"># 24 hours</span>
+
+    <span class="c1"># JWT</span>
+    <span class="n">JWT_ALGORITHM</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"HS256"</span>
+    <span class="n">JWT_EXPIRATION_MINUTES</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">480</span>
+
+    <span class="c1"># Database</span>
+    <span class="n">DATABASE_URL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"postgresql+psycopg2://postgres:postgres@localhost:5432/eisenhower"</span>
+    <span class="n">DATABASE_SSL_MODE</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"disable"</span>  <span class="c1"># require, verify-ca, verify-full, disable</span>
+
+    <span class="c1"># CORS</span>
+    <span class="n">ALLOWED_ORIGINS</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"*"</span>
+
+    <span class="c1"># Environment (controls dev-only features like mock fixtures)</span>
+    <span class="n">ENVIRONMENT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"development"</span>
+
+    <span class="c1"># TLS / SSL</span>
+    <span class="n">TLS_ENABLED</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">TLS_CERT_PATH</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"/etc/ssl/certs/eisenhower.crt"</span>
+    <span class="n">TLS_KEY_PATH</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"/etc/ssl/private/eisenhower.key"</span>
+    <span class="n">TLS_CA_PATH</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"/etc/ssl/certs/ca.crt"</span>
+
+    <span class="c1"># Redis</span>
+    <span class="n">REDIS_URL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"redis://redis:6379/0"</span>
+    <span class="n">REDIS_SSL</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># MinIO / S3</span>
+    <span class="n">S3_ENDPOINT_URL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"http://minio:9000"</span>
+    <span class="n">S3_BUCKET_NAME</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"eisenhower-artifacts"</span>
+    <span class="n">S3_ACCESS_KEY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"minioadmin"</span>
+    <span class="n">S3_SECRET_KEY</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"minioadmin"</span>
+    <span class="n">S3_USE_SSL</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># HSM / PKCS#11 — Hardware Security Module for forensic audit signing</span>
+    <span class="n">HSM_ENABLED</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">HSM_PKCS11_LIB_PATH</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"/usr/lib/softhsm2/libsofthsm2.so"</span>
+    <span class="n">HSM_SLOT_ID</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">HSM_TOKEN_LABEL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ForensicAuditToken"</span>
+    <span class="n">HSM_PIN</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"change-me-in-production"</span>
+    <span class="n">HSM_KEY_LABEL</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"audit-signing-key"</span>
+
+    <span class="c1"># Data Diode — air-gapped unidirectional polling daemon</span>
+    <span class="n">DIODE_ENABLED</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">DIODE_DROP_DIR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"/var/spool/eisenhower/diode_drop"</span>
+    <span class="n">DIODE_QUARANTINE_DIR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"/var/spool/eisenhower/quarantine"</span>
+    <span class="n">DIODE_POLL_INTERVAL_SECONDS</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="n">DIODE_PUBLIC_KEY_DIR</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"/etc/eisenhower/keys/public"</span>
+    <span class="n">DIODE_MAX_ARCHIVE_SIZE_MB</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span>
+    <span class="n">DIODE_ZIP_BOMB_RATIO</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100.0</span>
+
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">SettingsConfigDict</span><span class="p">(</span><span class="n">env_file</span><span class="o">=</span><span class="s2">".env"</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Settings.__init__">
+<a class="viewcode-back" href="../../modules.html#app.config.Settings.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialise settings and validate production secrets.</span>
+
+<span class="sd">        In production mode, this performs strict validation of the</span>
+<span class="sd">        ``SECRET_KEY`` to ensure it is not a known default and has</span>
+<span class="sd">        sufficient entropy (≥256 bits, which maps to ≥44 characters</span>
+<span class="sd">        for urlsafe base64 tokens).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            If running in production and ``SECRET_KEY`` is a known</span>
+<span class="sd">            default value or has insufficient entropy.</span>
+<span class="sd">        """</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_production_secrets</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_production_secrets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Validate that production cryptographic secrets meet security requirements.</span>
+
+<span class="sd">        Checks</span>
+<span class="sd">        ------</span>
+<span class="sd">        - ``SECRET_KEY`` must not equal any known default placeholder.</span>
+<span class="sd">        - ``SECRET_KEY`` must be at least ``MIN_SECRET_KEY_LENGTH`` characters</span>
+<span class="sd">          (≈256 bits of entropy for urlsafe base64).</span>
+<span class="sd">        - ``SECRET_KEY`` must have an estimated Shannon entropy of at least</span>
+<span class="sd">          256 bits.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            If any check fails in production mode.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ENVIRONMENT</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">"production"</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">secret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SECRET_KEY</span>
+
+        <span class="c1"># Check against known defaults</span>
+        <span class="k">if</span> <span class="n">secret</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="n">d</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">DEFAULT_SECRET_KEYS</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="s2">"FATAL: SECRET_KEY is set to a known default value. "</span>
+                <span class="s2">"In production, SECRET_KEY must be a cryptographically "</span>
+                <span class="s2">"random token. Generate one with: "</span>
+                <span class="s1">'python -c "import secrets; print(secrets.token_urlsafe(48))"'</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check minimum length (44 chars ≈ 256 bits for urlsafe base64)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">MIN_SECRET_KEY_LENGTH</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"FATAL: SECRET_KEY is too short for production "</span>
+                <span class="sa">f</span><span class="s2">"(minimum </span><span class="si">{</span><span class="n">MIN_SECRET_KEY_LENGTH</span><span class="si">}</span><span class="s2"> characters, "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span><span class="si">}</span><span class="s2">). "</span>
+                <span class="s2">"In production, SECRET_KEY must contain at least 256 bits "</span>
+                <span class="s2">"of entropy. Generate one with: "</span>
+                <span class="s1">'python -c "import secrets; print(secrets.token_urlsafe(48))"'</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check estimated entropy</span>
+        <span class="n">entropy</span> <span class="o">=</span> <span class="n">_estimate_secret_entropy</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">entropy</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"FATAL: SECRET_KEY has insufficient entropy for production "</span>
+                <span class="sa">f</span><span class="s2">"(estimated </span><span class="si">{</span><span class="n">entropy</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> bits, minimum 256 bits). "</span>
+                <span class="s2">"Use a longer, more random secret. Generate one with: "</span>
+                <span class="s1">'python -c "import secrets; print(secrets.token_urlsafe(48))"'</span>
+            <span class="p">)</span></div>
+
+
+
+<span class="n">settings</span> <span class="o">=</span> <span class="n">Settings</span><span class="p">()</span>
+<span class="sd">"""Singleton application settings instance.</span>
+
+<span class="sd">This is the central configuration object used throughout the application.</span>
+<span class="sd">It is initialised once at import time from environment variables or a</span>
+<span class="sd">``.env`` file.  All modules should import this instance rather than</span>
+<span class="sd">creating their own ``Settings()`` object.</span>
+
+<span class="sd">Example</span>
+<span class="sd">~~~~~~~</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    from app.config import settings</span>
+
+<span class="sd">    print(settings.APP_NAME)  # "Eisenhower Portfolio Manager"</span>
+<span class="sd">"""</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.schemas.briefing_schemas &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.schemas.briefing_schemas</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.schemas.briefing_schemas</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Briefing Pack Export Schemas.</span>
+
+<span class="sd">This module defines Pydantic schemas for the automated executive briefing</span>
+<span class="sd">deck generator.  The briefing service produces standardized PowerPoint</span>
+<span class="sd">(.pptx) presentations containing programme health metrics, schedule</span>
+<span class="sd">visualizations, EVM S-Curves, risk tornado charts, and risk matrices.</span>
+
+<span class="sd">Briefing Deck Structure</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Each briefing deck follows a fixed 5-slide template aligned with defence</span>
+<span class="sd">programme reporting conventions:</span>
+
+<span class="sd">1. **Programme Master Health** — Executive summary with RAG status dials,</span>
+<span class="sd">   overall CPI/SPI indices, and active critical path summary.</span>
+
+<span class="sd">2. **Comparative Gantt Snapshot** — Top-level WBS nodes with live forecast</span>
+<span class="sd">   bars, B₀ contract baseline tracks, and jagged status-date drop line.</span>
+
+<span class="sd">3. **Cumulative EVM S-Curve** — Historical and projected PV, EV, and AC</span>
+<span class="sd">   curves through contract completion.</span>
+
+<span class="sd">4. **Top 5 Schedule Drivers** — Tornado chart of Monte Carlo Criticality</span>
+<span class="sd">   Index (CI) ranking the primary risk drivers.</span>
+
+<span class="sd">5. **5×5 Programme Risk Matrix** — Active risks plotted by likelihood vs</span>
+<span class="sd">   consequence with mitigation owners.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">Every slide is automatically stamped with the programme's classification</span>
+<span class="sd">marking (e.g., "OFFICIAL-SENSITIVE // UK EYES ONLY") at the top and bottom.</span>
+<span class="sd">Export-control disclaimers appear on the title slide.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
+
+
+<div class="viewcode-block" id="BriefingGenerateRequest">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.briefing_schemas.BriefingGenerateRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BriefingGenerateRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Request schema for generating an executive briefing deck.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    project_id : str</span>
+<span class="sd">        UUID of the root PortfolioNode for the programme being briefed.</span>
+<span class="sd">    status_date : str</span>
+<span class="sd">        Reporting cut-off date in ISO format (e.g., '2026-10-24').</span>
+<span class="sd">        All metrics are calculated as of this date.</span>
+<span class="sd">    slide_selection : list[int] or None</span>
+<span class="sd">        Optional list of slide numbers to include (1–5).</span>
+<span class="sd">        If None, all 5 slides are generated.</span>
+<span class="sd">        Example: [1, 3, 5] generates only slides 1, 3, and 5.</span>
+<span class="sd">    title_override : str or None</span>
+<span class="sd">        Optional custom title for the briefing deck.</span>
+<span class="sd">        If None, the programme name is used automatically.</span>
+<span class="sd">    classification_override : str or None</span>
+<span class="sd">        Optional override for the classification marking.</span>
+<span class="sd">        If None, the programme's highest classification is used.</span>
+<span class="sd">    include_export_disclaimer : bool</span>
+<span class="sd">        Whether to include export-control disclaimer on the title slide.</span>
+<span class="sd">        Default is True.</span>
+<span class="sd">    """</span>
+
+    <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"UUID of the root PortfolioNode for the programme"</span>
+    <span class="p">)</span>
+    <span class="n">status_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Reporting cut-off date (ISO format, e.g. '2026-10-24')"</span>
+    <span class="p">)</span>
+    <span class="n">slide_selection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Slide numbers to include (1-5). None = all slides."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">title_override</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Custom title for the briefing deck"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">classification_override</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Override classification marking"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">include_export_disclaimer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Include export-control disclaimer on title slide"</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BriefingSlideInfo">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.briefing_schemas.BriefingSlideInfo">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BriefingSlideInfo</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Metadata about a single generated slide.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    slide_number : int</span>
+<span class="sd">        The slide number (1–5).</span>
+<span class="sd">    slide_title : str</span>
+<span class="sd">        Title of the slide.</span>
+<span class="sd">    data_points : int</span>
+<span class="sd">        Number of data points rendered on this slide.</span>
+<span class="sd">    """</span>
+
+    <span class="n">slide_number</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">slide_title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">data_points</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="BriefingGenerateResponse">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.briefing_schemas.BriefingGenerateResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BriefingGenerateResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response schema for briefing deck generation.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    deck_id : str</span>
+<span class="sd">        Unique identifier for the generated briefing deck.</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Title of the briefing deck.</span>
+<span class="sd">    slide_count : int</span>
+<span class="sd">        Number of slides in the deck.</span>
+<span class="sd">    slides : list[BriefingSlideInfo]</span>
+<span class="sd">        Metadata for each generated slide.</span>
+<span class="sd">    file_size_bytes : int</span>
+<span class="sd">        Size of the generated .pptx file in bytes.</span>
+<span class="sd">    classification : str</span>
+<span class="sd">        Classification marking applied to all slides.</span>
+<span class="sd">    generated_at : str</span>
+<span class="sd">        Timestamp when the deck was generated.</span>
+<span class="sd">    message : str</span>
+<span class="sd">        Human-readable summary of the generation result.</span>
+<span class="sd">    """</span>
+
+    <span class="n">deck_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">slide_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">slides</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BriefingSlideInfo</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">file_size_bytes</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">classification</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">generated_at</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">message</span><span class="p">:</span> <span class="nb">str</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

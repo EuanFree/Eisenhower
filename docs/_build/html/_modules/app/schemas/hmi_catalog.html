@@ -1,0 +1,825 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.schemas.hmi_catalog &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.schemas.hmi_catalog</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.schemas.hmi_catalog</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Human-Machine Interface (HMI) Component Catalog — UI payload schemas.</span>
+
+<span class="sd">This module defines the complete set of Pydantic response models that drive</span>
+<span class="sd">the frontend integration for the Eisenhower Portfolio Manager.  Each schema</span>
+<span class="sd">corresponds to a specific GUI tier component, providing a contract between</span>
+<span class="sd">the backend API and the frontend rendering layer.</span>
+
+<span class="sd">The catalog is organised by UI component:</span>
+
+<span class="sd">1. **GanttBarPayload** — Schedule Gantt chart bars showing planned vs. actual</span>
+<span class="sd">   timelines, baseline comparisons, and blocked status.</span>
+
+<span class="sd">2. **JaggedDropLinePayload** — The "jagged drop line" visualisation showing</span>
+<span class="sd">   the status date frontier across the programme, indicating which work</span>
+<span class="sd">   packages are ahead or behind schedule.</span>
+
+<span class="sd">3. **DailyCockpitSummaryPayload** — The personal landing page ("My Daily</span>
+<span class="sd">   Cockpit") summary showing active sprint load, blocked items, urgent tasks,</span>
+<span class="sd">   focus queue, and claimable placeholder tasks.</span>
+
+<span class="sd">4. **ClashTriageItemPayload** — Resource and schedule clash triage items</span>
+<span class="sd">   showing severity, category, conflict window, and proposed resolution.</span>
+
+<span class="sd">5. **DisplaySettingsPayload** — Server-side display profile for SCIF hot-desking</span>
+<span class="sd">   environments, including density, theme, and colour accessibility settings.</span>
+
+<span class="sd">Design Principles</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- **Frontend-ready**: Every field is serialisable to JSON and maps directly</span>
+<span class="sd">  to a UI component property.</span>
+<span class="sd">- **Defence-aware**: Classification markings and redaction flags are included</span>
+<span class="sd">  so the frontend can apply ABAC masking at the display layer.</span>
+<span class="sd">- **Baseline-aware**: Gantt bars include both B₀ (original contract baseline)</span>
+<span class="sd">  and B_curr (current approved baseline) for variance visualisation.</span>
+<span class="sd">- **Performance-optimised**: Payloads are lean — only the fields the UI</span>
+<span class="sd">  actually needs, avoiding over-fetching of full model data.</span>
+
+<span class="sd">Schema Naming Convention</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">All schemas follow the pattern ``&lt;Component&gt;Payload`` to distinguish them</span>
+<span class="sd">from CRUD schemas (Create/Update/Response) in ``schemas.py``.  Payload</span>
+<span class="sd">schemas are read-only API responses optimised for UI consumption.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Gantt Chart Bar Payload</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="BaselineBar">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.BaselineBar">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaselineBar</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A single baseline comparison bar segment for Gantt overlay.</span>
+
+<span class="sd">    In defence programme management, baseline comparisons are critical</span>
+<span class="sd">    for visualising schedule variance.  The Gantt chart overlays the</span>
+<span class="sd">    original contract baseline (B₀) and the current approved baseline</span>
+<span class="sd">    (B_curr) against the live schedule bar.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_date : date</span>
+<span class="sd">        Baseline planned start date for this node.</span>
+<span class="sd">    end_date : date</span>
+<span class="sd">        Baseline planned end date for this node.</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Short label identifying the baseline (e.g., 'B0', 'B1').</span>
+<span class="sd">    """</span>
+
+    <span class="n">start_date</span><span class="p">:</span> <span class="n">date</span>
+    <span class="n">end_date</span><span class="p">:</span> <span class="n">date</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Baseline identifier, e.g. 'B0' or 'B_curr'"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="GanttBarPayload">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.GanttBarPayload">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GanttBarPayload</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Payload for a single Gantt chart bar in the schedule view.</span>
+
+<span class="sd">    Each bar represents a PortfolioNode in the WBS hierarchy, displaying</span>
+<span class="sd">    planned vs. actual timelines, physical progress, blocked status,</span>
+<span class="sd">    and baseline comparison overlays.</span>
+
+<span class="sd">    The frontend renders:</span>
+
+<span class="sd">    - **Planned bar**: Blue bar from planned_start to planned_end.</span>
+<span class="sd">    - **Actual bar**: Grey bar from actual_start to actual_end (if started).</span>
+<span class="sd">    - **Progress fill**: Darker overlay showing physical_percent_complete.</span>
+<span class="sd">    - **Blocked indicator**: Red X or warning icon when is_blocked is True.</span>
+<span class="sd">    - **Cross-hatch shading**: Diagonal pattern when cross_hatch_shading</span>
+<span class="sd">      is True (indicates procurement-constrained or export-controlled task).</span>
+<span class="sd">    - **Baseline comparisons**: Thin overlay bars for B₀ and B_curr.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        UUID of the PortfolioNode this bar represents.</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Display label shown on the bar (node name or code).</span>
+<span class="sd">    planned_start : date</span>
+<span class="sd">        Planned early start date from CPM calculation.</span>
+<span class="sd">    planned_end : date</span>
+<span class="sd">        Planned early finish date from CPM calculation.</span>
+<span class="sd">    actual_start : date or None</span>
+<span class="sd">        Actual start date (None if task has not started).</span>
+<span class="sd">    actual_end : date or None</span>
+<span class="sd">        Actual end date (None if task is not yet complete).</span>
+<span class="sd">    physical_percent_complete : float</span>
+<span class="sd">        Physical progress percentage (0.0–100.0).  Drives the progress</span>
+<span class="sd">        fill overlay on the bar.</span>
+<span class="sd">    is_blocked : bool</span>
+<span class="sd">        True if the task has an active blocker (NodeBlocker record).</span>
+<span class="sd">        Renders a red warning indicator on the bar.</span>
+<span class="sd">    cross_hatch_shading : bool</span>
+<span class="sd">        True if the task requires cross-hatch shading to indicate</span>
+<span class="sd">        procurement constraints, export control restrictions, or</span>
+<span class="sd">        other special handling.  Renders diagonal pattern overlay.</span>
+<span class="sd">    baseline_b0 : BaselineBar or None</span>
+<span class="sd">        Original contract baseline (B₀) comparison bar.  Shows the</span>
+<span class="sd">        initial planned schedule for variance visualisation.</span>
+<span class="sd">    baseline_b_curr : BaselineBar or None</span>
+<span class="sd">        Current approved baseline (B_curr) comparison bar.  Shows</span>
+<span class="sd">        the most recently approved baseline after BCR changes.</span>
+<span class="sd">    security_classification : str or None</span>
+<span class="sd">        Security classification marking for ABAC-aware rendering.</span>
+<span class="sd">        Frontend may suppress details for unclassified users.</span>
+<span class="sd">    is_masked : bool</span>
+<span class="sd">        True if this node's data is redacted due to ABAC clearance.</span>
+<span class="sd">        Frontend should render a ghost-node placeholder.</span>
+<span class="sd">    node_type : str</span>
+<span class="sd">        Visual type hint for the frontend: 'milestone', 'summary',</span>
+<span class="sd">        or 'task'.  Milestones render as diamonds, summaries as</span>
+<span class="sd">        bold bars, tasks as standard bars.</span>
+<span class="sd">    outline_level : int</span>
+<span class="sd">        WBS hierarchy depth (1 = programme root, 2 = project, etc.).</span>
+<span class="sd">        Controls indentation in the Gantt row labels.</span>
+<span class="sd">    """</span>
+
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"UUID of the PortfolioNode"</span><span class="p">)</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Display label on the bar"</span><span class="p">)</span>
+    <span class="n">planned_start</span><span class="p">:</span> <span class="n">date</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"CPM planned early start"</span><span class="p">)</span>
+    <span class="n">planned_end</span><span class="p">:</span> <span class="n">date</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"CPM planned early finish"</span><span class="p">)</span>
+    <span class="n">actual_start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">actual_end</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">physical_percent_complete</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Physical progress 0.0–100.0%"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">is_blocked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">False</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"True if task has an active NodeBlocker"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">cross_hatch_shading</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">False</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"True for procurement-constrained or export-controlled tasks"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">baseline_b0</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BaselineBar</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">baseline_b_curr</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BaselineBar</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">security_classification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">is_masked</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">node_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"task"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"'milestone', 'summary', or 'task'"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">outline_level</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"WBS hierarchy depth"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="GanttChartPayload">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.GanttChartPayload">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GanttChartPayload</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Complete Gantt chart payload for the schedule view.</span>
+
+<span class="sd">    Returns the full set of bars, the status date line, and metadata</span>
+<span class="sd">    for the Gantt chart component.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bars : list[GanttBarPayload]</span>
+<span class="sd">        List of all Gantt bars to render, ordered by planned start date.</span>
+<span class="sd">    status_date : date</span>
+<span class="sd">        The current status date for the programme.  Renders as a</span>
+<span class="sd">        vertical "today" line on the chart.</span>
+<span class="sd">    chart_start : date</span>
+<span class="sd">        Earliest date on the chart x-axis.</span>
+<span class="sd">    chart_end : date</span>
+<span class="sd">        Latest date on the chart x-axis.</span>
+<span class="sd">    total_nodes : int</span>
+<span class="sd">        Total number of nodes in the chart (for pagination info).</span>
+<span class="sd">    """</span>
+
+    <span class="n">bars</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GanttBarPayload</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">status_date</span><span class="p">:</span> <span class="n">date</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Current programme status date"</span><span class="p">)</span>
+    <span class="n">chart_start</span><span class="p">:</span> <span class="n">date</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Earliest x-axis date"</span><span class="p">)</span>
+    <span class="n">chart_end</span><span class="p">:</span> <span class="n">date</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Latest x-axis date"</span><span class="p">)</span>
+    <span class="n">total_nodes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Jagged Drop Line Payload</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="DropLinePoint">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.DropLinePoint">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DropLinePoint</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A single coordinate point on the jagged drop line.</span>
+
+<span class="sd">    The jagged drop line visualises the schedule frontier across the</span>
+<span class="sd">    programme.  Each point represents a work package's status relative</span>
+<span class="sd">    to the status date.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        UUID of the node this point represents.</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Short label (node code or name).</span>
+<span class="sd">    x : float</span>
+<span class="sd">        X-coordinate (date position, typically day offset from project start).</span>
+<span class="sd">    y : float</span>
+<span class="sd">        Y-coordinate (hierarchy level or work package grouping).</span>
+<span class="sd">    status : str</span>
+<span class="sd">        Schedule status: 'ahead', 'on-track', 'behind', or 'complete'.</span>
+<span class="sd">        Determines the colour of the line segment.</span>
+<span class="sd">    variance_days : float</span>
+<span class="sd">        Schedule variance in days.  Positive = behind, negative = ahead.</span>
+<span class="sd">    """</span>
+
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">x</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"X-coordinate (day offset from project start)"</span><span class="p">)</span>
+    <span class="n">y</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Y-coordinate (hierarchy level)"</span><span class="p">)</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"'ahead', 'on-track', 'behind', or 'complete'"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">variance_days</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Positive = behind schedule, negative = ahead"</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="JaggedDropLinePayload">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.JaggedDropLinePayload">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">JaggedDropLinePayload</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Payload for the jagged drop line schedule frontier visualisation.</span>
+
+<span class="sd">    The jagged drop line is a defence-industry-standard visualisation</span>
+<span class="sd">    that shows the collective schedule health of a programme at a glance.</span>
+<span class="sd">    It plots each work package's status date position relative to the</span>
+<span class="sd">    planned schedule, creating a "jagged" frontier line that reveals</span>
+<span class="sd">    clusters of ahead/behind tasks.</span>
+
+<span class="sd">    The frontend renders:</span>
+
+<span class="sd">    - **Green segments**: Work packages ahead of schedule.</span>
+<span class="sd">    - **Blue segments**: Work packages on track.</span>
+<span class="sd">    - **Red segments**: Work packages behind schedule.</span>
+<span class="sd">    - **Grey segments**: Completed work packages.</span>
+<span class="sd">    - **Inflection points**: Sharp turns indicating status changes.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    status_date : date</span>
+<span class="sd">        The status date used to calculate the drop line.  This is the</span>
+<span class="sd">        reference date against which all variance is measured.</span>
+<span class="sd">    points : list[DropLinePoint]</span>
+<span class="sd">        Ordered list of coordinate points forming the jagged line.</span>
+<span class="sd">        Points are sorted by Y-coordinate (hierarchy level) for</span>
+<span class="sd">        proper line rendering.</span>
+<span class="sd">    ahead_count : int</span>
+<span class="sd">        Number of work packages currently ahead of schedule.</span>
+<span class="sd">    on_track_count : int</span>
+<span class="sd">        Number of work packages currently on track.</span>
+<span class="sd">    behind_count : int</span>
+<span class="sd">        Number of work packages currently behind schedule.</span>
+<span class="sd">    complete_count : int</span>
+<span class="sd">        Number of completed work packages.</span>
+<span class="sd">    summary : dict</span>
+<span class="sd">        Additional summary metadata for the UI tooltip.</span>
+<span class="sd">    """</span>
+
+    <span class="n">status_date</span><span class="p">:</span> <span class="n">date</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Reference date for variance calculation"</span><span class="p">)</span>
+    <span class="n">points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DropLinePoint</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ahead_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">on_track_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">behind_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">complete_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">summary</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Additional metadata for UI tooltips"</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Daily Cockpit Summary Payload</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="SprintLoadGauge">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.SprintLoadGauge">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SprintLoadGauge</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Active sprint load gauge for the daily cockpit.</span>
+
+<span class="sd">    Shows the user's current workload intensity as a gauge meter,</span>
+<span class="sd">    helping them assess whether they are over- or under-allocated.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    active_task_count : int</span>
+<span class="sd">        Number of currently active (in-progress) sprint tasks assigned</span>
+<span class="sd">        to the user.</span>
+<span class="sd">    total_planned_hours : float</span>
+<span class="sd">        Total planned hours for the current week across all assignments.</span>
+<span class="sd">    capacity_hours : float</span>
+<span class="sd">        User's available capacity hours for the current week (standard</span>
+<span class="sd">        40-hour work week adjusted for allocated units).</span>
+<span class="sd">    utilization_percent : float</span>
+<span class="sd">        Percentage of capacity utilised (0.0–100.0+).  Values above</span>
+<span class="sd">        100% indicate over-allocation.</span>
+<span class="sd">    status : str</span>
+<span class="sd">        Load status: 'underloaded', 'optimal', 'busy', or 'overloaded'.</span>
+<span class="sd">    """</span>
+
+    <span class="n">active_task_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">total_planned_hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">capacity_hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">40.0</span><span class="p">,</span> <span class="n">gt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">utilization_percent</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"optimal"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"'underloaded', 'optimal', 'busy', or 'overloaded'"</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FocusQueueItem">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.FocusQueueItem">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FocusQueueItem</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A single task in the user's focus queue.</span>
+
+<span class="sd">    The focus queue orders tasks by priority: critical path tasks first,</span>
+<span class="sd">    then by due date.  This is the user's "what should I work on next?"</span>
+<span class="sd">    list.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        UUID of the task node.</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Task name or code.</span>
+<span class="sd">    is_critical_path : bool</span>
+<span class="sd">        True if this task is on the critical path (Total Float ≤ 0).</span>
+<span class="sd">        Critical tasks are highlighted in red.</span>
+<span class="sd">    due_date : date or None</span>
+<span class="sd">        Planned finish date for this task.</span>
+<span class="sd">    days_until_due : int or None</span>
+<span class="sd">        Number of calendar days until the task is due.  Negative = overdue.</span>
+<span class="sd">    percent_complete : float</span>
+<span class="sd">        Current progress percentage (0.0–100.0).</span>
+<span class="sd">    status : str</span>
+<span class="sd">        Task status: 'not_started', 'in_progress', 'blocked', or 'complete'.</span>
+<span class="sd">    parent_label : str or None</span>
+<span class="sd">        Name of the parent work package (for context).</span>
+<span class="sd">    """</span>
+
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">is_critical_path</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">due_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">days_until_due</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">percent_complete</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mf">100.0</span><span class="p">)</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"not_started"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"'not_started', 'in_progress', 'blocked', or 'complete'"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parent_label</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="ClaimableTaskItem">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.ClaimableTaskItem">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClaimableTaskItem</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A task available for claim from a generic placeholder resource.</span>
+
+<span class="sd">    In defence programmes, tasks are often initially assigned to generic</span>
+<span class="sd">    placeholder roles (e.g., "Systems Safety Assessor") rather than</span>
+<span class="sd">    specific individuals.  The claimable queue shows tasks the user</span>
+<span class="sd">    can claim, filtered by their clearance and skill profile.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        UUID of the task node.</span>
+<span class="sd">    label : str</span>
+<span class="sd">        Task name or code.</span>
+<span class="sd">    placeholder_role : str</span>
+<span class="sd">        Name of the generic placeholder role (e.g., "RF Hardware Engineer").</span>
+<span class="sd">    required_clearance : str or None</span>
+<span class="sd">        Minimum security clearance required to claim this task.</span>
+<span class="sd">    required_skills : list[str] or None</span>
+<span class="sd">        List of skill codes required for this task.</span>
+<span class="sd">    planned_hours : float</span>
+<span class="sd">        Estimated hours for this task.</span>
+<span class="sd">    due_date : date or None</span>
+<span class="sd">        Planned finish date.</span>
+<span class="sd">    """</span>
+
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">label</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">placeholder_role</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">required_clearance</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">required_skills</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">planned_hours</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">due_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="DailyCockpitSummaryPayload">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.DailyCockpitSummaryPayload">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DailyCockpitSummaryPayload</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Complete payload for the Daily Cockpit personal landing page.</span>
+
+<span class="sd">    The Daily Cockpit is the user's personal dashboard, showing:</span>
+
+<span class="sd">    1. **Sprint Load Gauge**: Current workload intensity.</span>
+<span class="sd">    2. **Blocked Items**: Tasks blocked on the user's action.</span>
+<span class="sd">    3. **Urgent Tasks**: Tasks due within 48 hours.</span>
+<span class="sd">    4. **Focus Queue**: Prioritised task list (critical path first).</span>
+<span class="sd">    5. **Claimable Queue**: Generic placeholder tasks available to claim.</span>
+
+<span class="sd">    This payload is designed for a single API call that hydrates the</span>
+<span class="sd">    entire cockpit view, minimising round-trips.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    sprint_load : SprintLoadGauge</span>
+<span class="sd">        Current workload gauge showing active tasks and capacity.</span>
+<span class="sd">    blocked_count : int</span>
+<span class="sd">        Number of tasks blocked where the user is the owner/assignee.</span>
+<span class="sd">    urgent_count : int</span>
+<span class="sd">        Number of tasks due within 48 hours.</span>
+<span class="sd">    focus_queue : list[FocusQueueItem]</span>
+<span class="sd">        Prioritised list of tasks to work on, ordered by critical path</span>
+<span class="sd">        status and due date.</span>
+<span class="sd">    claimable_queue : list[ClaimableTaskItem]</span>
+<span class="sd">        List of generic placeholder tasks the user can claim.</span>
+<span class="sd">    last_updated : datetime</span>
+<span class="sd">        Timestamp when this summary was generated.</span>
+<span class="sd">    """</span>
+
+    <span class="n">sprint_load</span><span class="p">:</span> <span class="n">SprintLoadGauge</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">SprintLoadGauge</span><span class="p">)</span>
+    <span class="n">blocked_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">urgent_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">focus_queue</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">FocusQueueItem</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">claimable_queue</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ClaimableTaskItem</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">last_updated</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">))</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Clash Triage Item Payload</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="ClashTriageItemPayload">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.ClashTriageItemPayload">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClashTriageItemPayload</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A single clash triage item for the resource/schedule clash dashboard.</span>
+
+<span class="sd">    Clash triage items represent conflicts discovered by the portfolio</span>
+<span class="sd">    sweep engine (clash_daemon.py) — resource double-bookings, security</span>
+<span class="sd">    clearance lapses, facility collisions, etc.</span>
+
+<span class="sd">    The frontend renders each clash as a triage card with:</span>
+
+<span class="sd">    - **Severity badge**: Red (CRITICAL), Orange (MAJOR), Yellow (ADVISORY).</span>
+<span class="sd">    - **Category icon**: Resource, security, facility, calendar, etc.</span>
+<span class="sd">    - **Conflict window**: Date range of the conflict.</span>
+<span class="sd">    - **Entity name**: Name of the conflicting node or resource.</span>
+<span class="sd">    - **Shift preview**: Proposed resolution from the leveling engine.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    clash_id : str</span>
+<span class="sd">        UUID of the ScheduleClashIssue record.</span>
+<span class="sd">    severity : str</span>
+<span class="sd">        Severity level: 'CRITICAL', 'MAJOR', or 'ADVISORY'.</span>
+<span class="sd">        Determines the badge colour.</span>
+<span class="sd">    category : str</span>
+<span class="sd">        Clash category (e.g., 'RESOURCE_OVERALLOCATION',</span>
+<span class="sd">        'FACILITY_CONTRAVENTION').  Determines the icon.</span>
+<span class="sd">    conflict_window_start : date</span>
+<span class="sd">        Start date of the conflict window.</span>
+<span class="sd">    conflict_window_end : date</span>
+<span class="sd">        End date of the conflict window.</span>
+<span class="sd">    entity_name : str</span>
+<span class="sd">        Human-readable name of the primary conflicting entity</span>
+<span class="sd">        (node name, resource name, or facility name).</span>
+<span class="sd">    conflicting_entity_name : str or None</span>
+<span class="sd">        Name of the secondary conflicting entity (if applicable,</span>
+<span class="sd">        e.g., the other task double-booking the same resource).</span>
+<span class="sd">    description : str</span>
+<span class="sd">        Detailed description of the clash for the triage card body.</span>
+<span class="sd">    recommended_action : str or None</span>
+<span class="sd">        Suggested resolution action from the clash daemon.</span>
+<span class="sd">    leveling_shift_preview : dict or None</span>
+<span class="sd">        Preview of the proposed date shift from the leveling engine.</span>
+<span class="sd">        Contains node_id, original_start, proposed_start, and</span>
+<span class="sd">        consumed_float_days.</span>
+<span class="sd">    is_resolved : bool</span>
+<span class="sd">        True if this clash has been resolved.</span>
+<span class="sd">    """</span>
+
+    <span class="n">clash_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"UUID of the ScheduleClashIssue"</span><span class="p">)</span>
+    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"'CRITICAL', 'MAJOR', or 'ADVISORY'"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">category</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Clash category, e.g. 'RESOURCE_OVERALLOCATION'"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">conflict_window_start</span><span class="p">:</span> <span class="n">date</span>
+    <span class="n">conflict_window_end</span><span class="p">:</span> <span class="n">date</span>
+    <span class="n">entity_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Primary conflicting entity name"</span><span class="p">)</span>
+    <span class="n">conflicting_entity_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Detailed clash description"</span><span class="p">)</span>
+    <span class="n">recommended_action</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">leveling_shift_preview</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">is_resolved</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+
+<div class="viewcode-block" id="ClashTriagePayload">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.ClashTriagePayload">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClashTriagePayload</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Complete clash triage dashboard payload.</span>
+
+<span class="sd">    Returns all active (unresolved) clashes for the programme,</span>
+<span class="sd">    grouped by severity for prioritised triage.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    clashes : list[ClashTriageItemPayload]</span>
+<span class="sd">        List of all active clash items.</span>
+<span class="sd">    critical_count : int</span>
+<span class="sd">        Number of CRITICAL severity clashes.</span>
+<span class="sd">    major_count : int</span>
+<span class="sd">        Number of MAJOR severity clashes.</span>
+<span class="sd">    advisory_count : int</span>
+<span class="sd">        Number of ADVISORY severity clashes.</span>
+<span class="sd">    last_sweep : datetime or None</span>
+<span class="sd">        Timestamp of the last portfolio sweep run.</span>
+<span class="sd">    """</span>
+
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ClashTriageItemPayload</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">critical_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">major_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">advisory_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">last_sweep</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Display Settings Payload</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="DisplaySettingsPayload">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.DisplaySettingsPayload">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DisplaySettingsPayload</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Payload for server-side display profile settings.</span>
+
+<span class="sd">    In SCIF (Sensitive Compartmented Information Facility) environments,</span>
+<span class="sd">    browser storage and cookies are prohibited due to hot-desking policies.</span>
+<span class="sd">    Display preferences are persisted server-side in PostgreSQL and</span>
+<span class="sd">    returned on each login.</span>
+
+<span class="sd">    The frontend applies these settings to configure:</span>
+
+<span class="sd">    - **Density**: Row height and spacing (ultra-dense for 1080p,</span>
+<span class="sd">      balanced for 4K, comfort for large displays).</span>
+<span class="sd">    - **Scale factor**: Overall UI zoom level (0.80–1.50).</span>
+<span class="sd">    - **Theme**: Colour scheme (SCIF dark, high contrast, balanced light,</span>
+<span class="sd">      projector mode).</span>
+<span class="sd">    - **Colour accessibility**: Colourblind-safe palette (deuteranopia,</span>
+<span class="sd">      protanopia, tritanopia, monochrome).</span>
+<span class="sd">    - **View state**: Column widths, hidden columns, split-pane ratios.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    profile_name : str</span>
+<span class="sd">        Name of the active display profile (e.g., 'DEFAULT',</span>
+<span class="sd">        'LAPTOP_1080P', '4K_OPS_ROOM').</span>
+<span class="sd">    density : str</span>
+<span class="sd">        Density profile: 'ULTRA_DENSE' (28px row), 'BALANCED' (36px row),</span>
+<span class="sd">        or 'COMFORT' (44px row).</span>
+<span class="sd">    scale_factor : float</span>
+<span class="sd">        Overall UI scale factor (0.80–1.50).  Applied as CSS transform</span>
+<span class="sd">        or font-size multiplier.</span>
+<span class="sd">    row_height_px : int</span>
+<span class="sd">        Explicit row height in pixels (20–100).  Overrides density</span>
+<span class="sd">        profile if set.</span>
+<span class="sd">    theme : str</span>
+<span class="sd">        Ambient colour theme: 'SCIF_DARK', 'HIGH_CONTRAST_DARK',</span>
+<span class="sd">        'BALANCED_LIGHT', or 'PROJECTOR'.</span>
+<span class="sd">    color_accessibility : str</span>
+<span class="sd">        Colourblind accessibility mode: 'STANDARD_RAG', 'DEUTERANOPIA',</span>
+<span class="sd">        'PROTANOPIA', 'TRITANOPIA', or 'MONOCHROME_PATTERN'.</span>
+<span class="sd">    view_state_overrides : dict</span>
+<span class="sd">        JSONB dictionary of view-specific overrides: column widths,</span>
+<span class="sd">        hidden columns, split-pane ratios, etc.</span>
+<span class="sd">    is_active_default : bool</span>
+<span class="sd">        True if this is the user's active default profile.</span>
+<span class="sd">    """</span>
+
+    <span class="n">profile_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"DEFAULT"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Profile name, e.g. 'DEFAULT', 'LAPTOP_1080P', '4K_OPS_ROOM'"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">density</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"BALANCED"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"'ULTRA_DENSE' (28px), 'BALANCED' (36px), or 'COMFORT' (44px)"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">scale_factor</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mf">1.0</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mf">0.80</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mf">1.50</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"UI scale factor 0.80–1.50"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">row_height_px</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="mi">36</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Row height in pixels, 20–100"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">theme</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"SCIF_DARK"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"'SCIF_DARK', 'HIGH_CONTRAST_DARK', 'BALANCED_LIGHT', or 'PROJECTOR'"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">color_accessibility</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="s2">"STANDARD_RAG"</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"'STANDARD_RAG', 'DEUTERANOPIA', 'PROTANOPIA', 'TRITANOPIA', or 'MONOCHROME_PATTERN'"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">view_state_overrides</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Column widths, hidden columns, split-pane ratios"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">is_active_default</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># JSON Schema Manifest</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="HMICatalogManifest">
+<a class="viewcode-back" href="../../../modules.html#app.schemas.hmi_catalog.HMICatalogManifest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HMICatalogManifest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""JSON Schema manifest for the complete UI Component Inventory.</span>
+
+<span class="sd">    This manifest provides a machine-readable inventory of all HMI</span>
+<span class="sd">    component payloads, enabling the frontend build system to:</span>
+
+<span class="sd">    1. **Validate API contracts**: Ensure the backend returns the</span>
+<span class="sd">       expected payload structure.</span>
+<span class="sd">    2. **Generate TypeScript types**: Auto-generate frontend type</span>
+<span class="sd">       definitions from the schema.</span>
+<span class="sd">    3. **Drive integration tests**: Use the manifest to verify each</span>
+<span class="sd">       endpoint returns the correct payload shape.</span>
+<span class="sd">    4. **Document the UI contract**: Serve as the single source of</span>
+<span class="sd">       truth for frontend-backend integration.</span>
+
+<span class="sd">    To obtain the full JSON schema, call the ``.model_json_schema()``</span>
+<span class="sd">    method on any payload class.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    component_count : int</span>
+<span class="sd">        Total number of distinct UI component payloads in the catalog.</span>
+<span class="sd">    components : list[str]</span>
+<span class="sd">        List of component payload class names.</span>
+<span class="sd">    version : str</span>
+<span class="sd">        Schema version for change tracking.</span>
+<span class="sd">    """</span>
+
+    <span class="n">component_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">components</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"GanttBarPayload"</span><span class="p">,</span>
+        <span class="s2">"JaggedDropLinePayload"</span><span class="p">,</span>
+        <span class="s2">"DailyCockpitSummaryPayload"</span><span class="p">,</span>
+        <span class="s2">"ClashTriageItemPayload"</span><span class="p">,</span>
+        <span class="s2">"DisplaySettingsPayload"</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"1.0.0"</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

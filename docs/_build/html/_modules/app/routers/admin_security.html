@@ -1,0 +1,896 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.admin_security &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.admin_security</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.admin_security</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Admin security router for session management, spillage remediation, and SBOM.</span>
+
+<span class="sd">This module provides the administrative security endpoints required by</span>
+<span class="sd">UK MOD JSP 440 / JSP 604 and US DoD IL5/IL6 guidelines:</span>
+
+<span class="sd">1. **Heartbeat** — Client-side session keep-alive to prevent inactivity</span>
+<span class="sd">   timeout (``POST /api/v1/auth/heartbeat``).</span>
+
+<span class="sd">2. **Spillage Purge** — Multi-signature emergency data redaction for</span>
+<span class="sd">   classified spillage events (``POST /api/v1/admin/security/spillage/purge``).</span>
+
+<span class="sd">3. **Audit Certificates** — Historic spillage redaction certificates for</span>
+<span class="sd">   external security accreditation boards</span>
+<span class="sd">   (``GET /api/v1/admin/security/spillage/audit-certificates``).</span>
+
+<span class="sd">4. **SBOM Download** — Download the active signed CycloneDX SBOM manifest</span>
+<span class="sd">   (``GET /api/v1/admin/security/sbom``).</span>
+
+<span class="sd">5. **Vulnerability Report** — Returns active CVE matches, affected libraries,</span>
+<span class="sd">   CVSS scores, and mitigation guidance</span>
+<span class="sd">   (``GET /api/v1/admin/security/vulnerability-report``).</span>
+
+<span class="sd">Session Heartbeat</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">In a SCIF environment, an unattended terminal is a security risk.  The</span>
+<span class="sd">client sends periodic heartbeat pings to keep the session alive.  If</span>
+<span class="sd">the elapsed time since the last heartbeat exceeds 900 seconds (15</span>
+<span class="sd">minutes), the session is invalidated and the client receives HTTP 401</span>
+<span class="sd">with header ``X-Session-Terminated: INACTIVITY_TIMEOUT``.</span>
+
+<span class="sd">Spillage Purge</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">When classified data is accidentally disclosed to an unauthorized system</span>
+<span class="sd">or personnel, the contaminated content must be surgically redacted.</span>
+<span class="sd">This endpoint requires multi-signature authorization from two Superusers</span>
+<span class="sd">with clearance at or above SECRET.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    # Heartbeat — keep session alive</span>
+<span class="sd">    POST /api/v1/auth/heartbeat</span>
+
+<span class="sd">    # Execute spillage purge</span>
+<span class="sd">    POST /api/v1/admin/security/spillage/purge</span>
+<span class="sd">    {</span>
+<span class="sd">        "incident_ticket_ref": "INC-2026-0042",</span>
+<span class="sd">        "search_terms": ["CLASSIFIED_PROGRAM_NAME"],</span>
+<span class="sd">        "purging_user_ids": [1, 2]</span>
+<span class="sd">    }</span>
+
+<span class="sd">    # Retrieve audit certificates</span>
+<span class="sd">    GET /api/v1/admin/security/spillage/audit-certificates</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_admin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.session</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">session_manager</span><span class="p">,</span>
+    <span class="n">INACTIVITY_TIMEOUT_SECONDS</span><span class="p">,</span>
+    <span class="n">INACTIVITY_WARNING_SECONDS</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.spillage_remediation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">execute_emergency_spillage_purge</span><span class="p">,</span>
+    <span class="n">get_spillage_audit_certificates</span><span class="p">,</span>
+    <span class="n">verify_purge_authorization</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.cve_triage</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CVETriage</span><span class="p">,</span>
+    <span class="n">CVETriageError</span><span class="p">,</span>
+    <span class="n">VulnerabilityMatch</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+<span class="sd">"""FastAPI router for admin security endpoints.</span>
+
+<span class="sd">Provides session heartbeat, spillage purge, and audit certificate</span>
+<span class="sd">endpoints for classified operational environments.</span>
+<span class="sd">"""</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Pydantic Schemas</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="HeartbeatRequest">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.HeartbeatRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HeartbeatRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Request body for the session heartbeat endpoint.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    token_jti : str</span>
+<span class="sd">        JWT token JTI (JWT ID) identifying the session to keep alive.</span>
+<span class="sd">    """</span>
+    <span class="n">token_jti</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"JWT token JTI identifying the session."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="HeartbeatResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.HeartbeatResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HeartbeatResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response from the session heartbeat endpoint.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    status : str</span>
+<span class="sd">        Session status (``ACTIVE`` or ``EXPIRED``).</span>
+<span class="sd">    remaining_seconds : int</span>
+<span class="sd">        Seconds remaining until inactivity timeout.</span>
+<span class="sd">    is_warning_zone : bool</span>
+<span class="sd">        Whether the session is in the warning zone (14–15 minutes).</span>
+<span class="sd">    """</span>
+    <span class="n">status</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">remaining_seconds</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">is_warning_zone</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+
+
+<div class="viewcode-block" id="SpillagePurgeRequest">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.SpillagePurgeRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpillagePurgeRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Request body for the emergency spillage purge endpoint.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incident_ticket_ref : str</span>
+<span class="sd">        Security incident ticket reference authorizing the purge.</span>
+<span class="sd">    search_terms : list of str, optional</span>
+<span class="sd">        Text patterns to search for in node names and codes.</span>
+<span class="sd">    entity_ids : list of str, optional</span>
+<span class="sd">        Specific entity UUIDs to redact.</span>
+<span class="sd">    purging_user_ids : list of int</span>
+<span class="sd">        User IDs of the two signing Superusers.</span>
+<span class="sd">    certificate_serials : list of str, optional</span>
+<span class="sd">        Smartcard certificate serial numbers for each signer.</span>
+<span class="sd">    """</span>
+    <span class="n">incident_ticket_ref</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Security incident ticket reference."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">search_terms</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Text patterns to search for in contaminated content."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">entity_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Specific entity UUIDs to redact."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">purging_user_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="o">...</span><span class="p">,</span>
+        <span class="n">min_length</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"User IDs of the two signing Superusers."</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">certificate_serials</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">"Smartcard certificate serial numbers for each signer."</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SpillagePurgeResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.SpillagePurgeResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SpillagePurgeResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response from the emergency spillage purge endpoint.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incident_ticket_ref : str</span>
+<span class="sd">        The incident ticket reference.</span>
+<span class="sd">    redacted_nodes : list of str</span>
+<span class="sd">        UUIDs of nodes that were redacted.</span>
+<span class="sd">    redacted_node_count : int</span>
+<span class="sd">        Number of nodes redacted.</span>
+<span class="sd">    tombstoned_audit_count : int</span>
+<span class="sd">        Number of audit entries tombstoned.</span>
+<span class="sd">    certificate_id : str</span>
+<span class="sd">        UUID of the redaction certificate audit entry.</span>
+<span class="sd">    purging_officers : list of str</span>
+<span class="sd">        UPNs of the purging officers.</span>
+<span class="sd">    timestamp : str</span>
+<span class="sd">        ISO timestamp of the purge.</span>
+<span class="sd">    """</span>
+    <span class="n">incident_ticket_ref</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">redacted_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">redacted_node_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">tombstoned_audit_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">certificate_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">purging_officers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">timestamp</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+
+<div class="viewcode-block" id="AuditCertificateResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.AuditCertificateResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AuditCertificateResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response model for a single spillage redaction certificate.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    id : str</span>
+<span class="sd">        Certificate audit entry ID.</span>
+<span class="sd">    incident_ticket_ref : str</span>
+<span class="sd">        Incident ticket reference.</span>
+<span class="sd">    purging_officers : list of str</span>
+<span class="sd">        UPNs of purging officers.</span>
+<span class="sd">    redacted_node_count : int</span>
+<span class="sd">        Number of nodes redacted.</span>
+<span class="sd">    tombstoned_audit_count : int</span>
+<span class="sd">        Number of audit entries tombstoned.</span>
+<span class="sd">    signed_at : str</span>
+<span class="sd">        ISO timestamp of the certificate.</span>
+<span class="sd">    certificate_hash : str</span>
+<span class="sd">        SHA-256 hash of the certificate.</span>
+<span class="sd">    created_at : str or None</span>
+<span class="sd">        ISO timestamp when the certificate was created.</span>
+<span class="sd">    """</span>
+    <span class="nb">id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">incident_ticket_ref</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">purging_officers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">redacted_node_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">tombstoned_audit_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">signed_at</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">certificate_hash</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">created_at</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="AuditCertificatesListResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.AuditCertificatesListResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AuditCertificatesListResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response model for the list of spillage redaction certificates.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    certificates : list of AuditCertificateResponse</span>
+<span class="sd">        List of certificate records.</span>
+<span class="sd">    total_count : int</span>
+<span class="sd">        Total number of certificates.</span>
+<span class="sd">    """</span>
+    <span class="n">certificates</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AuditCertificateResponse</span><span class="p">]</span>
+    <span class="n">total_count</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Heartbeat Endpoint</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="heartbeat">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.heartbeat">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/heartbeat"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">HeartbeatResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Session heartbeat — keep session alive"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Updates the last-activity timestamp for the current session. "</span>
+        <span class="s2">"If the session has exceeded the 15-minute inactivity timeout, "</span>
+        <span class="s2">"the token is invalidated and HTTP 401 is returned."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">heartbeat</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">HeartbeatRequest</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">require_admin</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Session heartbeat endpoint.</span>
+
+<span class="sd">    Touches the session timestamp to keep it alive.  If the elapsed</span>
+<span class="sd">    time since the last heartbeat exceeds 900 seconds (15 minutes),</span>
+<span class="sd">    the session is invalidated.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : HeartbeatRequest</span>
+<span class="sd">        The heartbeat request containing the token JTI.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated admin user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    HeartbeatResponse</span>
+<span class="sd">        Session status with remaining time and warning zone flag.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        401 if the session has expired due to inactivity.</span>
+<span class="sd">    """</span>
+    <span class="n">token_jti</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">token_jti</span>
+
+    <span class="c1"># Check if the session is still valid</span>
+    <span class="n">is_valid</span><span class="p">,</span> <span class="n">reason</span> <span class="o">=</span> <span class="n">session_manager</span><span class="o">.</span><span class="n">check_session</span><span class="p">(</span><span class="n">token_jti</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_valid</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Session terminated: </span><span class="si">{</span><span class="n">reason</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"X-Session-Terminated"</span><span class="p">:</span> <span class="n">reason</span><span class="p">},</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Touch the session to update last-activity timestamp</span>
+    <span class="n">session_manager</span><span class="o">.</span><span class="n">touch_session</span><span class="p">(</span><span class="n">token_jti</span><span class="p">)</span>
+
+    <span class="c1"># Get session info for the response</span>
+    <span class="n">session_info</span> <span class="o">=</span> <span class="n">session_manager</span><span class="o">.</span><span class="n">get_session_info</span><span class="p">(</span><span class="n">token_jti</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">HeartbeatResponse</span><span class="p">(</span>
+        <span class="n">status</span><span class="o">=</span><span class="s2">"ACTIVE"</span><span class="p">,</span>
+        <span class="n">remaining_seconds</span><span class="o">=</span><span class="n">session_info</span><span class="p">[</span><span class="s2">"remaining_seconds"</span><span class="p">]</span> <span class="k">if</span> <span class="n">session_info</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">is_warning_zone</span><span class="o">=</span><span class="n">session_info</span><span class="p">[</span><span class="s2">"is_warning_zone"</span><span class="p">]</span> <span class="k">if</span> <span class="n">session_info</span> <span class="k">else</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Spillage Purge Endpoint</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="spillage_purge">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.spillage_purge">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/spillage/purge"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">SpillagePurgeResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Execute emergency classified spillage purge"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Surgically redacts contaminated content from nodes matching "</span>
+        <span class="s2">"the provided search terms or entity IDs.  Requires multi-signature "</span>
+        <span class="s2">"authorization from two Superusers with clearance ≥ SECRET. "</span>
+        <span class="s2">"Records a SPILLAGE_REDACTION_CERTIFICATE in the immutable audit log."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">spillage_purge</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">SpillagePurgeRequest</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">require_admin</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Execute an emergency classified spillage purge.</span>
+
+<span class="sd">    Redacts contaminated content from nodes while preserving the</span>
+<span class="sd">    integrity of the forensic audit trail.  Requires authorization</span>
+<span class="sd">    from two Superusers with clearance at or above SECRET.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : SpillagePurgeRequest</span>
+<span class="sd">        The purge request with incident ticket, search terms or entity</span>
+<span class="sd">        IDs, and purging user IDs.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated admin user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SpillagePurgeResponse</span>
+<span class="sd">        Purge result with redacted node count, tombstoned audit count,</span>
+<span class="sd">        and certificate ID.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        400 if the request is invalid.</span>
+<span class="sd">        403 if multi-signature authorization is not met.</span>
+<span class="sd">        500 if an unexpected error occurs during the purge.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Convert entity_ids from strings to UUIDs</span>
+    <span class="n">entity_ids</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">entity_ids</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+        <span class="n">entity_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">UUID</span><span class="p">(</span><span class="n">eid</span><span class="p">)</span> <span class="k">for</span> <span class="n">eid</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">entity_ids</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">execute_emergency_spillage_purge</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">incident_ticket_ref</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">incident_ticket_ref</span><span class="p">,</span>
+            <span class="n">search_terms</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">search_terms</span><span class="p">,</span>
+            <span class="n">entity_ids</span><span class="o">=</span><span class="n">entity_ids</span><span class="p">,</span>
+            <span class="n">purging_user_ids</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">purging_user_ids</span><span class="p">,</span>
+            <span class="n">certificate_serials</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">certificate_serials</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">SpillagePurgeResponse</span><span class="p">(</span>
+            <span class="n">incident_ticket_ref</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"incident_ticket_ref"</span><span class="p">],</span>
+            <span class="n">redacted_nodes</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"redacted_nodes"</span><span class="p">],</span>
+            <span class="n">redacted_node_count</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"redacted_node_count"</span><span class="p">],</span>
+            <span class="n">tombstoned_audit_count</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"tombstoned_audit_count"</span><span class="p">],</span>
+            <span class="n">certificate_id</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"certificate_id"</span><span class="p">],</span>
+            <span class="n">purging_officers</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"purging_officers"</span><span class="p">],</span>
+            <span class="n">timestamp</span><span class="o">=</span><span class="n">result</span><span class="p">[</span><span class="s2">"timestamp"</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Spillage purge failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Audit Certificates Endpoint</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="spillage_audit_certificates">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.spillage_audit_certificates">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/spillage/audit-certificates"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">AuditCertificatesListResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Retrieve historic spillage redaction certificates"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Returns all SPILLAGE_REDACTION_CERTIFICATE entries from the "</span>
+        <span class="s2">"ForensicAuditLog, optionally filtered by incident ticket reference. "</span>
+        <span class="s2">"Used by external security accreditation boards to verify that "</span>
+        <span class="s2">"spillage remediation was properly authorized and executed."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">spillage_audit_certificates</span><span class="p">(</span>
+    <span class="n">incident_ticket_ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">require_admin</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Retrieve historic spillage redaction certificates.</span>
+
+<span class="sd">    Returns all SPILLAGE_REDACTION_CERTIFICATE entries from the</span>
+<span class="sd">    ForensicAuditLog, optionally filtered by incident ticket reference.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    incident_ticket_ref : str, optional</span>
+<span class="sd">        Filter certificates by incident ticket reference.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated admin user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    AuditCertificatesListResponse</span>
+<span class="sd">        List of certificate records with total count.</span>
+<span class="sd">    """</span>
+    <span class="n">certificates</span> <span class="o">=</span> <span class="n">get_spillage_audit_certificates</span><span class="p">(</span>
+        <span class="n">db</span><span class="p">,</span> <span class="n">incident_ticket_ref</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">AuditCertificatesListResponse</span><span class="p">(</span>
+        <span class="n">certificates</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">AuditCertificateResponse</span><span class="p">(</span><span class="o">**</span><span class="n">cert</span><span class="p">)</span> <span class="k">for</span> <span class="n">cert</span> <span class="ow">in</span> <span class="n">certificates</span>
+        <span class="p">],</span>
+        <span class="n">total_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">certificates</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># SBOM / Vulnerability Report — Pydantic Schemas</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">SBOM_OUTPUT_PATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"dist/sbom/cyclonedx.json"</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SBOMManifestResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.SBOMManifestResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SBOMManifestResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response model for the SBOM manifest download endpoint.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bom_format : str</span>
+<span class="sd">        SBOM format identifier (``CycloneDX``).</span>
+<span class="sd">    spec_version : str</span>
+<span class="sd">        CycloneDX specification version.</span>
+<span class="sd">    component_count : int</span>
+<span class="sd">        Total number of components in the manifest.</span>
+<span class="sd">    timestamp : str</span>
+<span class="sd">        Manifest generation timestamp.</span>
+<span class="sd">    signed : bool</span>
+<span class="sd">        Whether the manifest has been cryptographically signed.</span>
+<span class="sd">    signature_path : str or None</span>
+<span class="sd">        Path to the detached signature file, if signed.</span>
+<span class="sd">    """</span>
+
+    <span class="n">bom_format</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">spec_version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">component_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">timestamp</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">signed</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">signature_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="VulnerabilityMatchResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.VulnerabilityMatchResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VulnerabilityMatchResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response model for a single vulnerability match.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cve_id : str</span>
+<span class="sd">        CVE identifier.</span>
+<span class="sd">    component_name : str</span>
+<span class="sd">        Affected component name.</span>
+<span class="sd">    component_version : str</span>
+<span class="sd">        Affected component version.</span>
+<span class="sd">    component_type : str</span>
+<span class="sd">        Component type.</span>
+<span class="sd">    cvss_score : float</span>
+<span class="sd">        CVSS base score.</span>
+<span class="sd">    severity : str</span>
+<span class="sd">        Severity rating.</span>
+<span class="sd">    description : str</span>
+<span class="sd">        Vulnerability description.</span>
+<span class="sd">    mitigation : str</span>
+<span class="sd">        Mitigation guidance.</span>
+<span class="sd">    cpe_match : str</span>
+<span class="sd">        Matching CPE string.</span>
+<span class="sd">    """</span>
+
+    <span class="n">cve_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">component_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">component_version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">component_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">cvss_score</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">mitigation</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">cpe_match</span><span class="p">:</span> <span class="nb">str</span></div>
+
+
+
+<div class="viewcode-block" id="VulnerabilitySummaryResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.VulnerabilitySummaryResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VulnerabilitySummaryResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response model for the vulnerability summary.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    total_matches : int</span>
+<span class="sd">        Total number of vulnerability matches.</span>
+<span class="sd">    critical_count : int</span>
+<span class="sd">        Number of critical vulnerabilities.</span>
+<span class="sd">    high_count : int</span>
+<span class="sd">        Number of high-severity vulnerabilities.</span>
+<span class="sd">    medium_count : int</span>
+<span class="sd">        Number of medium-severity vulnerabilities.</span>
+<span class="sd">    low_count : int</span>
+<span class="sd">        Number of low-severity vulnerabilities.</span>
+<span class="sd">    affected_components : list of str</span>
+<span class="sd">        List of affected component identifiers.</span>
+<span class="sd">    has_critical : bool</span>
+<span class="sd">        Whether any critical vulnerability is present.</span>
+<span class="sd">    critical_cves : list of str</span>
+<span class="sd">        List of critical CVE IDs.</span>
+<span class="sd">    """</span>
+
+    <span class="n">total_matches</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">critical_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">high_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">medium_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">low_count</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">affected_components</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">has_critical</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">critical_cves</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="VulnerabilityReportResponse">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.VulnerabilityReportResponse">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VulnerabilityReportResponse</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Response model for the full vulnerability report.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    summary : VulnerabilitySummaryResponse</span>
+<span class="sd">        Vulnerability summary statistics.</span>
+<span class="sd">    matches : list of VulnerabilityMatchResponse</span>
+<span class="sd">        Detailed vulnerability match records.</span>
+<span class="sd">    critical_alert : bool</span>
+<span class="sd">        Whether a critical alert banner should be displayed.</span>
+<span class="sd">    last_ingest_time : str or None</span>
+<span class="sd">        Timestamp of the last CVE feed ingestion.</span>
+<span class="sd">    cve_database_count : int</span>
+<span class="sd">        Total number of CVEs in the ingested database.</span>
+<span class="sd">    """</span>
+
+    <span class="n">summary</span><span class="p">:</span> <span class="n">VulnerabilitySummaryResponse</span>
+    <span class="n">matches</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">VulnerabilityMatchResponse</span><span class="p">]</span>
+    <span class="n">critical_alert</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">last_ingest_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">cve_database_count</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># SBOM Download Endpoint</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="download_sbom">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.download_sbom">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/sbom"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">SBOMManifestResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Download active signed CycloneDX SBOM manifest"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Returns the active CycloneDX v1.5 Software Bill of Materials "</span>
+        <span class="s2">"manifest.  If the manifest has been signed, the signature path "</span>
+        <span class="s2">"is included.  The full JSON manifest is returned in the response body."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">download_sbom</span><span class="p">(</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">require_admin</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Download the active signed CycloneDX SBOM manifest.</span>
+
+<span class="sd">    Returns the SBOM manifest metadata and the full JSON document.</span>
+<span class="sd">    If the manifest file does not exist, returns HTTP 404.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated admin user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SBOMManifestResponse</span>
+<span class="sd">        SBOM manifest metadata.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the SBOM manifest has not been generated yet.</span>
+<span class="sd">    """</span>
+    <span class="n">sbom_path</span> <span class="o">=</span> <span class="n">SBOM_OUTPUT_PATH</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sbom_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"SBOM manifest not found. Run the SBOM generator first."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">sbom_path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">sbom_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Failed to read SBOM manifest: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check for signature file</span>
+    <span class="n">sig_path</span> <span class="o">=</span> <span class="n">sbom_path</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">".json.sig"</span><span class="p">)</span>
+    <span class="n">signed</span> <span class="o">=</span> <span class="n">sig_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span>
+
+    <span class="n">metadata</span> <span class="o">=</span> <span class="n">sbom_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"metadata"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">components</span> <span class="o">=</span> <span class="n">sbom_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"components"</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">return</span> <span class="n">SBOMManifestResponse</span><span class="p">(</span>
+        <span class="n">bom_format</span><span class="o">=</span><span class="n">sbom_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bomFormat"</span><span class="p">,</span> <span class="s2">"CycloneDX"</span><span class="p">),</span>
+        <span class="n">spec_version</span><span class="o">=</span><span class="n">sbom_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"specVersion"</span><span class="p">,</span> <span class="s2">"1.5"</span><span class="p">),</span>
+        <span class="n">component_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">components</span><span class="p">),</span>
+        <span class="n">timestamp</span><span class="o">=</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"timestamp"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
+        <span class="n">signed</span><span class="o">=</span><span class="n">signed</span><span class="p">,</span>
+        <span class="n">signature_path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">sig_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">signed</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Vulnerability Report Endpoint</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="vulnerability_report">
+<a class="viewcode-back" href="../../../modules.html#app.routers.admin_security.vulnerability_report">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/vulnerability-report"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">VulnerabilityReportResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Get active CVE vulnerability report"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Returns active CVE matches against the current SBOM, including "</span>
+        <span class="s2">"affected libraries, CVSS scores, and mitigation guidance.  If any "</span>
+        <span class="s2">"CRITICAL vulnerability (CVSS &gt;= 9.0) is detected, an administrative "</span>
+        <span class="s2">"banner alert is raised across the platform."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">vulnerability_report</span><span class="p">(</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">require_admin</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get the active CVE vulnerability report.</span>
+
+<span class="sd">    Matches ingested CVE definitions against the current SBOM components,</span>
+<span class="sd">    filters out dev-only dependencies, and returns a detailed report with</span>
+<span class="sd">    CVSS scores and mitigation guidance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated admin user.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VulnerabilityReportResponse</span>
+<span class="sd">        Full vulnerability report with summary and match details.</span>
+<span class="sd">    """</span>
+    <span class="n">triage</span> <span class="o">=</span> <span class="n">CVETriage</span><span class="p">()</span>
+
+    <span class="c1"># Load SBOM components</span>
+    <span class="n">sbom_components</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">sbom_path</span> <span class="o">=</span> <span class="n">SBOM_OUTPUT_PATH</span>
+    <span class="k">if</span> <span class="n">sbom_path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">sbom_path</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">sbom_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">sbom_components</span> <span class="o">=</span> <span class="n">sbom_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"components"</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">,</span> <span class="ne">OSError</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+    <span class="c1"># Match vulnerabilities</span>
+    <span class="n">matches</span> <span class="o">=</span> <span class="n">triage</span><span class="o">.</span><span class="n">match_vulnerabilities_against_sbom</span><span class="p">(</span><span class="n">sbom_components</span><span class="p">)</span>
+
+    <span class="c1"># Build summary</span>
+    <span class="n">summary_data</span> <span class="o">=</span> <span class="n">triage</span><span class="o">.</span><span class="n">get_vulnerability_summary</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>
+
+    <span class="c1"># Check for critical alert</span>
+    <span class="n">critical_alert</span> <span class="o">=</span> <span class="n">triage</span><span class="o">.</span><span class="n">has_critical_vulnerabilities</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span>
+
+    <span class="c1"># Build response</span>
+    <span class="n">match_responses</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">VulnerabilityMatchResponse</span><span class="p">(</span>
+            <span class="n">cve_id</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">cve_id</span><span class="p">,</span>
+            <span class="n">component_name</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">component_name</span><span class="p">,</span>
+            <span class="n">component_version</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">component_version</span><span class="p">,</span>
+            <span class="n">component_type</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">component_type</span><span class="p">,</span>
+            <span class="n">cvss_score</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">cvss_score</span><span class="p">,</span>
+            <span class="n">severity</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">mitigation</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">mitigation</span><span class="p">,</span>
+            <span class="n">cpe_match</span><span class="o">=</span><span class="n">m</span><span class="o">.</span><span class="n">cpe_match</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">VulnerabilityReportResponse</span><span class="p">(</span>
+        <span class="n">summary</span><span class="o">=</span><span class="n">VulnerabilitySummaryResponse</span><span class="p">(</span><span class="o">**</span><span class="n">summary_data</span><span class="p">),</span>
+        <span class="n">matches</span><span class="o">=</span><span class="n">match_responses</span><span class="p">,</span>
+        <span class="n">critical_alert</span><span class="o">=</span><span class="n">critical_alert</span><span class="p">,</span>
+        <span class="n">last_ingest_time</span><span class="o">=</span><span class="n">triage</span><span class="o">.</span><span class="n">_last_ingest_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">triage</span><span class="o">.</span><span class="n">_last_ingest_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cve_database_count</span><span class="o">=</span><span class="n">triage</span><span class="o">.</span><span class="n">cve_count</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "max_size_mb": 100,
+  "max_files": 10,
+  "compress": true,
+  "rotate_on_startup": false
+}

@@ -1,0 +1,1281 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.calendars &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.calendars</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.calendars</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Project and resource calendar management API router.</span>
+
+<span class="sd">This module provides the REST API endpoints for managing working calendars</span>
+<span class="sd">and calendar exceptions.  Calendars define the standard working pattern</span>
+<span class="sd">(working days, hours per day, jurisdiction) for projects and resources.</span>
+<span class="sd">Calendar exceptions override the standard pattern for specific dates</span>
+<span class="sd">(statutory holidays, planned maintenance, overtime surge periods).</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">~~~~~~~~~</span>
+
+<span class="sd">- **GET /** — List all working calendars.</span>
+<span class="sd">- **POST /** — Create a new working calendar.</span>
+<span class="sd">- **GET /{id}** — Get a single calendar.</span>
+<span class="sd">- **PUT /{id}** — Update a calendar.</span>
+<span class="sd">- **DELETE /{id}** — Delete a calendar.</span>
+<span class="sd">- **GET /{id}/exceptions** — List exceptions for a calendar.</span>
+<span class="sd">- **POST /{id}/exceptions** — Create a new exception.</span>
+<span class="sd">- **PUT /{id}/exceptions/{exc_id}** — Update an exception.</span>
+<span class="sd">- **DELETE /{id}/exceptions/{exc_id}** — Delete an exception.</span>
+<span class="sd">- **GET /{id}/working-days** — Calculate working hours across a date range.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All endpoints require JWT authentication via the ``get_current_user``</span>
+<span class="sd">dependency.</span>
+
+<span class="sd">Usage Examples</span>
+<span class="sd">~~~~~~~~~~~~~~</span>
+
+<span class="sd">Create a UK standard calendar::</span>
+
+<span class="sd">    POST /api/v1/calendars/</span>
+<span class="sd">    {</span>
+<span class="sd">        "code": "CAL_UK_STANDARD",</span>
+<span class="sd">        "name": "UK Standard Working Calendar",</span>
+<span class="sd">        "jurisdiction": "UK",</span>
+<span class="sd">        "standard_hours_per_day": 7.50,</span>
+<span class="sd">        "working_days_mask": 31</span>
+<span class="sd">    }</span>
+
+<span class="sd">Add a statutory holiday::</span>
+
+<span class="sd">    POST /api/v1/calendars/{calendar_id}/exceptions</span>
+<span class="sd">    {</span>
+<span class="sd">        "exception_date": "2026-05-04",</span>
+<span class="sd">        "exception_type": "STATUTORY_HOLIDAY",</span>
+<span class="sd">        "working_hours_override": 0.00,</span>
+<span class="sd">        "description": "UK Spring Bank Holiday"</span>
+<span class="sd">    }</span>
+
+<span class="sd">Query working hours for a date range::</span>
+
+<span class="sd">    GET /api/v1/calendars/{calendar_id}/working-days?start_date=2026-01-01&amp;end_date=2026-01-31</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span> <span class="k">as</span> <span class="n">date_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CalendarException</span><span class="p">,</span> <span class="n">CalendarExceptionType</span><span class="p">,</span> <span class="n">CalendarJurisdiction</span><span class="p">,</span>
+    <span class="n">ResourceNode</span><span class="p">,</span> <span class="n">ResourceWorkPattern</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">WorkPatternTemplate</span><span class="p">,</span>
+    <span class="n">WorkingCalendar</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CalendarExceptionCreate</span><span class="p">,</span>
+    <span class="n">CalendarExceptionListResponse</span><span class="p">,</span>
+    <span class="n">CalendarExceptionResponse</span><span class="p">,</span>
+    <span class="n">CalendarExceptionUpdate</span><span class="p">,</span>
+    <span class="n">ResourceEffectivePatternResponse</span><span class="p">,</span>
+    <span class="n">ResourceWorkPatternCreate</span><span class="p">,</span>
+    <span class="n">ResourceWorkPatternListResponse</span><span class="p">,</span>
+    <span class="n">ResourceWorkPatternResponse</span><span class="p">,</span>
+    <span class="n">WorkingCalendarCreate</span><span class="p">,</span>
+    <span class="n">WorkingCalendarListResponse</span><span class="p">,</span>
+    <span class="n">WorkingCalendarResponse</span><span class="p">,</span>
+    <span class="n">WorkingCalendarUpdate</span><span class="p">,</span>
+    <span class="n">WorkingDaysResponse</span><span class="p">,</span>
+    <span class="n">WorkPatternDayResponse</span><span class="p">,</span>
+    <span class="n">WorkPatternTemplateCreate</span><span class="p">,</span>
+    <span class="n">WorkPatternTemplateListResponse</span><span class="p">,</span>
+    <span class="n">WorkPatternTemplateResponse</span><span class="p">,</span>
+    <span class="n">WorkPatternTemplateUpdate</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.cpm_engine</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_is_working_day_with_calendar</span><span class="p">,</span>
+    <span class="n">_get_exception_set</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Working Calendar CRUD</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="list_calendars">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.list_calendars">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkingCalendarListResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"List all working calendars"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Returns all configured working calendars with their exception counts."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_calendars</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all working calendars.</span>
+
+<span class="sd">    Returns every calendar in the system, including the number of exceptions</span>
+<span class="sd">    (holidays, maintenance windows, etc.) defined for each one.</span>
+<span class="sd">    """</span>
+    <span class="n">calendars</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">is_default</span><span class="o">.</span><span class="n">desc</span><span class="p">(),</span> <span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cal</span> <span class="ow">in</span> <span class="n">calendars</span><span class="p">:</span>
+        <span class="n">exc_count</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">CalendarException</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">CalendarException</span><span class="o">.</span><span class="n">calendar_id</span> <span class="o">==</span> <span class="n">cal</span><span class="o">.</span><span class="n">id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">WorkingCalendarResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">jurisdiction</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="p">,</span>
+            <span class="n">standard_hours_per_day</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">standard_hours_per_day</span><span class="p">),</span>
+            <span class="n">working_days_mask</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">working_days_mask</span><span class="p">,</span>
+            <span class="n">is_default</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+            <span class="n">exception_count</span><span class="o">=</span><span class="n">exc_count</span><span class="p">,</span>
+        <span class="p">))</span>
+    <span class="k">return</span> <span class="n">WorkingCalendarListResponse</span><span class="p">(</span><span class="n">calendars</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">total_calendars</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="create_calendar">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.create_calendar">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkingCalendarResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Create a new working calendar"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Create a new working calendar defining the standard working pattern. "</span>
+        <span class="s2">"If ``is_default`` is True, any existing default calendar will be "</span>
+        <span class="s2">"cleared so only one default exists at a time."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_calendar</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">WorkingCalendarCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new working calendar.</span>
+
+<span class="sd">    Validates that the code is unique and that setting ``is_default`` does</span>
+<span class="sd">    not create multiple default calendars.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check unique code</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Calendar code '</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' already exists"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Validate jurisdiction</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">jurisdiction</span> <span class="o">=</span> <span class="n">CalendarJurisdiction</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">jurisdiction</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid jurisdiction: </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">jurisdiction</span><span class="si">}</span><span class="s2">. Must be one of: </span><span class="si">{</span><span class="p">[</span><span class="n">j</span><span class="o">.</span><span class="n">value</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">CalendarJurisdiction</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># If setting as default, clear any existing default</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">is_default</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">is_default</span> <span class="o">==</span> <span class="kc">True</span>  <span class="c1"># noqa: E712</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"is_default"</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">WorkingCalendar</span><span class="p">(</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">jurisdiction</span><span class="o">=</span><span class="n">jurisdiction</span><span class="p">,</span>
+        <span class="n">standard_hours_per_day</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">standard_hours_per_day</span><span class="p">)),</span>
+        <span class="n">working_days_mask</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">working_days_mask</span><span class="p">,</span>
+        <span class="n">is_default</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">cal</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">cal</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">WorkingCalendarResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">jurisdiction</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="p">,</span>
+        <span class="n">standard_hours_per_day</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">standard_hours_per_day</span><span class="p">),</span>
+        <span class="n">working_days_mask</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">working_days_mask</span><span class="p">,</span>
+        <span class="n">is_default</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+        <span class="n">exception_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_calendar">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.get_calendar">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{calendar_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkingCalendarResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Get a single working calendar"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_calendar</span><span class="p">(</span>
+    <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get a single working calendar by ID."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">cal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Calendar not found"</span><span class="p">)</span>
+
+    <span class="n">exc_count</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">CalendarException</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">CalendarException</span><span class="o">.</span><span class="n">calendar_id</span> <span class="o">==</span> <span class="n">cal</span><span class="o">.</span><span class="n">id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">WorkingCalendarResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">jurisdiction</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="p">,</span>
+        <span class="n">standard_hours_per_day</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">standard_hours_per_day</span><span class="p">),</span>
+        <span class="n">working_days_mask</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">working_days_mask</span><span class="p">,</span>
+        <span class="n">is_default</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+        <span class="n">exception_count</span><span class="o">=</span><span class="n">exc_count</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_calendar">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.update_calendar">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{calendar_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkingCalendarResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Update a working calendar"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">update_calendar</span><span class="p">(</span>
+    <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">WorkingCalendarUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Partially update a working calendar.</span>
+
+<span class="sd">    Only the fields provided in the request body are updated; omitted</span>
+<span class="sd">    fields remain unchanged.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">cal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Calendar not found"</span><span class="p">)</span>
+
+    <span class="n">update_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">dict</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"jurisdiction"</span> <span class="ow">in</span> <span class="n">update_data</span> <span class="ow">and</span> <span class="n">update_data</span><span class="p">[</span><span class="s2">"jurisdiction"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">update_data</span><span class="p">[</span><span class="s2">"jurisdiction"</span><span class="p">]</span> <span class="o">=</span> <span class="n">CalendarJurisdiction</span><span class="p">(</span><span class="n">update_data</span><span class="p">[</span><span class="s2">"jurisdiction"</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid jurisdiction: </span><span class="si">{</span><span class="n">update_data</span><span class="p">[</span><span class="s1">'jurisdiction'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"standard_hours_per_day"</span> <span class="ow">in</span> <span class="n">update_data</span> <span class="ow">and</span> <span class="n">update_data</span><span class="p">[</span><span class="s2">"standard_hours_per_day"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">update_data</span><span class="p">[</span><span class="s2">"standard_hours_per_day"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">update_data</span><span class="p">[</span><span class="s2">"standard_hours_per_day"</span><span class="p">]))</span>
+
+    <span class="c1"># If setting as default, clear any existing default</span>
+    <span class="k">if</span> <span class="n">update_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_default"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">is_default</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># noqa: E712</span>
+            <span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">cal</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"is_default"</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">update_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">cal</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">cal</span><span class="p">)</span>
+
+    <span class="n">exc_count</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">CalendarException</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">CalendarException</span><span class="o">.</span><span class="n">calendar_id</span> <span class="o">==</span> <span class="n">cal</span><span class="o">.</span><span class="n">id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">WorkingCalendarResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">jurisdiction</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">cal</span><span class="o">.</span><span class="n">jurisdiction</span><span class="p">,</span>
+        <span class="n">standard_hours_per_day</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">standard_hours_per_day</span><span class="p">),</span>
+        <span class="n">working_days_mask</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">working_days_mask</span><span class="p">,</span>
+        <span class="n">is_default</span><span class="o">=</span><span class="n">cal</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+        <span class="n">exception_count</span><span class="o">=</span><span class="n">exc_count</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_calendar">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.delete_calendar">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{calendar_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Delete a working calendar"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Deletes the calendar and all associated exceptions (cascade)."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_calendar</span><span class="p">(</span>
+    <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete a working calendar.</span>
+
+<span class="sd">    All associated CalendarException records are automatically deleted</span>
+<span class="sd">    via cascade.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">cal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Calendar not found"</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">cal</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Calendar Exception CRUD</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="list_exceptions">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.list_exceptions">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{calendar_id}</span><span class="s2">/exceptions"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">CalendarExceptionListResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"List exceptions for a calendar"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_exceptions</span><span class="p">(</span>
+    <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all calendar exceptions for a given calendar, sorted by date."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">cal_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span>
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cal_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">cal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Calendar not found"</span><span class="p">)</span>
+
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">CalendarException</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">CalendarException</span><span class="o">.</span><span class="n">calendar_id</span> <span class="o">==</span> <span class="n">cal_uuid</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">CalendarException</span><span class="o">.</span><span class="n">exception_date</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">exc_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">exc</span> <span class="ow">in</span> <span class="n">exceptions</span><span class="p">:</span>
+        <span class="n">exc_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CalendarExceptionResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">calendar_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">calendar_id</span><span class="p">),</span>
+            <span class="n">exception_date</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">exception_type</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="p">,</span>
+            <span class="n">working_hours_override</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">working_hours_override</span><span class="p">),</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">CalendarExceptionListResponse</span><span class="p">(</span>
+        <span class="n">calendar_id</span><span class="o">=</span><span class="n">calendar_id</span><span class="p">,</span>
+        <span class="n">exceptions</span><span class="o">=</span><span class="n">exc_list</span><span class="p">,</span>
+        <span class="n">total_exceptions</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">exc_list</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_exception">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.create_exception">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{calendar_id}</span><span class="s2">/exceptions"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">CalendarExceptionResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Create a calendar exception"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_exception</span><span class="p">(</span>
+    <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">CalendarExceptionCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new calendar exception (holiday, maintenance, overtime).</span>
+
+<span class="sd">    Validates that the calendar exists and that the exception type is valid.</span>
+<span class="sd">    Duplicate dates for the same calendar are rejected.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">cal_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">)</span>
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cal_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">cal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Calendar not found"</span><span class="p">)</span>
+
+    <span class="c1"># Validate exception type</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">exc_type</span> <span class="o">=</span> <span class="n">CalendarExceptionType</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">exception_type</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid exception type: </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">exception_type</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Parse date</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">exc_date</span> <span class="o">=</span> <span class="n">date_type</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">exception_date</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid date format: </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">exception_date</span><span class="si">}</span><span class="s2">. Use YYYY-MM-DD."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check for duplicate date</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">CalendarException</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">CalendarException</span><span class="o">.</span><span class="n">calendar_id</span> <span class="o">==</span> <span class="n">cal_uuid</span><span class="p">,</span>
+            <span class="n">CalendarException</span><span class="o">.</span><span class="n">exception_date</span> <span class="o">==</span> <span class="n">exc_date</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Exception already exists for date </span><span class="si">{</span><span class="n">exc_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">exc</span> <span class="o">=</span> <span class="n">CalendarException</span><span class="p">(</span>
+        <span class="n">calendar_id</span><span class="o">=</span><span class="n">cal_uuid</span><span class="p">,</span>
+        <span class="n">exception_date</span><span class="o">=</span><span class="n">exc_date</span><span class="p">,</span>
+        <span class="n">exception_type</span><span class="o">=</span><span class="n">exc_type</span><span class="p">,</span>
+        <span class="n">working_hours_override</span><span class="o">=</span><span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">working_hours_override</span><span class="p">)),</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CalendarExceptionResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">calendar_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">calendar_id</span><span class="p">),</span>
+        <span class="n">exception_date</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">exception_type</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="p">,</span>
+        <span class="n">working_hours_override</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">working_hours_override</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_exception">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.update_exception">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{calendar_id}</span><span class="s2">/exceptions/</span><span class="si">{exception_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">CalendarExceptionResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Update a calendar exception"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">update_exception</span><span class="p">(</span>
+    <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">exception_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">CalendarExceptionUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Partially update a calendar exception."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">exc</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">CalendarException</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">CalendarException</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">exception_id</span><span class="p">),</span>
+            <span class="n">CalendarException</span><span class="o">.</span><span class="n">calendar_id</span> <span class="o">==</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">exc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Exception not found"</span><span class="p">)</span>
+
+    <span class="n">update_data</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">dict</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"exception_type"</span> <span class="ow">in</span> <span class="n">update_data</span> <span class="ow">and</span> <span class="n">update_data</span><span class="p">[</span><span class="s2">"exception_type"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">update_data</span><span class="p">[</span><span class="s2">"exception_type"</span><span class="p">]</span> <span class="o">=</span> <span class="n">CalendarExceptionType</span><span class="p">(</span><span class="n">update_data</span><span class="p">[</span><span class="s2">"exception_type"</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid exception type: </span><span class="si">{</span><span class="n">update_data</span><span class="p">[</span><span class="s1">'exception_type'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"exception_date"</span> <span class="ow">in</span> <span class="n">update_data</span> <span class="ow">and</span> <span class="n">update_data</span><span class="p">[</span><span class="s2">"exception_date"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">update_data</span><span class="p">[</span><span class="s2">"exception_date"</span><span class="p">]</span> <span class="o">=</span> <span class="n">date_type</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">update_data</span><span class="p">[</span><span class="s2">"exception_date"</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid date format: </span><span class="si">{</span><span class="n">update_data</span><span class="p">[</span><span class="s1">'exception_date'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"working_hours_override"</span> <span class="ow">in</span> <span class="n">update_data</span> <span class="ow">and</span> <span class="n">update_data</span><span class="p">[</span><span class="s2">"working_hours_override"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">update_data</span><span class="p">[</span><span class="s2">"working_hours_override"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">update_data</span><span class="p">[</span><span class="s2">"working_hours_override"</span><span class="p">]))</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">update_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CalendarExceptionResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">calendar_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">calendar_id</span><span class="p">),</span>
+        <span class="n">exception_date</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">exception_type</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="p">,</span>
+        <span class="n">working_hours_override</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">working_hours_override</span><span class="p">),</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_exception">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.delete_exception">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{calendar_id}</span><span class="s2">/exceptions/</span><span class="si">{exception_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Delete a calendar exception"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_exception</span><span class="p">(</span>
+    <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">exception_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete a calendar exception."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">exc</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">CalendarException</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">CalendarException</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">exception_id</span><span class="p">),</span>
+            <span class="n">CalendarException</span><span class="o">.</span><span class="n">calendar_id</span> <span class="o">==</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">exc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Exception not found"</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Working Days Calculation</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="get_working_days">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.get_working_days">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{calendar_id}</span><span class="s2">/working-days"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkingDaysResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Calculate working hours across a date range"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Given a start and end date, returns the total number of working "</span>
+        <span class="s2">"days and hours available under the specified calendar, accounting "</span>
+        <span class="s2">"for statutory holidays, planned maintenance, and overtime surge periods."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_working_days</span><span class="p">(</span>
+    <span class="n">calendar_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Start date (YYYY-MM-DD)"</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"End date (YYYY-MM-DD)"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Calculate working hours for a date range.</span>
+
+<span class="sd">    Iterates through each day in the range, checking the calendar's working</span>
+<span class="sd">    days mask and exception records to determine the total working hours.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt</span>
+
+    <span class="n">cal</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">calendar_id</span><span class="p">))</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">cal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Calendar not found"</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">date_type</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">date_type</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid date format. Use YYYY-MM-DD."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;</span> <span class="n">end</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_422_UNPROCESSABLE_ENTITY</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"start_date must be before or equal to end_date."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">exception_map</span> <span class="o">=</span> <span class="n">_get_exception_set</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">cal</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="n">standard_hours</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cal</span><span class="o">.</span><span class="n">standard_hours_per_day</span><span class="p">)</span>
+
+    <span class="n">total_working_days</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">total_working_hours</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">exceptions_in_range</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="k">while</span> <span class="n">current</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">:</span>
+        <span class="c1"># Check if this day is a working day per the mask</span>
+        <span class="n">dt_current</span> <span class="o">=</span> <span class="n">dt</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">current</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">current</span><span class="o">.</span><span class="n">day</span><span class="p">)</span>
+        <span class="n">is_working</span> <span class="o">=</span> <span class="n">_is_working_day_with_calendar</span><span class="p">(</span><span class="n">dt_current</span><span class="p">,</span> <span class="n">cal</span><span class="p">,</span> <span class="n">exception_map</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">is_working</span><span class="p">:</span>
+            <span class="n">total_working_days</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="c1"># Check for exception override</span>
+            <span class="k">if</span> <span class="n">current</span> <span class="ow">in</span> <span class="n">exception_map</span><span class="p">:</span>
+                <span class="n">hours</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">exception_map</span><span class="p">[</span><span class="n">current</span><span class="p">])</span>
+                <span class="n">total_working_hours</span> <span class="o">+=</span> <span class="n">hours</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">total_working_hours</span> <span class="o">+=</span> <span class="n">standard_hours</span>
+
+        <span class="c1"># Collect exceptions in range</span>
+        <span class="k">if</span> <span class="n">current</span> <span class="ow">in</span> <span class="n">exception_map</span><span class="p">:</span>
+            <span class="n">exc</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">CalendarException</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">CalendarException</span><span class="o">.</span><span class="n">calendar_id</span> <span class="o">==</span> <span class="n">cal</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">CalendarException</span><span class="o">.</span><span class="n">exception_date</span> <span class="o">==</span> <span class="n">current</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">exc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">exceptions_in_range</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CalendarExceptionResponse</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                    <span class="n">calendar_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">calendar_id</span><span class="p">),</span>
+                    <span class="n">exception_date</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                    <span class="n">exception_type</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">exc</span><span class="o">.</span><span class="n">exception_type</span><span class="p">,</span>
+                    <span class="n">working_hours_override</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">working_hours_override</span><span class="p">),</span>
+                    <span class="n">description</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+                <span class="p">))</span>
+
+        <span class="n">current</span> <span class="o">+=</span> <span class="nb">__import__</span><span class="p">(</span><span class="s1">'datetime'</span><span class="p">)</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">WorkingDaysResponse</span><span class="p">(</span>
+        <span class="n">calendar_id</span><span class="o">=</span><span class="n">calendar_id</span><span class="p">,</span>
+        <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span>
+        <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">,</span>
+        <span class="n">total_working_days</span><span class="o">=</span><span class="n">total_working_days</span><span class="p">,</span>
+        <span class="n">total_working_hours</span><span class="o">=</span><span class="n">total_working_hours</span><span class="p">,</span>
+        <span class="n">standard_hours_per_day</span><span class="o">=</span><span class="n">standard_hours</span><span class="p">,</span>
+        <span class="n">exceptions_in_range</span><span class="o">=</span><span class="n">exceptions_in_range</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Work Pattern Templates</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="list_work_patterns">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.list_work_patterns">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkPatternTemplateListResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"List all work pattern templates"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Returns all work pattern templates, optionally filtered by category."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_work_patterns</span><span class="p">(</span>
+    <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by category"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all work pattern templates."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="n">templates</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">list_templates</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">category</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">defaults</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">tpl</span> <span class="ow">in</span> <span class="n">templates</span><span class="p">:</span>
+        <span class="n">days</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tpl</span><span class="o">.</span><span class="n">days</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">)</span> <span class="k">if</span> <span class="n">tpl</span><span class="o">.</span><span class="n">days</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">resource_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tpl</span><span class="o">.</span><span class="n">resource_assignments</span><span class="p">)</span> <span class="k">if</span> <span class="n">tpl</span><span class="o">.</span><span class="n">resource_assignments</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">tpl</span><span class="o">.</span><span class="n">is_default</span><span class="p">:</span>
+            <span class="n">defaults</span><span class="p">[</span><span class="n">tpl</span><span class="o">.</span><span class="n">category</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">tpl</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">WorkPatternTemplateResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">tpl</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">tpl</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">tpl</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">tpl</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="n">tpl</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tpl</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">tpl</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="n">tpl</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+            <span class="n">is_default</span><span class="o">=</span><span class="n">tpl</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+            <span class="n">is_active</span><span class="o">=</span><span class="n">tpl</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+            <span class="n">days</span><span class="o">=</span><span class="p">[</span><span class="n">WorkPatternDayResponse</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="n">day_of_week</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">,</span>
+                <span class="n">hours</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">hours</span><span class="p">),</span>
+                <span class="n">start_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">start_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">start_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">end_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">end_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">end_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days</span><span class="p">],</span>
+            <span class="n">resource_count</span><span class="o">=</span><span class="n">resource_count</span><span class="p">,</span>
+            <span class="n">created_at</span><span class="o">=</span><span class="n">tpl</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+            <span class="n">updated_at</span><span class="o">=</span><span class="n">tpl</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">WorkPatternTemplateListResponse</span><span class="p">(</span>
+        <span class="n">templates</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+        <span class="n">total_calendars</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">),</span>
+        <span class="n">defaults</span><span class="o">=</span><span class="n">defaults</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_work_pattern">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.create_work_pattern">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkPatternTemplateResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Create a new work pattern template"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Creates a reusable work pattern template with per-day-of-week definitions."</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_work_pattern</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">WorkPatternTemplateCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new work pattern template."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">create_template</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+            <span class="n">days</span><span class="o">=</span><span class="p">[{</span>
+                <span class="s2">"day_of_week"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">,</span>
+                <span class="s2">"hours"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">hours</span><span class="p">,</span>
+                <span class="s2">"start_time"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+                <span class="s2">"end_time"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span>
+            <span class="p">}</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">days</span><span class="p">],</span>
+            <span class="n">is_default</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="n">days</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">days</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">)</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">days</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">WorkPatternTemplateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">is_default</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">days</span><span class="o">=</span><span class="p">[</span><span class="n">WorkPatternDayResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">day_of_week</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">,</span>
+            <span class="n">hours</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">hours</span><span class="p">),</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">start_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">start_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">end_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">end_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">end_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days</span><span class="p">],</span>
+        <span class="n">resource_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_work_pattern">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.get_work_pattern">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/</span><span class="si">{template_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkPatternTemplateResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Get a single work pattern template"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_work_pattern</span><span class="p">(</span>
+    <span class="n">template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get a single work pattern template."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">template_id</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">template</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="s2">"Work pattern template not found"</span><span class="p">)</span>
+
+    <span class="n">days</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">days</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">)</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">days</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">WorkPatternTemplateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">is_default</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">days</span><span class="o">=</span><span class="p">[</span><span class="n">WorkPatternDayResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">day_of_week</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">,</span>
+            <span class="n">hours</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">hours</span><span class="p">),</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">start_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">start_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">end_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">end_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">end_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days</span><span class="p">],</span>
+        <span class="n">resource_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">resource_assignments</span><span class="p">)</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">resource_assignments</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_work_pattern">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.update_work_pattern">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/</span><span class="si">{template_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkPatternTemplateResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Update a work pattern template"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">update_work_pattern</span><span class="p">(</span>
+    <span class="n">template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">WorkPatternTemplateUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update a work pattern template."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">update_template</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">template_id</span><span class="o">=</span><span class="n">PyUUID</span><span class="p">(</span><span class="n">template_id</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+            <span class="n">is_default</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+            <span class="n">is_active</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+            <span class="n">days</span><span class="o">=</span><span class="p">[{</span>
+                <span class="s2">"day_of_week"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">,</span>
+                <span class="s2">"hours"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">hours</span><span class="p">,</span>
+                <span class="s2">"start_time"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+                <span class="s2">"end_time"</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span>
+            <span class="p">}</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">days</span><span class="p">]</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">days</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="n">days</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">days</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">)</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">days</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">WorkPatternTemplateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">is_default</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">days</span><span class="o">=</span><span class="p">[</span><span class="n">WorkPatternDayResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">day_of_week</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">,</span>
+            <span class="n">hours</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">hours</span><span class="p">),</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">start_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">start_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">end_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">end_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">end_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days</span><span class="p">],</span>
+        <span class="n">resource_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">resource_assignments</span><span class="p">)</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">resource_assignments</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_work_pattern">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.delete_work_pattern">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/</span><span class="si">{template_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Deactivate a work pattern template"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">delete_work_pattern</span><span class="p">(</span>
+    <span class="n">template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Deactivate a work pattern template."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">service</span><span class="o">.</span><span class="n">delete_template</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">template_id</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Template deactivated"</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="set_default_work_pattern">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.set_default_work_pattern">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/</span><span class="si">{template_id}</span><span class="s2">/set-default"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkPatternTemplateResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Set a template as the default for its category"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">set_default_work_pattern</span><span class="p">(</span>
+    <span class="n">template_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Set a template as the default for its category."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">set_default_template</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">template_id</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="n">days</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">days</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">)</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">days</span> <span class="k">else</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">WorkPatternTemplateResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="n">template</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+        <span class="n">is_default</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_default</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">days</span><span class="o">=</span><span class="p">[</span><span class="n">WorkPatternDayResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">day_of_week</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">day_of_week</span><span class="p">,</span>
+            <span class="n">hours</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">hours</span><span class="p">),</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">start_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">start_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">end_time</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">end_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%H:%M"</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">end_time</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">days</span><span class="p">],</span>
+        <span class="n">resource_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">template</span><span class="o">.</span><span class="n">resource_assignments</span><span class="p">)</span> <span class="k">if</span> <span class="n">template</span><span class="o">.</span><span class="n">resource_assignments</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Resource Work Pattern Assignments</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="assign_work_pattern">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.assign_work_pattern">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/assignments/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ResourceWorkPatternResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Assign a work pattern to a resource"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">assign_work_pattern</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">ResourceWorkPatternCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Assign a work pattern template to a resource."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span> <span class="k">as</span> <span class="n">date_type</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">assignment</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">assign_pattern_to_resource</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">resource_node_id</span><span class="o">=</span><span class="n">PyUUID</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">),</span>
+            <span class="n">template_id</span><span class="o">=</span><span class="n">PyUUID</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">template_id</span><span class="p">),</span>
+            <span class="n">effective_from</span><span class="o">=</span><span class="n">date_type</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">effective_from</span><span class="p">),</span>
+            <span class="n">effective_to</span><span class="o">=</span><span class="n">date_type</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">effective_to</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">effective_to</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">override_hours</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">override_hours</span><span class="p">,</span>
+            <span class="n">priority</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+            <span class="n">notes</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">notes</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkPatternTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkPatternTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">assignment</span><span class="o">.</span><span class="n">template_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="n">resource</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ResourceWorkPatternResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">resource_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">),</span>
+        <span class="n">resource_name</span><span class="o">=</span><span class="n">resource</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">resource</span> <span class="k">else</span> <span class="s2">"Unknown"</span><span class="p">,</span>
+        <span class="n">template_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">template_id</span><span class="p">),</span>
+        <span class="n">template_name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">template</span> <span class="k">else</span> <span class="s2">"Unknown"</span><span class="p">,</span>
+        <span class="n">effective_from</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">effective_from</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">effective_to</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">effective_to</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">assignment</span><span class="o">.</span><span class="n">effective_to</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">override_hours</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">override_hours_json</span><span class="p">,</span>
+        <span class="n">priority</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+        <span class="n">notes</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">notes</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="list_resource_assignments">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.list_resource_assignments">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/assignments/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ResourceWorkPatternListResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"List resource work pattern assignments"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_resource_assignments</span><span class="p">(</span>
+    <span class="n">resource_node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by resource"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List resource work pattern assignments."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">resource_node_id</span><span class="p">:</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">get_resource_assignments</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">resource_node_id</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceWorkPattern</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ResourceWorkPattern</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkPatternTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkPatternTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">a</span><span class="o">.</span><span class="n">template_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="n">resource</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">a</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ResourceWorkPatternResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">resource_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">),</span>
+            <span class="n">resource_name</span><span class="o">=</span><span class="n">resource</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">resource</span> <span class="k">else</span> <span class="s2">"Unknown"</span><span class="p">,</span>
+            <span class="n">template_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">template_id</span><span class="p">),</span>
+            <span class="n">template_name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">template</span> <span class="k">else</span> <span class="s2">"Unknown"</span><span class="p">,</span>
+            <span class="n">effective_from</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">effective_from</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="n">effective_to</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">effective_to</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">effective_to</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">override_hours</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">override_hours_json</span><span class="p">,</span>
+            <span class="n">priority</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+            <span class="n">notes</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">notes</span><span class="p">,</span>
+            <span class="n">created_at</span><span class="o">=</span><span class="n">a</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ResourceWorkPatternListResponse</span><span class="p">(</span><span class="n">assignments</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">total_assignments</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="remove_work_pattern">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.remove_work_pattern">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/assignments/</span><span class="si">{assignment_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Remove a work pattern assignment from a resource"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">remove_work_pattern</span><span class="p">(</span>
+    <span class="n">assignment_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Remove a work pattern assignment."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">service</span><span class="o">.</span><span class="n">remove_pattern_from_resource</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">assignment_id</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Assignment removed"</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="get_resource_effective_pattern">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.get_resource_effective_pattern">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/resources/</span><span class="si">{resource_node_id}</span><span class="s2">/effective"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ResourceEffectivePatternResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Get the effective work pattern for a resource"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_resource_effective_pattern</span><span class="p">(</span>
+    <span class="n">resource_node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get the effective work pattern for a resource."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">effective</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">get_resource_effective_pattern</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">resource_node_id</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ResourceEffectivePatternResponse</span><span class="p">(</span>
+        <span class="n">resource_node_id</span><span class="o">=</span><span class="n">effective</span><span class="p">[</span><span class="s2">"resource_node_id"</span><span class="p">],</span>
+        <span class="n">resource_name</span><span class="o">=</span><span class="n">effective</span><span class="p">[</span><span class="s2">"resource_name"</span><span class="p">],</span>
+        <span class="n">template_id</span><span class="o">=</span><span class="n">effective</span><span class="p">[</span><span class="s2">"template_id"</span><span class="p">],</span>
+        <span class="n">template_name</span><span class="o">=</span><span class="n">effective</span><span class="p">[</span><span class="s2">"template_name"</span><span class="p">],</span>
+        <span class="n">effective_days</span><span class="o">=</span><span class="n">effective</span><span class="p">[</span><span class="s2">"effective_days"</span><span class="p">],</span>
+        <span class="n">weekly_hours</span><span class="o">=</span><span class="n">effective</span><span class="p">[</span><span class="s2">"weekly_hours"</span><span class="p">],</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="apply_default_pattern">
+<a class="viewcode-back" href="../../../modules.html#app.routers.calendars.apply_default_pattern">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/work-patterns/resources/</span><span class="si">{resource_node_id}</span><span class="s2">/apply-default"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ResourceWorkPatternResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Apply the default work pattern for a category to a resource"</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">apply_default_pattern</span><span class="p">(</span>
+    <span class="n">resource_node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">category</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="s2">"STANDARD"</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Category of the default pattern"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Apply the default work pattern for a category to a resource."""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.work_patterns</span><span class="w"> </span><span class="kn">import</span> <span class="n">WorkPatternService</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkPatternService</span><span class="p">()</span>
+    <span class="n">assignment</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">apply_default_pattern_to_resource</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">resource_node_id</span><span class="o">=</span><span class="n">PyUUID</span><span class="p">(</span><span class="n">resource_node_id</span><span class="p">),</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">assignment</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"No default template found for category '</span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkPatternTemplate</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkPatternTemplate</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">assignment</span><span class="o">.</span><span class="n">template_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="n">resource</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ResourceWorkPatternResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">resource_node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">),</span>
+        <span class="n">resource_name</span><span class="o">=</span><span class="n">resource</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">resource</span> <span class="k">else</span> <span class="s2">"Unknown"</span><span class="p">,</span>
+        <span class="n">template_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">template_id</span><span class="p">),</span>
+        <span class="n">template_name</span><span class="o">=</span><span class="n">template</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">template</span> <span class="k">else</span> <span class="s2">"Unknown"</span><span class="p">,</span>
+        <span class="n">effective_from</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">effective_from</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">effective_to</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">effective_to</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">assignment</span><span class="o">.</span><span class="n">effective_to</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">override_hours</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">override_hours_json</span><span class="p">,</span>
+        <span class="n">priority</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">priority</span><span class="p">,</span>
+        <span class="n">notes</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">notes</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

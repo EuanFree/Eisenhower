@@ -1,0 +1,602 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.artifacts &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.artifacts</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.artifacts</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""API router for the classified document vault and evidence attachment service.</span>
+
+<span class="sd">This module exposes the endpoints for uploading, confirming, and downloading</span>
+<span class="sd">classified documents through the S3-compatible object store.  All endpoints</span>
+<span class="sd">require JWT authentication and enforce ABAC clearance checks and export</span>
+<span class="sd">control interlocks.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">---------</span>
+
+<span class="sd">POST /api/v1/artifacts/request-upload</span>
+<span class="sd">    Prepare artifact metadata and emit a pre-signed S3 PUT URL for upload.</span>
+
+<span class="sd">POST /api/v1/artifacts/confirm-upload</span>
+<span class="sd">    Validate S3 object existence, verify SHA-256 digest, and mark artifact</span>
+<span class="sd">    as active and available for download.</span>
+
+<span class="sd">GET /api/v1/artifacts/{artifact_id}/download-url</span>
+<span class="sd">    Emit an authenticated pre-signed S3 GET URL valid for 60 seconds.</span>
+
+<span class="sd">GET /api/v1/artifacts/</span>
+<span class="sd">    List all artifacts accessible to the current user based on clearance.</span>
+
+<span class="sd">Security Considerations</span>
+<span class="sd">-----------------------</span>
+
+<span class="sd">- All endpoints require a valid JWT token via the ``get_current_user`` dependency.</span>
+<span class="sd">- Upload requests are validated against the user's clearance level — a user</span>
+<span class="sd">  cannot upload a document classified above their clearance.</span>
+<span class="sd">- Download URLs are only issued after ABAC clearance and export control checks</span>
+<span class="sd">  pass.  URLs expire after 60 seconds to minimise data exfiltration risk.</span>
+<span class="sd">- Every download is logged in the ForensicAuditLog with the user's identity</span>
+<span class="sd">  and the artifact's classification marking.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">    # Request an upload URL:</span>
+<span class="sd">    POST /api/v1/artifacts/request-upload</span>
+<span class="sd">    {</span>
+<span class="sd">        "file_name": "safety-report.pdf",</span>
+<span class="sd">        "file_size_bytes": 1048576,</span>
+<span class="sd">        "mime_type": "application/pdf",</span>
+<span class="sd">        "security_classification": "SECRET",</span>
+<span class="sd">        "export_control_regime": "ITAR"</span>
+<span class="sd">    }</span>
+
+<span class="sd">    # After uploading to the returned URL, confirm:</span>
+<span class="sd">    POST /api/v1/artifacts/confirm-upload</span>
+<span class="sd">    {</span>
+<span class="sd">        "artifact_id": "uuid...",</span>
+<span class="sd">        "sha256_checksum": "abc123..."</span>
+<span class="sd">    }</span>
+
+<span class="sd">    # Request a download URL:</span>
+<span class="sd">    GET /api/v1/artifacts/{artifact_id}/download-url</span>
+
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">SecurityClassification</span><span class="p">,</span> <span class="n">ExportControlRegime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ArtifactUploadRequest</span><span class="p">,</span>
+    <span class="n">ArtifactUploadResponse</span><span class="p">,</span>
+    <span class="n">ArtifactConfirmUploadRequest</span><span class="p">,</span>
+    <span class="n">ArtifactConfirmUploadResponse</span><span class="p">,</span>
+    <span class="n">ArtifactDownloadResponse</span><span class="p">,</span>
+    <span class="n">ArtifactResponse</span><span class="p">,</span>
+    <span class="n">ArtifactListResponse</span><span class="p">,</span>
+    <span class="n">ExternalRepositoryArtifactCreate</span><span class="p">,</span>
+    <span class="n">ExternalRepositoryArtifactResponse</span><span class="p">,</span>
+    <span class="n">ExternalRepositoryArtifactListResponse</span><span class="p">,</span>
+    <span class="n">WindchillWebhookPayload</span><span class="p">,</span>
+    <span class="n">GitWebhookPayload</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.artifact_vault</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">generate_secure_upload_url</span><span class="p">,</span>
+    <span class="n">confirm_upload</span><span class="p">,</span>
+    <span class="n">generate_secure_download_url</span><span class="p">,</span>
+    <span class="n">list_artifacts</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.artifact_linking_service</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">link_artifact</span><span class="p">,</span>
+    <span class="n">ingest_windchill_webhook</span><span class="p">,</span>
+    <span class="n">ingest_git_webhook</span><span class="p">,</span>
+    <span class="n">get_node_artifacts</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="request_upload">
+<a class="viewcode-back" href="../../../modules.html#app.routers.artifacts.request_upload">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/request-upload"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ArtifactUploadResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Request a pre-signed upload URL"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Prepare artifact metadata and emit a pre-signed S3 PUT URL for "</span>
+        <span class="s2">"uploading a classified document. The client uploads the file directly "</span>
+        <span class="s2">"to S3 using the returned URL, then calls /confirm-upload to verify "</span>
+        <span class="s2">"integrity and activate the artifact."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">request_upload</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">ArtifactUploadRequest</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArtifactUploadResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Request a pre-signed S3 PUT URL for uploading a classified document.</span>
+
+<span class="sd">    This endpoint creates a placeholder database row and returns a pre-signed</span>
+<span class="sd">    URL that the client can use to upload the file directly to the S3-compatible</span>
+<span class="sd">    object store.  After the upload completes, the client must call</span>
+<span class="sd">    ``/confirm-upload`` to verify the SHA-256 digest and activate the artifact.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : ArtifactUploadRequest</span>
+<span class="sd">        File metadata including name, size, MIME type, classification, and</span>
+<span class="sd">        optional portfolio node / CDRL linkage.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user requesting the upload.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ArtifactUploadResponse</span>
+<span class="sd">        The artifact ID, pre-signed upload URL, S3 object key, and expiry time.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the user lacks clearance to upload at the requested classification</span>
+<span class="sd">        level or if S3 is unavailable.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">generate_secure_upload_url</span><span class="p">(</span>
+        <span class="n">user</span><span class="o">=</span><span class="n">current_user</span><span class="p">,</span>
+        <span class="n">file_name</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span>
+        <span class="n">file_size_bytes</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">file_size_bytes</span><span class="p">,</span>
+        <span class="n">mime_type</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">mime_type</span><span class="p">,</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+        <span class="n">cdrl_id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">cdrl_id</span><span class="p">,</span>
+        <span class="n">security_classification</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span>
+        <span class="n">caveats</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span>
+        <span class="n">export_control_regime</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">export_control_regime</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ArtifactUploadResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="confirm_upload_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.artifacts.confirm_upload_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/confirm-upload"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ArtifactConfirmUploadResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Confirm a completed upload"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Validate that the S3 object exists, verify the SHA-256 digest "</span>
+        <span class="s2">"matches the client-provided value, and mark the artifact as active "</span>
+        <span class="s2">"and available for download."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">confirm_upload_endpoint</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">ArtifactConfirmUploadRequest</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArtifactConfirmUploadResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Confirm a completed upload by verifying the S3 object and SHA-256 digest.</span>
+
+<span class="sd">    After the client uploads the file to the pre-signed URL returned by</span>
+<span class="sd">    ``/request-upload``, it calls this endpoint to confirm the upload.</span>
+<span class="sd">    The server verifies the S3 object exists, computes the server-side</span>
+<span class="sd">    SHA-256 digest, and compares it against the client-provided value.</span>
+<span class="sd">    Only if they match is the artifact marked as active.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : ArtifactConfirmUploadRequest</span>
+<span class="sd">        The artifact ID and SHA-256 hex digest computed by the client.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user confirming the upload.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ArtifactConfirmUploadResponse</span>
+<span class="sd">        Confirmation that the upload was verified and the artifact is active.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the artifact is not found, the S3 object does not exist, or</span>
+<span class="sd">        the SHA-256 digests do not match.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">confirm_upload</span><span class="p">(</span>
+        <span class="n">artifact_id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">artifact_id</span><span class="p">,</span>
+        <span class="n">client_sha256</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">sha256_checksum</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ArtifactConfirmUploadResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="download_url">
+<a class="viewcode-back" href="../../../modules.html#app.routers.artifacts.download_url">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/</span><span class="si">{artifact_id}</span><span class="s2">/download-url"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ArtifactDownloadResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Generate a pre-signed download URL"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Emit an authenticated pre-signed S3 GET URL valid for a maximum "</span>
+        <span class="s2">"of 60 seconds. Enforces ABAC clearance checks and export control "</span>
+        <span class="s2">"citizenship interlocks before issuing the URL."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">download_url</span><span class="p">(</span>
+    <span class="n">artifact_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArtifactDownloadResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Generate a pre-signed S3 GET URL for downloading a classified document.</span>
+
+<span class="sd">    Before issuing a download URL, the system enforces:</span>
+
+<span class="sd">    1. **ABAC Clearance** — User clearance &gt;= artifact classification AND</span>
+<span class="sd">       user caveats include all artifact caveats.</span>
+<span class="sd">    2. **Export Control** — If the artifact is ITAR/EAR-controlled, the</span>
+<span class="sd">       user's citizenship and employer licence are verified.</span>
+
+<span class="sd">    The returned URL is valid for 60 seconds.  Every download is logged</span>
+<span class="sd">    in the ForensicAuditLog.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    artifact_id : str</span>
+<span class="sd">        UUID of the artifact to download.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user requesting the download.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ArtifactDownloadResponse</span>
+<span class="sd">        The artifact metadata, pre-signed download URL, and expiry time.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the artifact is not found, not active, or the user fails</span>
+<span class="sd">        clearance/export control checks.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">generate_secure_download_url</span><span class="p">(</span>
+        <span class="n">user</span><span class="o">=</span><span class="n">current_user</span><span class="p">,</span>
+        <span class="n">artifact_id</span><span class="o">=</span><span class="n">artifact_id</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ArtifactDownloadResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="list_artifacts_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.artifacts.list_artifacts_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ArtifactListResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"List accessible artifacts"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"List all document artifacts accessible to the current user based "</span>
+        <span class="s2">"on their security clearance and caveat matching. Optionally filter "</span>
+        <span class="s2">"by portfolio node or CDRL."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_artifacts_endpoint</span><span class="p">(</span>
+    <span class="n">portfolio_node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cdrl_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArtifactListResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""List document artifacts accessible to the current user.</span>
+
+<span class="sd">    Returns only artifacts whose security classification and caveats</span>
+<span class="sd">    are within the user's clearance level.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    portfolio_node_id : str or None</span>
+<span class="sd">        Filter by attached portfolio node.</span>
+<span class="sd">    cdrl_id : str or None</span>
+<span class="sd">        Filter by linked CDRL.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user requesting the list.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ArtifactListResponse</span>
+<span class="sd">        List of accessible artifacts and total count.</span>
+<span class="sd">    """</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">list_artifacts</span><span class="p">(</span>
+        <span class="n">user</span><span class="o">=</span><span class="n">current_user</span><span class="p">,</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+        <span class="n">cdrl_id</span><span class="o">=</span><span class="n">cdrl_id</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ArtifactListResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># External Repository Artifact Linking Endpoints</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="link_repository_artifact">
+<a class="viewcode-back" href="../../../modules.html#app.routers.artifacts.link_repository_artifact">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/link"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Link an external repository artifact to a WBS node"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Manually or programmatically attach an external artifact "</span>
+        <span class="s2">"(Windchill, Git, DOORS) to a WBS node.  If the artifact is "</span>
+        <span class="s2">"already in a terminal lifecycle state and drives_progress is True, "</span>
+        <span class="s2">"the task's physical progress is advanced immediately."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">link_repository_artifact</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">ExternalRepositoryArtifactCreate</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Link an external repository artifact to a WBS node."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">artifact</span> <span class="o">=</span> <span class="n">link_artifact</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span>
+            <span class="n">repository_type</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">repository_type</span><span class="p">,</span>
+            <span class="n">external_identifier</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">external_identifier</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">version_revision</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">version_revision</span><span class="p">,</span>
+            <span class="n">lifecycle_state</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">lifecycle_state</span><span class="p">,</span>
+            <span class="n">verification_hash</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">verification_hash</span><span class="p">,</span>
+            <span class="n">drives_progress</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">drives_progress</span><span class="p">,</span>
+            <span class="n">milestone_weight_step_id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">milestone_weight_step_id</span><span class="p">,</span>
+            <span class="n">external_url</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">external_url</span><span class="p">,</span>
+            <span class="n">extra_metadata</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">extra_metadata</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">artifact</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">artifact</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+            <span class="s2">"repository_type"</span><span class="p">:</span> <span class="n">artifact</span><span class="o">.</span><span class="n">repository_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s2">"external_identifier"</span><span class="p">:</span> <span class="n">artifact</span><span class="o">.</span><span class="n">external_identifier</span><span class="p">,</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="n">artifact</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="s2">"lifecycle_state"</span><span class="p">:</span> <span class="n">artifact</span><span class="o">.</span><span class="n">lifecycle_state</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Artifact linked successfully"</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="windchill_webhook">
+<a class="viewcode-back" href="../../../modules.html#app.routers.artifacts.windchill_webhook">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/webhook/windchill"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Ingest a Windchill REST event webhook payload"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Process Windchill LifeCycle change events and update the "</span>
+        <span class="s2">"corresponding artifact link.  When an artifact transitions to "</span>
+        <span class="s2">"RELEASED or APPROVED and drives_progress is True, the linked "</span>
+        <span class="s2">"task's physical progress is automatically advanced."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">windchill_webhook</span><span class="p">(</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="n">WindchillWebhookPayload</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Ingest a Windchill REST event webhook payload."""</span>
+    <span class="n">artifact</span> <span class="o">=</span> <span class="n">ingest_windchill_webhook</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">event_type</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span>
+        <span class="n">object_type</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">object_type</span><span class="p">,</span>
+        <span class="n">object_id</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">object_id</span><span class="p">,</span>
+        <span class="n">part_number</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">part_number</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">revision</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">revision</span><span class="p">,</span>
+        <span class="n">lifecycle_state</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">lifecycle_state</span><span class="p">,</span>
+        <span class="n">owner</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">owner</span><span class="p">,</span>
+        <span class="n">timestamp</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
+        <span class="n">verification_hash</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">verification_hash</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">artifact</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"No matching artifact found, no action taken"</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">artifact</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"external_identifier"</span><span class="p">:</span> <span class="n">artifact</span><span class="o">.</span><span class="n">external_identifier</span><span class="p">,</span>
+        <span class="s2">"lifecycle_state"</span><span class="p">:</span> <span class="n">artifact</span><span class="o">.</span><span class="n">lifecycle_state</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Windchill event processed successfully"</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="git_webhook">
+<a class="viewcode-back" href="../../../modules.html#app.routers.artifacts.git_webhook">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/webhook/git"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Ingest a Git release/tag push webhook payload"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Process Git release and tag push payloads.  Tagged releases "</span>
+        <span class="s2">"are marked as RELEASED; branch pushes are marked as DRAFT."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">git_webhook</span><span class="p">(</span>
+    <span class="n">payload</span><span class="p">:</span> <span class="n">GitWebhookPayload</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Ingest a Git release/tag push webhook payload."""</span>
+    <span class="n">artifact</span> <span class="o">=</span> <span class="n">ingest_git_webhook</span><span class="p">(</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">event_type</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span>
+        <span class="n">repository_url</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">repository_url</span><span class="p">,</span>
+        <span class="n">repository_name</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">repository_name</span><span class="p">,</span>
+        <span class="n">commit_hash</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">commit_hash</span><span class="p">,</span>
+        <span class="n">tag_name</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">tag_name</span><span class="p">,</span>
+        <span class="n">branch</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">branch</span><span class="p">,</span>
+        <span class="n">message</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+        <span class="n">author</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">author</span><span class="p">,</span>
+        <span class="n">timestamp</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">artifact</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"message"</span><span class="p">:</span> <span class="s2">"No matching artifact found, no action taken"</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">artifact</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"external_identifier"</span><span class="p">:</span> <span class="n">artifact</span><span class="o">.</span><span class="n">external_identifier</span><span class="p">,</span>
+        <span class="s2">"lifecycle_state"</span><span class="p">:</span> <span class="n">artifact</span><span class="o">.</span><span class="n">lifecycle_state</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="s2">"message"</span><span class="p">:</span> <span class="s2">"Git event processed successfully"</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="get_artifacts_for_node">
+<a class="viewcode-back" href="../../../modules.html#app.routers.artifacts.get_artifacts_for_node">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+    <span class="s2">"/node/</span><span class="si">{node_id}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">ExternalRepositoryArtifactListResponse</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Retrieve all linked repository artifacts for a WBS node"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Return all external repository artifacts linked to the given "</span>
+        <span class="s2">"WBS node, including their current lifecycle states and any "</span>
+        <span class="s2">"earned value contribution from progress-driving artifacts."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_artifacts_for_node</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExternalRepositoryArtifactListResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Retrieve all linked repository artifacts for a WBS node."""</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">get_node_artifacts</span><span class="p">(</span><span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span> <span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ExternalRepositoryArtifactListResponse</span><span class="p">(</span><span class="o">**</span><span class="n">result</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

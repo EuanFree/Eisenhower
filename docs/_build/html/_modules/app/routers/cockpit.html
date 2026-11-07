@@ -1,0 +1,853 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.cockpit &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.cockpit</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.cockpit</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""My Daily Cockpit — personal landing page API endpoints.</span>
+
+<span class="sd">Provides quick-access endpoints for the authenticated user's daily workflow:</span>
+<span class="sd">summary metrics, focus queue ordered by CPM priority, claimable placeholder</span>
+<span class="sd">tasks, quick progress updates, and atomic blocker creation.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">and_</span><span class="p">,</span> <span class="n">or_</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">User</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="p">,</span>
+    <span class="n">NodeBlocker</span><span class="p">,</span> <span class="n">ForensicAuditLog</span><span class="p">,</span> <span class="n">BlockerCategory</span><span class="p">,</span> <span class="n">BlockerSeverity</span><span class="p">,</span>
+    <span class="n">AssignmentStatus</span><span class="p">,</span> <span class="n">ExportControlRegime</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CockpitSummaryResponse</span><span class="p">,</span>
+    <span class="n">FocusQueueResponse</span><span class="p">,</span> <span class="n">FocusQueueTaskResponse</span><span class="p">,</span>
+    <span class="n">ClaimableTasksResponse</span><span class="p">,</span> <span class="n">ClaimableTaskResponse</span><span class="p">,</span>
+    <span class="n">ProgressUpdateRequest</span><span class="p">,</span> <span class="n">ProgressUpdateResponse</span><span class="p">,</span>
+    <span class="n">BlockerCreateRequest</span><span class="p">,</span> <span class="n">BlockerCreateResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.abac</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_node_visible</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.export_control</span><span class="w"> </span><span class="kn">import</span> <span class="n">verify_export_control_compliance</span> <span class="k">as</span> <span class="n">verify_foreign_disclosure_compliance</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/v1/cockpit"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"Cockpit - Daily Landing Page"</span><span class="p">])</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Helper: find all portfolio nodes the user is assigned to via ResourceAssignment</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_assigned_node_ids</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return a list of PortfolioNode IDs where the user is assigned.</span>
+
+<span class="sd">    Matches the user's email/username against ResourceNode code or name,</span>
+<span class="sd">    then returns the portfolio_node_id from ResourceAssignment.</span>
+<span class="sd">    """</span>
+    <span class="n">assigned</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">AssignmentStatus</span><span class="o">.</span><span class="n">CONFIRMED</span><span class="p">,</span>
+            <span class="n">or_</span><span class="p">(</span>
+                <span class="n">ResourceNode</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                <span class="n">ResourceNode</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                <span class="n">ResourceNode</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">full_name</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">assigned</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_accessible_project_root_ids</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return root PortfolioNode IDs the user has access to.</span>
+
+<span class="sd">    A user has access to projects where they are assigned to at least one</span>
+<span class="sd">    node, or where they have sufficient clearance on the root node.</span>
+<span class="sd">    """</span>
+    <span class="n">assigned_ids</span> <span class="o">=</span> <span class="n">_get_assigned_node_ids</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">assigned_ids</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c1"># Get the assigned nodes to find their tree roots via ltree path</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">assigned_ids</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="n">root_paths</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="c1"># The root is the first segment of the ltree path</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+            <span class="n">root_path</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">root_paths</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">root_path</span><span class="p">)</span>
+
+    <span class="c1"># Find all root nodes matching those paths</span>
+    <span class="n">root_nodes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">root_paths</span><span class="p">))</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">root_nodes</span><span class="p">]</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># GET /summary — Key metrics for the current user</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="get_cockpit_summary">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cockpit.get_cockpit_summary">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/summary"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">CockpitSummaryResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_cockpit_summary</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return key metrics for the user's Daily Cockpit landing page.</span>
+
+<span class="sd">    Metrics include:</span>
+<span class="sd">    - Active sprint task count (assigned, not complete)</span>
+<span class="sd">    - Total planned hours this week (from ResourceAssignment)</span>
+<span class="sd">    - Tasks due within 48 hours</span>
+<span class="sd">    - Tasks where the user is an owner/assignee and are blocked</span>
+<span class="sd">    """</span>
+    <span class="n">assigned_ids</span> <span class="o">=</span> <span class="n">_get_assigned_node_ids</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">current_user</span><span class="p">)</span>
+
+    <span class="c1"># 1. Active sprint task count — assigned tasks not yet complete</span>
+    <span class="n">active_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">assigned_ids</span><span class="p">:</span>
+        <span class="n">active_count</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">assigned_ids</span><span class="p">),</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">percent_complete</span> <span class="o">&lt;</span> <span class="mf">100.0</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 2. Total planned hours this week</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+    <span class="c1"># Monday of current week</span>
+    <span class="n">start_of_week</span> <span class="o">=</span> <span class="n">now</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">now</span><span class="o">.</span><span class="n">weekday</span><span class="p">())</span>
+    <span class="n">start_of_week</span> <span class="o">=</span> <span class="n">start_of_week</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">end_of_week</span> <span class="o">=</span> <span class="n">start_of_week</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+    <span class="n">total_planned_hours</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">if</span> <span class="n">assigned_ids</span><span class="p">:</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">assigned_ids</span><span class="p">),</span>
+                <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">AssignmentStatus</span><span class="o">.</span><span class="n">CONFIRMED</span><span class="p">,</span>
+                <span class="n">or_</span><span class="p">(</span>
+                    <span class="n">ResourceNode</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">current_user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+                    <span class="n">ResourceNode</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">current_user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                    <span class="n">ResourceNode</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">current_user</span><span class="o">.</span><span class="n">full_name</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="c1"># Tasks planned for this week</span>
+                <span class="n">or_</span><span class="p">(</span>
+                    <span class="n">and_</span><span class="p">(</span>
+                        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&lt;</span> <span class="n">end_of_week</span><span class="p">,</span>
+                        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&gt;=</span> <span class="n">start_of_week</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">and_</span><span class="p">(</span>
+                        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">&gt;</span> <span class="n">start_of_week</span><span class="p">,</span>
+                        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">&lt;=</span> <span class="n">end_of_week</span><span class="p">,</span>
+                    <span class="p">),</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">total_planned_hours</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">planned_hours</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">)</span>
+
+    <span class="c1"># 3. Tasks due within 48 hours</span>
+    <span class="n">cutoff_48h</span> <span class="o">=</span> <span class="n">now</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">48</span><span class="p">)</span>
+    <span class="n">tasks_due_48h</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">assigned_ids</span><span class="p">:</span>
+        <span class="n">tasks_due_48h</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">assigned_ids</span><span class="p">),</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">percent_complete</span> <span class="o">&lt;</span> <span class="mf">100.0</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">&lt;=</span> <span class="n">cutoff_48h</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 4. Blocked tasks — user is assigned and has unresolved blockers</span>
+    <span class="n">blocked_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">assigned_ids</span><span class="p">:</span>
+        <span class="n">blocked_count</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">NodeBlocker</span><span class="p">,</span> <span class="n">NodeBlocker</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">assigned_ids</span><span class="p">),</span>
+                <span class="n">NodeBlocker</span><span class="o">.</span><span class="n">resolved_at</span> <span class="o">==</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">CockpitSummaryResponse</span><span class="p">(</span>
+        <span class="n">active_sprint_task_count</span><span class="o">=</span><span class="n">active_count</span><span class="p">,</span>
+        <span class="n">total_planned_hours_this_week</span><span class="o">=</span><span class="nb">round</span><span class="p">(</span><span class="n">total_planned_hours</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="n">tasks_due_within_48h</span><span class="o">=</span><span class="n">tasks_due_48h</span><span class="p">,</span>
+        <span class="n">tasks_blocked_count</span><span class="o">=</span><span class="n">blocked_count</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># GET /focus-queue — User's tasks ordered by CPM critical path &amp; due date</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="get_focus_queue">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cockpit.get_focus_queue">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/focus-queue"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">FocusQueueResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_focus_queue</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the user's active, in-progress, and upcoming assigned tasks.</span>
+
+<span class="sd">    Ordered by CPM critical path status (critical first) then by due date</span>
+<span class="sd">    (earliest first).  Only includes tasks the user has clearance to see.</span>
+<span class="sd">    """</span>
+    <span class="n">assigned_ids</span> <span class="o">=</span> <span class="n">_get_assigned_node_ids</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">current_user</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">assigned_ids</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FocusQueueResponse</span><span class="p">(</span><span class="n">tasks</span><span class="o">=</span><span class="p">[])</span>
+
+    <span class="c1"># Fetch assigned nodes that are active and not complete</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">assigned_ids</span><span class="p">),</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">percent_complete</span> <span class="o">&lt;</span> <span class="mf">100.0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">asc</span><span class="p">()</span><span class="o">.</span><span class="n">nulls_last</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Filter by ABAC clearance and build response</span>
+    <span class="n">task_responses</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FocusQueueTaskResponse</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Extract CPM schedule data from custom_attributes if available</span>
+        <span class="n">custom</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">schedule</span> <span class="o">=</span> <span class="n">custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schedule"</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">is_critical</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_critical"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">total_float</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"total_float"</span><span class="p">)</span>
+
+        <span class="n">task_responses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">FocusQueueTaskResponse</span><span class="p">(</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">percent_complete</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">percent_complete</span><span class="p">,</span>
+            <span class="n">planned_start_date</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span>
+            <span class="n">planned_end_date</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+            <span class="n">is_critical_path</span><span class="o">=</span><span class="n">is_critical</span><span class="p">,</span>
+            <span class="n">total_float_days</span><span class="o">=</span><span class="n">total_float</span><span class="p">,</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span>
+            <span class="n">is_masked</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="c1"># Sort: critical path first, then by planned_end_date</span>
+    <span class="n">task_responses</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="p">(</span><span class="ow">not</span> <span class="n">t</span><span class="o">.</span><span class="n">is_critical_path</span><span class="p">,</span> <span class="n">t</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">max</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">FocusQueueResponse</span><span class="p">(</span><span class="n">tasks</span><span class="o">=</span><span class="n">task_responses</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># GET /claimable-tasks — Tasks assigned to generic placeholder resources</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="get_claimable_tasks">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cockpit.get_claimable_tasks">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/claimable-tasks"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ClaimableTasksResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_claimable_tasks</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return tasks assigned to generic placeholder resources.</span>
+
+<span class="sd">    These are tasks within projects the user has access to, where the</span>
+<span class="sd">    assigned resource is a generic placeholder (is_generic_placeholder=True).</span>
+<span class="sd">    Filtered by matching user clearance.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Find all claimable assignments — generic placeholder resources</span>
+    <span class="n">claimable</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ResourceNode</span><span class="o">.</span><span class="n">is_generic_placeholder</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">AssignmentStatus</span><span class="o">.</span><span class="n">CLAIMED</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">task_responses</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ClaimableTaskResponse</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">claimable</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node</span>
+        <span class="n">resource</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node</span>
+
+        <span class="c1"># Check user clearance</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="n">task_responses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ClaimableTaskResponse</span><span class="p">(</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">placeholder_resource_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">resource</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">placeholder_resource_name</span><span class="o">=</span><span class="n">resource</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">allocated_units</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">allocated_units</span><span class="p">,</span>
+            <span class="n">planned_hours</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span><span class="p">,</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ClaimableTasksResponse</span><span class="p">(</span><span class="n">tasks</span><span class="o">=</span><span class="n">task_responses</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># POST /claimable-tasks/{node_id}/claim — Claim a placeholder-assigned task</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="claim_task">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cockpit.claim_task">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/claimable-tasks/</span><span class="si">{node_id}</span><span class="s2">/claim"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">claim_task</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Claim a task currently assigned to a generic placeholder resource.</span>
+
+<span class="sd">    When a task is assigned to a generic placeholder (e.g., "Test Engineer</span>
+<span class="sd">    TBC"), any cleared user can claim it.  This endpoint replaces the</span>
+<span class="sd">    placeholder assignment with a confirmed assignment to the requesting user.</span>
+
+<span class="sd">    Before allowing the claim, the endpoint verifies:</span>
+
+<span class="sd">    1. The user has sufficient security clearance for the node (ABAC).</span>
+<span class="sd">    2. The user passes export control compliance checks (nationality and</span>
+<span class="sd">       employer licence) if the node is export-controlled.</span>
+
+<span class="sd">    If export control checks fail, an HTTP 403 is returned and a</span>
+<span class="sd">    ForensicAuditLog entry is created with marking EXPORT_CONTROL_DENIAL.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        The UUID of the PortfolioNode to claim.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        The authenticated user claiming the task.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Confirmation message with the node code and assignment details.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the node is not found.</span>
+<span class="sd">        403 if the user lacks clearance or export control compliance.</span>
+<span class="sd">        400 if the node has no claimable placeholder assignment.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid node ID format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Task </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check user clearance (ABAC)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to claim this task"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Export control compliance check — raises HTTP 403 if denied</span>
+    <span class="n">verify_foreign_disclosure_compliance</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+
+    <span class="c1"># Find the placeholder assignment for this node</span>
+    <span class="n">placeholder_assignment</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">,</span>
+            <span class="n">ResourceNode</span><span class="o">.</span><span class="n">is_generic_placeholder</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">AssignmentStatus</span><span class="o">.</span><span class="n">CLAIMED</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">placeholder_assignment</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"No claimable placeholder assignment found for this task"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Find or create a ResourceNode for the claiming user</span>
+    <span class="n">user_resource</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ResourceNode</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">current_user</span><span class="o">.</span><span class="n">full_name</span><span class="p">,</span>
+            <span class="n">ResourceNode</span><span class="o">.</span><span class="n">resource_type</span> <span class="o">==</span> <span class="s2">"PERSON"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user_resource</span><span class="p">:</span>
+        <span class="c1"># Create a ResourceNode for the user if one doesn't exist</span>
+        <span class="n">user_resource</span> <span class="o">=</span> <span class="n">ResourceNode</span><span class="p">(</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">full_name</span> <span class="ow">or</span> <span class="n">current_user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">tree_type</span><span class="o">=</span><span class="s2">"RBS"</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="n">resource_type</span><span class="o">=</span><span class="s2">"PERSON"</span><span class="p">,</span>
+            <span class="n">is_generic_placeholder</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">user_resource</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Update the assignment to point to the user's resource and confirm it</span>
+    <span class="n">placeholder_assignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">=</span> <span class="n">user_resource</span><span class="o">.</span><span class="n">id</span>
+    <span class="n">placeholder_assignment</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">AssignmentStatus</span><span class="o">.</span><span class="n">CONFIRMED</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"message"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Task </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2"> claimed successfully"</span><span class="p">,</span>
+        <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"node_code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="s2">"assigned_to"</span><span class="p">:</span> <span class="n">current_user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># POST /tasks/{node_id}/progress — Quick progress update</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="update_task_progress">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cockpit.update_task_progress">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{node_id}</span><span class="s2">/progress"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">ProgressUpdateResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_task_progress</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">progress_data</span><span class="p">:</span> <span class="n">ProgressUpdateRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Allow quick updates: +5%, +10%, or completion, with optional hour logs.</span>
+
+<span class="sd">    Validates the node exists, the user is assigned, and the progress_type</span>
+<span class="sd">    is one of the allowed values.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid node ID format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Task </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check user clearance</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to update this task"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check user is assigned to this node</span>
+    <span class="n">assigned_ids</span> <span class="o">=</span> <span class="n">_get_assigned_node_ids</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">current_user</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">node_uuid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">assigned_ids</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"You are not assigned to this task"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">previous_percent</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">percent_complete</span>
+
+    <span class="c1"># Calculate new progress based on type</span>
+    <span class="k">if</span> <span class="n">progress_data</span><span class="o">.</span><span class="n">progress_type</span> <span class="o">==</span> <span class="s2">"+5"</span><span class="p">:</span>
+        <span class="n">new_percent</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">previous_percent</span> <span class="o">+</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">progress_data</span><span class="o">.</span><span class="n">progress_type</span> <span class="o">==</span> <span class="s2">"+10"</span><span class="p">:</span>
+        <span class="n">new_percent</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">previous_percent</span> <span class="o">+</span> <span class="mf">10.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">progress_data</span><span class="o">.</span><span class="n">progress_type</span> <span class="o">==</span> <span class="s2">"complete"</span><span class="p">:</span>
+        <span class="n">new_percent</span> <span class="o">=</span> <span class="mf">100.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid progress_type: </span><span class="si">{</span><span class="n">progress_data</span><span class="o">.</span><span class="n">progress_type</span><span class="si">}</span><span class="s2">. Must be '+5', '+10', or 'complete'."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># V&amp;V completion gate interlock</span>
+    <span class="c1"># If the node requires V&amp;V signoff, reject setting percent_complete = 100.0</span>
+    <span class="c1"># unless all mandatory VerificationTestCase items are PASSED or WAIVED.</span>
+    <span class="k">if</span> <span class="n">new_percent</span> <span class="o">&gt;=</span> <span class="mf">100.0</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s2">"requires_vv_signoff"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">VerificationTestCase</span><span class="p">,</span> <span class="n">VerificationTestCaseStatus</span>
+        <span class="n">blocking_tests</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">VerificationTestCase</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">,</span>
+                <span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">is_mandatory</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">VerificationTestCase</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">notin_</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">VerificationTestCaseStatus</span><span class="o">.</span><span class="n">PASSED</span><span class="p">,</span> <span class="n">VerificationTestCaseStatus</span><span class="o">.</span><span class="n">WAIVED</span><span class="p">]</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">blocking_tests</span><span class="p">:</span>
+            <span class="n">test_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">tc</span><span class="o">.</span><span class="n">test_identifier</span> <span class="k">for</span> <span class="n">tc</span> <span class="ow">in</span> <span class="n">blocking_tests</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Cannot complete: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">blocking_tests</span><span class="p">)</span><span class="si">}</span><span class="s2"> mandatory V&amp;V test case(s) "</span>
+                    <span class="sa">f</span><span class="s2">"are not yet PASSED or WAIVED: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">test_ids</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+    <span class="c1"># CDRL billing milestone interlock</span>
+    <span class="c1"># Billing milestones linked to CDRLs cannot transition to complete while</span>
+    <span class="c1"># CDRL status is REJECTED or UNDER_REVIEW.</span>
+    <span class="k">if</span> <span class="n">new_percent</span> <span class="o">&gt;=</span> <span class="mf">100.0</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ContractDeliverable</span><span class="p">,</span> <span class="n">CDRLStatus</span>
+        <span class="n">blocking_cdrls</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ContractDeliverable</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">,</span>
+                <span class="n">ContractDeliverable</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">CDRLStatus</span><span class="o">.</span><span class="n">REJECTED</span><span class="p">,</span> <span class="n">CDRLStatus</span><span class="o">.</span><span class="n">UNDER_REVIEW</span><span class="p">]</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">blocking_cdrls</span><span class="p">:</span>
+            <span class="n">cdrl_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">cdrl_sequence_number</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">blocking_cdrls</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Cannot complete: CDRL(s) </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cdrl_names</span><span class="p">)</span><span class="si">}</span><span class="s2"> are REJECTED or "</span>
+                    <span class="sa">f</span><span class="s2">"UNDER_REVIEW — cannot complete billing milestone"</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Update the node</span>
+    <span class="n">node</span><span class="o">.</span><span class="n">percent_complete</span> <span class="o">=</span> <span class="n">new_percent</span>
+
+    <span class="c1"># Log hours if provided — store in custom_attributes</span>
+    <span class="k">if</span> <span class="n">progress_data</span><span class="o">.</span><span class="n">logged_hours</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">custom</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">hour_logs</span> <span class="o">=</span> <span class="n">custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hour_logs"</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">hour_logs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"user_id"</span><span class="p">:</span> <span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="s2">"hours"</span><span class="p">:</span> <span class="n">progress_data</span><span class="o">.</span><span class="n">logged_hours</span><span class="p">,</span>
+            <span class="s2">"logged_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">})</span>
+        <span class="n">custom</span><span class="p">[</span><span class="s2">"hour_logs"</span><span class="p">]</span> <span class="o">=</span> <span class="n">hour_logs</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="o">=</span> <span class="n">custom</span>
+
+    <span class="c1"># If completed, set actual end date</span>
+    <span class="k">if</span> <span class="n">new_percent</span> <span class="o">&gt;=</span> <span class="mf">100.0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">actual_end_date</span><span class="p">:</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">actual_end_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ProgressUpdateResponse</span><span class="p">(</span>
+        <span class="n">node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">previous_percent_complete</span><span class="o">=</span><span class="n">previous_percent</span><span class="p">,</span>
+        <span class="n">new_percent_complete</span><span class="o">=</span><span class="n">new_percent</span><span class="p">,</span>
+        <span class="n">logged_hours</span><span class="o">=</span><span class="n">progress_data</span><span class="o">.</span><span class="n">logged_hours</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">updated_at</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># POST /tasks/{node_id}/blocker — Atomic blocker creation</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="create_task_blocker">
+<a class="viewcode-back" href="../../../modules.html#app.routers.cockpit.create_task_blocker">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks/</span><span class="si">{node_id}</span><span class="s2">/blocker"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">BlockerCreateResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_task_blocker</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">blocker_data</span><span class="p">:</span> <span class="n">BlockerCreateRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Atomically create a NodeBlocker entry, update task status, and record ForensicAuditLog.</span>
+
+<span class="sd">    This endpoint performs three operations in a single transaction:</span>
+<span class="sd">    1. Creates a NodeBlocker record</span>
+<span class="sd">    2. Updates the task's custom_attributes to reflect blocked status</span>
+<span class="sd">    3. Records a ForensicAuditLog entry for the blocker creation</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span> <span class="k">as</span> <span class="n">PyUUID</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node_uuid</span> <span class="o">=</span> <span class="n">PyUUID</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid node ID format"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Task </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check user clearance</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient clearance to block this task"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Validate category and severity enums</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="n">BlockerCategory</span><span class="p">(</span><span class="n">blocker_data</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">BlockerCategory</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid category: </span><span class="si">{</span><span class="n">blocker_data</span><span class="o">.</span><span class="n">category</span><span class="si">}</span><span class="s2">. Must be one of: </span><span class="si">{</span><span class="n">valid</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">severity</span> <span class="o">=</span> <span class="n">BlockerSeverity</span><span class="p">(</span><span class="n">blocker_data</span><span class="o">.</span><span class="n">severity</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">BlockerSeverity</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid severity: </span><span class="si">{</span><span class="n">blocker_data</span><span class="o">.</span><span class="n">severity</span><span class="si">}</span><span class="s2">. Must be one of: </span><span class="si">{</span><span class="n">valid</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">transaction_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span>
+
+    <span class="c1"># 1. Create the NodeBlocker</span>
+    <span class="n">blocker</span> <span class="o">=</span> <span class="n">NodeBlocker</span><span class="p">(</span>
+        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node_uuid</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="n">severity</span><span class="p">,</span>
+        <span class="n">impacted_hours</span><span class="o">=</span><span class="n">blocker_data</span><span class="o">.</span><span class="n">impacted_hours</span><span class="p">,</span>
+        <span class="n">resolved_at</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">blocker</span><span class="p">)</span>
+
+    <span class="c1"># 2. Update task custom_attributes to mark as blocked</span>
+    <span class="n">custom</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">blockers_list</span> <span class="o">=</span> <span class="n">custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"active_blockers"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">blockers_list</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+        <span class="s2">"blocker_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">blocker</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="k">if</span> <span class="n">blocker</span><span class="o">.</span><span class="n">id</span> <span class="k">else</span> <span class="s2">"pending"</span><span class="p">,</span>
+        <span class="s2">"category"</span><span class="p">:</span> <span class="n">blocker_data</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="s2">"severity"</span><span class="p">:</span> <span class="n">blocker_data</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span>
+        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="s2">"description"</span><span class="p">:</span> <span class="n">blocker_data</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+    <span class="p">})</span>
+    <span class="n">custom</span><span class="p">[</span><span class="s2">"active_blockers"</span><span class="p">]</span> <span class="o">=</span> <span class="n">blockers_list</span>
+    <span class="n">custom</span><span class="p">[</span><span class="s2">"is_blocked"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="o">=</span> <span class="n">custom</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>  <span class="c1"># Ensure blocker.id is populated</span>
+
+    <span class="c1"># 3. Record ForensicAuditLog entry for the blocker creation</span>
+    <span class="c1"># Get the latest chain hash</span>
+    <span class="n">last_audit</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span>
+        <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">()</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="n">prev_hash</span> <span class="o">=</span> <span class="n">last_audit</span><span class="o">.</span><span class="n">current_hash</span> <span class="k">if</span> <span class="n">last_audit</span> <span class="k">else</span> <span class="s2">""</span>
+
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">transaction_id</span><span class="p">,</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">email</span> <span class="ow">or</span> <span class="n">current_user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"UPDATE"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"PortfolioNode"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">node_uuid</span><span class="p">,</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"blocker_created"</span><span class="p">,</span>
+            <span class="s2">"blocker_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">blocker</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+            <span class="s2">"category"</span><span class="p">:</span> <span class="n">blocker_data</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+            <span class="s2">"severity"</span><span class="p">:</span> <span class="n">blocker_data</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span>
+            <span class="s2">"impacted_hours"</span><span class="p">:</span> <span class="n">blocker_data</span><span class="o">.</span><span class="n">impacted_hours</span><span class="p">,</span>
+            <span class="s2">"description"</span><span class="p">:</span> <span class="n">blocker_data</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="n">prev_hash</span><span class="o">=</span><span class="n">prev_hash</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">blocker</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">BlockerCreateResponse</span><span class="p">(</span>
+        <span class="n">blocker_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">blocker</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">node_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">blocker_data</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+        <span class="n">severity</span><span class="o">=</span><span class="n">blocker_data</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span>
+        <span class="n">impacted_hours</span><span class="o">=</span><span class="n">blocker_data</span><span class="o">.</span><span class="n">impacted_hours</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">blocker</span><span class="o">.</span><span class="n">created_at</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">),</span>
+        <span class="n">audit_log_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">audit_entry</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

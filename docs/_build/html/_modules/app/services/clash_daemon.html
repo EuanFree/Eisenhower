@@ -1,0 +1,1167 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.clash_daemon &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.clash_daemon</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.clash_daemon</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Background schedule audit engine (clash daemon).</span>
+
+<span class="sd">Periodically sweeps a project's schedule to detect clashes that would</span>
+<span class="sd">prevent smooth execution.  Each sweep generates a unique ``sweep_run_id``</span>
+<span class="sd">and persists all discovered clashes as :class:`ScheduleClashIssue` records.</span>
+
+<span class="sd">Clash Types Detected</span>
+<span class="sd">--------------------</span>
+
+<span class="sd">1. **Resource Double-Bookings** — A resource is assigned more than 100%</span>
+<span class="sd">   capacity across overlapping tasks.</span>
+
+<span class="sd">2. **Security Clearance Lapse** — A user's clearance or a skill</span>
+<span class="sd">   certification expires before the task's planned end date.</span>
+
+<span class="sd">3. **Facility Collisions** — Multiple tasks are scheduled in the same</span>
+<span class="sd">   SCIF/TEMPEST location exceeding its capacity.</span>
+
+<span class="sd">4. **Negative Float Slip** — A task's total float is negative, meaning</span>
+<span class="sd">   the project is already behind schedule.</span>
+
+<span class="sd">5. **Predecessor Unmet** — A dependency's successor is scheduled to start</span>
+<span class="sd">   before the predecessor is expected to finish.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">    from app.services.clash_daemon import run_portfolio_sweep</span>
+
+<span class="sd">    result = run_portfolio_sweep(db, project_root_id)</span>
+<span class="sd">    # result contains sweep_run_id and clash counts by severity</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">sa_text</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="p">,</span> <span class="n">ResourceNode</span><span class="p">,</span> <span class="n">LocationNode</span><span class="p">,</span>
+    <span class="n">DependencyLink</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">UserSkillProfile</span><span class="p">,</span> <span class="n">ScheduleClashIssue</span><span class="p">,</span>
+    <span class="n">ClashCategory</span><span class="p">,</span> <span class="n">ClashSeverity</span><span class="p">,</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Helper: check if a date is a workday</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_workday</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">date</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return True if *d* falls on a weekday (Mon–Fri)."""</span>
+    <span class="k">return</span> <span class="n">d</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">5</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Check 1: Resource double-bookings (&gt; 100% capacity)</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_resource_overallocation</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">sweep_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">project_start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">project_end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Detect resources assigned &gt; 100% capacity during overlapping tasks.</span>
+
+<span class="sd">    For each resource with active assignments in the project window,</span>
+<span class="sd">    calculate daily load.  Any day where total allocated units exceed</span>
+<span class="sd">    1.0 generates a clash issue.</span>
+<span class="sd">    """</span>
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Get all resources assigned to nodes under this project root</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">clashes</span>
+
+    <span class="c1"># Find all resource assignments under this project</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">op</span><span class="p">(</span><span class="s2">"&lt;@"</span><span class="p">)(</span><span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">),</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&lt;=</span> <span class="n">project_end</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">&gt;=</span> <span class="n">project_start</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Group by resource</span>
+    <span class="n">resource_assignments</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ResourceAssignment</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node</span>
+        <span class="k">if</span> <span class="n">pn</span> <span class="ow">and</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="n">rid</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span>
+            <span class="k">if</span> <span class="n">rid</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">resource_assignments</span><span class="p">:</span>
+                <span class="n">resource_assignments</span><span class="p">[</span><span class="n">rid</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">resource_assignments</span><span class="p">[</span><span class="n">rid</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">assignment</span><span class="p">,</span> <span class="n">pn</span><span class="p">))</span>
+
+    <span class="c1"># Check each resource for overallocation</span>
+    <span class="k">for</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">assigned</span> <span class="ow">in</span> <span class="n">resource_assignments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># Build daily load map</span>
+        <span class="n">daily_load</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">ResourceAssignment</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">assignment</span><span class="p">,</span> <span class="n">pn</span> <span class="ow">in</span> <span class="n">assigned</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span>
+            <span class="k">while</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_is_workday</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">d</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">daily_load</span><span class="p">:</span>
+                        <span class="n">daily_load</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">daily_load</span><span class="p">[</span><span class="n">d</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">assignment</span><span class="p">,</span> <span class="n">pn</span><span class="p">))</span>
+                <span class="n">d</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Find overallocation windows</span>
+        <span class="n">in_window</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">window_start</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">window_end</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">peak_load</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">peak_day</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">peak_tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">daily_load</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">tasks_on_day</span> <span class="o">=</span> <span class="n">daily_load</span><span class="p">[</span><span class="n">d</span><span class="p">]</span>
+            <span class="n">load</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">allocated_units</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">tasks_on_day</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">load</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">in_window</span><span class="p">:</span>
+                    <span class="n">window_start</span> <span class="o">=</span> <span class="n">d</span>
+                    <span class="n">in_window</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">peak_load</span> <span class="o">=</span> <span class="n">load</span>
+                    <span class="n">peak_day</span> <span class="o">=</span> <span class="n">d</span>
+                    <span class="n">peak_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">pn</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">pn</span> <span class="ow">in</span> <span class="n">tasks_on_day</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">load</span> <span class="o">&gt;</span> <span class="n">peak_load</span><span class="p">:</span>
+                        <span class="n">peak_load</span> <span class="o">=</span> <span class="n">load</span>
+                        <span class="n">peak_day</span> <span class="o">=</span> <span class="n">d</span>
+                        <span class="n">peak_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">pn</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">pn</span> <span class="ow">in</span> <span class="n">tasks_on_day</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">in_window</span><span class="p">:</span>
+                    <span class="n">window_end</span> <span class="o">=</span> <span class="n">d</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="c1"># Create clash issue</span>
+                    <span class="n">primary_node</span> <span class="o">=</span> <span class="n">peak_tasks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">peak_tasks</span> <span class="k">else</span> <span class="n">assigned</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">conflicting_node</span> <span class="o">=</span> <span class="n">peak_tasks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peak_tasks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+
+                    <span class="n">severity</span> <span class="o">=</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span> <span class="k">if</span> <span class="n">peak_load</span> <span class="o">&gt;</span> <span class="mf">2.0</span> <span class="k">else</span> <span class="p">(</span>
+                        <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">MAJOR</span> <span class="k">if</span> <span class="n">peak_load</span> <span class="o">&gt;</span> <span class="mf">1.5</span> <span class="k">else</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">ADVISORY</span>
+                    <span class="p">)</span>
+
+                    <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                        <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                        <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">RESOURCE_OVERALLOCATION</span><span class="p">,</span>
+                        <span class="n">severity</span><span class="o">=</span><span class="n">severity</span><span class="p">,</span>
+                        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">primary_node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                        <span class="n">conflicting_node_id</span><span class="o">=</span><span class="n">conflicting_node</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">conflicting_node</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">conflicting_resource_id</span><span class="o">=</span><span class="n">resource_id</span><span class="p">,</span>
+                        <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">window_start</span><span class="p">,</span>
+                        <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">window_end</span> <span class="ow">or</span> <span class="n">d</span><span class="p">,</span>
+                        <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Resource overallocated: </span><span class="si">{</span><span class="n">peak_load</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> capacity on </span><span class="si">{</span><span class="n">peak_day</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Resource </span><span class="si">{</span><span class="n">resource_id</span><span class="si">}</span><span class="s2"> is assigned </span><span class="si">{</span><span class="n">peak_load</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> capacity "</span>
+                            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">peak_tasks</span><span class="p">)</span><span class="si">}</span><span class="s2"> tasks) on </span><span class="si">{</span><span class="n">peak_day</span><span class="si">}</span><span class="s2">. "</span>
+                            <span class="sa">f</span><span class="s2">"Affected tasks: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">code</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">pn</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">peak_tasks</span><span class="p">)</span><span class="si">}</span><span class="s2">. "</span>
+                            <span class="sa">f</span><span class="s2">"Window: </span><span class="si">{</span><span class="n">window_start</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">window_end</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">d</span><span class="si">}</span><span class="s2">."</span>
+                        <span class="p">),</span>
+                        <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Delay non-critical tasks or reassign resources. "</span>
+                            <span class="sa">f</span><span class="s2">"Consider running the leveling engine to propose date shifts."</span>
+                        <span class="p">),</span>
+                    <span class="p">))</span>
+                    <span class="n">in_window</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Close any remaining window</span>
+        <span class="k">if</span> <span class="n">in_window</span> <span class="ow">and</span> <span class="n">window_start</span><span class="p">:</span>
+            <span class="n">window_end</span> <span class="o">=</span> <span class="n">project_end</span>
+            <span class="n">primary_node</span> <span class="o">=</span> <span class="n">peak_tasks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">peak_tasks</span> <span class="k">else</span> <span class="n">assigned</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">conflicting_node</span> <span class="o">=</span> <span class="n">peak_tasks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">peak_tasks</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+
+            <span class="n">severity</span> <span class="o">=</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span> <span class="k">if</span> <span class="n">peak_load</span> <span class="o">&gt;</span> <span class="mf">2.0</span> <span class="k">else</span> <span class="p">(</span>
+                <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">MAJOR</span> <span class="k">if</span> <span class="n">peak_load</span> <span class="o">&gt;</span> <span class="mf">1.5</span> <span class="k">else</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">ADVISORY</span>
+            <span class="p">)</span>
+
+            <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">RESOURCE_OVERALLOCATION</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="n">severity</span><span class="p">,</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">primary_node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">conflicting_node_id</span><span class="o">=</span><span class="n">conflicting_node</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">conflicting_node</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">conflicting_resource_id</span><span class="o">=</span><span class="n">resource_id</span><span class="p">,</span>
+                <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">window_start</span><span class="p">,</span>
+                <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">window_end</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Resource overallocated: </span><span class="si">{</span><span class="n">peak_load</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> capacity on </span><span class="si">{</span><span class="n">peak_day</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Resource </span><span class="si">{</span><span class="n">resource_id</span><span class="si">}</span><span class="s2"> is assigned </span><span class="si">{</span><span class="n">peak_load</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> capacity "</span>
+                    <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">peak_tasks</span><span class="p">)</span><span class="si">}</span><span class="s2"> tasks) on </span><span class="si">{</span><span class="n">peak_day</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="sa">f</span><span class="s2">"Affected tasks: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">code</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">pn</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">peak_tasks</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">),</span>
+                <span class="n">recommended_action</span><span class="o">=</span><span class="s2">"Run the leveling engine to propose date shifts."</span><span class="p">,</span>
+            <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">clashes</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Check 2: Security clearance lapse</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_clearance_lapse</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">sweep_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Detect assigned resources whose clearance/certification expires before task end.</span>
+
+<span class="sd">    Checks UserSkillProfile.certificate_expiry against the task's</span>
+<span class="sd">    planned_end_date.  Also checks if a resource's associated user has</span>
+<span class="sd">    a clearance level below the task's security classification.</span>
+<span class="sd">    """</span>
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Get all assignments under this project</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">clashes</span>
+
+    <span class="n">assignments</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">op</span><span class="p">(</span><span class="s2">"&lt;@"</span><span class="p">)(</span><span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">),</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pn</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">resource</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">resource</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Check if this is a person resource</span>
+        <span class="k">if</span> <span class="n">resource</span><span class="o">.</span><span class="n">resource_type</span> <span class="o">!=</span> <span class="s2">"PERSON"</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Try to find the associated user by matching resource code/name</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">username</span> <span class="o">==</span> <span class="n">resource</span><span class="o">.</span><span class="n">code</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">resource</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+                <span class="n">User</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Check 1: Certificate expiry on skill profiles</span>
+        <span class="n">skill_profiles</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UserSkillProfile</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">UserSkillProfile</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">UserSkillProfile</span><span class="o">.</span><span class="n">certificate_expiry</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="n">UserSkillProfile</span><span class="o">.</span><span class="n">certificate_expiry</span> <span class="o">&lt;</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">profile</span> <span class="ow">in</span> <span class="n">skill_profiles</span><span class="p">:</span>
+            <span class="n">skill</span> <span class="o">=</span> <span class="n">profile</span><span class="o">.</span><span class="n">skill</span>
+            <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">CREDENTIAL_LAPSE</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">conflicting_resource_id</span><span class="o">=</span><span class="n">resource</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">profile</span><span class="o">.</span><span class="n">certificate_expiry</span><span class="p">,</span>
+                <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Certificate expires for </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2"> on task </span><span class="si">{</span><span class="n">pn</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"User '</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">' is assigned to task '</span><span class="si">{</span><span class="n">pn</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' "</span>
+                    <span class="sa">f</span><span class="s2">"(ends </span><span class="si">{</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="si">}</span><span class="s2">), but their certification for "</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">skill</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' (skill: </span><span class="si">{</span><span class="n">skill</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">) expires on "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">profile</span><span class="o">.</span><span class="n">certificate_expiry</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="sa">f</span><span class="s2">"This is </span><span class="si">{</span><span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">profile</span><span class="o">.</span><span class="n">certificate_expiry</span><span class="p">)</span><span class="o">.</span><span class="n">days</span><span class="si">}</span><span class="s2"> days "</span>
+                    <span class="sa">f</span><span class="s2">"after expiry."</span>
+                <span class="p">),</span>
+                <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Renew the '</span><span class="si">{</span><span class="n">skill</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' certification before "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">profile</span><span class="o">.</span><span class="n">certificate_expiry</span><span class="si">}</span><span class="s2"> or reassign the task."</span>
+                <span class="p">),</span>
+            <span class="p">))</span>
+
+        <span class="c1"># Check 2: User clearance vs task classification</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span> <span class="ow">and</span> <span class="n">pn</span><span class="o">.</span><span class="n">security_classification</span><span class="p">:</span>
+            <span class="n">clearance_rank</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"OFFICIAL"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="s2">"OFFICIAL_SENSITIVE"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">"SECRET"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+                <span class="s2">"TOP_SECRET"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="n">user_rank</span> <span class="o">=</span> <span class="n">clearance_rank</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">task_rank</span> <span class="o">=</span> <span class="n">clearance_rank</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">user_rank</span> <span class="o">&lt;</span> <span class="n">task_rank</span><span class="p">:</span>
+                <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                    <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                    <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">CREDENTIAL_LAPSE</span><span class="p">,</span>
+                    <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>
+                    <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">conflicting_resource_id</span><span class="o">=</span><span class="n">resource</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">or</span> <span class="n">today</span><span class="p">,</span>
+                    <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+                    <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Insufficient clearance for </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2"> on task </span><span class="si">{</span><span class="n">pn</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"User '</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">' has </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> clearance "</span>
+                        <span class="sa">f</span><span class="s2">"but task '</span><span class="si">{</span><span class="n">pn</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' is classified </span><span class="si">{</span><span class="n">pn</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. "</span>
+                        <span class="sa">f</span><span class="s2">"This user cannot legally access the task data."</span>
+                    <span class="p">),</span>
+                    <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Reassign task '</span><span class="si">{</span><span class="n">pn</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' to a cleared resource or "</span>
+                        <span class="sa">f</span><span class="s2">"upgrade </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">'s clearance."</span>
+                    <span class="p">),</span>
+                <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">clashes</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Check 3: Facility / SCIF collisions</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_facility_collisions</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">sweep_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">project_start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">project_end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Detect multiple tasks in the same SCIF exceeding capacity.</span>
+
+<span class="sd">    For each SCIF/TEMPEST location, check if more than one task is</span>
+<span class="sd">    scheduled there during overlapping time windows.</span>
+<span class="sd">    """</span>
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Get all SCIF locations</span>
+    <span class="n">scifs</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">LocationNode</span><span class="o">.</span><span class="n">is_scif_or_tempest</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">scifs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">clashes</span>
+
+    <span class="c1"># For each SCIF, find tasks assigned to resources currently located there</span>
+    <span class="k">for</span> <span class="n">scif</span> <span class="ow">in</span> <span class="n">scifs</span><span class="p">:</span>
+        <span class="c1"># Find resources at this location</span>
+        <span class="n">resources_at_scif</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">current_location_id</span> <span class="o">==</span> <span class="n">scif</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">resources_at_scif</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">resource_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">resources_at_scif</span><span class="p">]</span>
+
+        <span class="c1"># Find tasks assigned to these resources</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">resource_ids</span><span class="p">),</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&lt;=</span> <span class="n">project_end</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">&gt;=</span> <span class="n">project_start</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">assignments</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Check for overlapping tasks</span>
+        <span class="n">tasks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+            <span class="n">pn</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">portfolio_node</span>
+            <span class="k">if</span> <span class="n">pn</span> <span class="ow">and</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+                <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">pn</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+
+        <span class="c1"># Find overlapping pairs</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)):</span>
+                <span class="n">pn1</span><span class="p">,</span> <span class="n">a1</span> <span class="o">=</span> <span class="n">tasks</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">pn2</span><span class="p">,</span> <span class="n">a2</span> <span class="o">=</span> <span class="n">tasks</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+                <span class="c1"># Check overlap</span>
+                <span class="n">overlap_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">pn1</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="n">pn2</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">)</span>
+                <span class="n">overlap_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">pn1</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span> <span class="n">pn2</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">overlap_start</span> <span class="o">&lt;=</span> <span class="n">overlap_end</span><span class="p">:</span>
+                    <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                        <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                        <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">SPATIAL_LOCATION_COLLISION</span><span class="p">,</span>
+                        <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>
+                        <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">pn1</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                        <span class="n">conflicting_node_id</span><span class="o">=</span><span class="n">pn2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                        <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">overlap_start</span><span class="p">,</span>
+                        <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">overlap_end</span><span class="p">,</span>
+                        <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"SCIF collision: </span><span class="si">{</span><span class="n">pn1</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">pn2</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="n">scif</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                        <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Tasks '</span><span class="si">{</span><span class="n">pn1</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' and '</span><span class="si">{</span><span class="n">pn2</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' are both scheduled "</span>
+                            <span class="sa">f</span><span class="s2">"in SCIF '</span><span class="si">{</span><span class="n">scif</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' (</span><span class="si">{</span><span class="n">scif</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">) from </span><span class="si">{</span><span class="n">overlap_start</span><span class="si">}</span><span class="s2"> "</span>
+                            <span class="sa">f</span><span class="s2">"to </span><span class="si">{</span><span class="n">overlap_end</span><span class="si">}</span><span class="s2">.  The facility may not accommodate both "</span>
+                            <span class="sa">f</span><span class="s2">"teams simultaneously."</span>
+                        <span class="p">),</span>
+                        <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"Stagger the schedules or move one task to an alternative "</span>
+                            <span class="sa">f</span><span class="s2">"SCIF facility."</span>
+                        <span class="p">),</span>
+                    <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">clashes</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Check 4: Negative float slip</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_negative_float</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">sweep_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Detect tasks with negative total float (behind schedule)."""</span>
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">clashes</span>
+
+    <span class="c1"># Query nodes with schedule data showing negative float</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">sa_text</span><span class="p">(</span>
+            <span class="s2">"SELECT * FROM portfolio_nodes pn "</span>
+            <span class="s2">"JOIN universal_breakdown_nodes ubn ON pn.id = ubn.id "</span>
+            <span class="s2">"WHERE ubn.path &lt;@ :root_path AND ubn.is_active = true"</span>
+        <span class="p">),</span>
+        <span class="p">{</span><span class="s2">"root_path"</span><span class="p">:</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">row_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">row</span><span class="p">))</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="c1"># Check custom_attributes for schedule data</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="s2">"schedule"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">sched</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">]</span>
+        <span class="n">total_float</span> <span class="o">=</span> <span class="n">sched</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"total_float"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">total_float</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">NEGATIVE_FLOAT_SLIP</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span> <span class="k">if</span> <span class="n">total_float</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">5</span> <span class="k">else</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">or</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span>
+                <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">or</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">(),</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Negative float: </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">total_float</span><span class="p">)</span><span class="si">}</span><span class="s2"> days behind"</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Task '</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' (</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">) has a total float of "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">total_float</span><span class="si">}</span><span class="s2"> days, meaning the project is already "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">total_float</span><span class="p">)</span><span class="si">}</span><span class="s2"> days behind schedule on this path."</span>
+                <span class="p">),</span>
+                <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Crash the schedule by adding resources, fast-tracking "</span>
+                    <span class="sa">f</span><span class="s2">"dependencies, or reducing scope."</span>
+                <span class="p">),</span>
+            <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">clashes</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Check 5: Predecessor unmet</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_predecessor_unmet</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">sweep_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Detect dependencies where successor starts before predecessor finishes."""</span>
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">clashes</span>
+
+    <span class="c1"># Get all dependencies under this project</span>
+    <span class="n">deps</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span>
+                        <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                            <span class="n">sa_text</span><span class="p">(</span>
+                                <span class="s2">"SELECT pn.id FROM portfolio_nodes pn "</span>
+                                <span class="s2">"JOIN universal_breakdown_nodes ubn ON pn.id = ubn.id "</span>
+                                <span class="s2">"WHERE ubn.path &lt;@ :root_path"</span>
+                            <span class="p">),</span>
+                            <span class="p">{</span><span class="s2">"root_path"</span><span class="p">:</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">},</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="n">succ</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pred</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">succ</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pred</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">succ</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Check if successor starts before predecessor finishes (accounting for lag)</span>
+        <span class="n">adjusted_pred_end</span> <span class="o">=</span> <span class="n">pred</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">succ</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&lt;</span> <span class="n">adjusted_pred_end</span><span class="p">:</span>
+            <span class="n">days_violation</span> <span class="o">=</span> <span class="p">(</span><span class="n">adjusted_pred_end</span> <span class="o">-</span> <span class="n">succ</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+
+            <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">PREDECESSOR_UNMET</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">MAJOR</span> <span class="k">if</span> <span class="n">days_violation</span> <span class="o">&lt;=</span> <span class="mi">5</span> <span class="k">else</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">succ</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">conflicting_node_id</span><span class="o">=</span><span class="n">pred</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">succ</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span>
+                <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">adjusted_pred_end</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Predecessor unmet: </span><span class="si">{</span><span class="n">succ</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2"> starts before </span><span class="si">{</span><span class="n">pred</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2"> finishes"</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Task '</span><span class="si">{</span><span class="n">succ</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' is scheduled to start on </span><span class="si">{</span><span class="n">succ</span><span class="o">.</span><span class="n">planned_start_date</span><span class="si">}</span><span class="s2">, "</span>
+                    <span class="sa">f</span><span class="s2">"but its predecessor '</span><span class="si">{</span><span class="n">pred</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' (dependency type: </span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">dependency_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">, "</span>
+                    <span class="sa">f</span><span class="s2">"lag: </span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span><span class="si">}</span><span class="s2"> days) doesn't finish until </span><span class="si">{</span><span class="n">adjusted_pred_end</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="sa">f</span><span class="s2">"Violation: </span><span class="si">{</span><span class="n">days_violation</span><span class="si">}</span><span class="s2"> days."</span>
+                <span class="p">),</span>
+                <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Delay '</span><span class="si">{</span><span class="n">succ</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' to start after </span><span class="si">{</span><span class="n">adjusted_pred_end</span><span class="si">}</span><span class="s2"> or "</span>
+                    <span class="sa">f</span><span class="s2">"accelerate '</span><span class="si">{</span><span class="n">pred</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' to finish earlier."</span>
+                <span class="p">),</span>
+            <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">clashes</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Main sweep orchestrator</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="run_portfolio_sweep">
+<a class="viewcode-back" href="../../../modules.html#app.services.clash_daemon.run_portfolio_sweep">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_portfolio_sweep</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run a complete portfolio sweep, detecting all clash types.</span>
+
+<span class="sd">    This is the main entry point for the clash daemon.  It generates</span>
+<span class="sd">    a unique ``sweep_run_id``, runs all five clash checks, persists</span>
+<span class="sd">    the results to the database, and returns a summary.</span>
+
+<span class="sd">    Checks Performed</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    1. Resource overallocation (&gt; 100% capacity)</span>
+<span class="sd">    2. Security clearance / certificate lapse</span>
+<span class="sd">    3. SCIF / facility spatial collisions</span>
+<span class="sd">    4. Negative float slip (behind schedule)</span>
+<span class="sd">    5. Predecessor unmet (dependency violations)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        The root PortfolioNode of the project to sweep.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        {</span>
+<span class="sd">            "sweep_run_id": str,</span>
+<span class="sd">            "total_clashes": int,</span>
+<span class="sd">            "by_severity": {"CRITICAL": int, "MAJOR": int, "ADVISORY": int},</span>
+<span class="sd">            "by_category": {category: int, ...},</span>
+<span class="sd">            "clash_ids": [str, ...],</span>
+<span class="sd">            "completed_at": str,</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the root node is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">sweep_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span>
+
+    <span class="c1"># Validate root</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">root_node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># Determine project date range</span>
+    <span class="n">all_nodes</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">sa_text</span><span class="p">(</span>
+            <span class="s2">"SELECT pn.planned_start_date, pn.planned_end_date FROM portfolio_nodes pn "</span>
+            <span class="s2">"JOIN universal_breakdown_nodes ubn ON pn.id = ubn.id "</span>
+            <span class="s2">"WHERE ubn.path &lt;@ :root_path AND ubn.is_active = true"</span>
+        <span class="p">),</span>
+        <span class="p">{</span><span class="s2">"root_path"</span><span class="p">:</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">dates</span> <span class="o">=</span> <span class="n">all_nodes</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+    <span class="n">starts</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dates</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">ends</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dates</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+    <span class="n">project_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">starts</span><span class="p">)</span> <span class="k">if</span> <span class="n">starts</span> <span class="k">else</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="n">project_end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ends</span><span class="p">)</span> <span class="k">if</span> <span class="n">ends</span> <span class="k">else</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+
+    <span class="c1"># Run all checks</span>
+    <span class="n">all_clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">all_clashes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_check_resource_overallocation</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">,</span> <span class="n">sweep_id</span><span class="p">,</span> <span class="n">project_start</span><span class="p">,</span> <span class="n">project_end</span><span class="p">))</span>
+    <span class="n">all_clashes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_check_clearance_lapse</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">,</span> <span class="n">sweep_id</span><span class="p">))</span>
+    <span class="n">all_clashes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_check_facility_collisions</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">,</span> <span class="n">sweep_id</span><span class="p">,</span> <span class="n">project_start</span><span class="p">,</span> <span class="n">project_end</span><span class="p">))</span>
+    <span class="n">all_clashes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_check_negative_float</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">,</span> <span class="n">sweep_id</span><span class="p">))</span>
+    <span class="n">all_clashes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_check_predecessor_unmet</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">,</span> <span class="n">sweep_id</span><span class="p">))</span>
+
+    <span class="c1"># Check chamber reservation conflicts (buffer overlaps, calibration expiry)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.facility_telemetry</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_chamber_conflicts</span>
+        <span class="n">chamber_clashes</span> <span class="o">=</span> <span class="n">scan_chamber_conflicts</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">sweep_id</span><span class="p">)</span>
+        <span class="n">all_clashes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">chamber_clashes</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="c1"># Chamber scan may fail if the table doesn't exist yet or on SQLite</span>
+        <span class="k">pass</span>
+
+    <span class="c1"># Check personnel clearance expiry collisions</span>
+    <span class="n">all_clashes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_check_clearance_expiry</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">,</span> <span class="n">sweep_id</span><span class="p">))</span>
+
+    <span class="c1"># Check SCIF escort capacity impact</span>
+    <span class="n">all_clashes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_check_scif_escort_impact</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">,</span> <span class="n">sweep_id</span><span class="p">,</span> <span class="n">project_start</span><span class="p">,</span> <span class="n">project_end</span><span class="p">))</span>
+
+    <span class="c1"># Check perishable material shelf-life</span>
+    <span class="n">all_clashes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_check_perishable_shelf_life</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">,</span> <span class="n">sweep_id</span><span class="p">))</span>
+
+    <span class="c1"># Persist all clashes</span>
+    <span class="n">by_severity</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"CRITICAL"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"MAJOR"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"ADVISORY"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="n">by_category</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">clash_ids</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">clash</span> <span class="ow">in</span> <span class="n">all_clashes</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">clash</span><span class="p">)</span>
+        <span class="n">by_severity</span><span class="p">[</span><span class="n">clash</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">by_severity</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">clash</span><span class="o">.</span><span class="n">severity</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">by_category</span><span class="p">[</span><span class="n">clash</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">by_category</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">clash</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">clash</span> <span class="ow">in</span> <span class="n">all_clashes</span><span class="p">:</span>
+        <span class="n">clash_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clash</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"sweep_run_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">sweep_id</span><span class="p">),</span>
+        <span class="s2">"total_clashes"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_clashes</span><span class="p">),</span>
+        <span class="s2">"by_severity"</span><span class="p">:</span> <span class="n">by_severity</span><span class="p">,</span>
+        <span class="s2">"by_category"</span><span class="p">:</span> <span class="n">by_category</span><span class="p">,</span>
+        <span class="s2">"clash_ids"</span><span class="p">:</span> <span class="n">clash_ids</span><span class="p">,</span>
+        <span class="s2">"completed_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Check 6: Personnel clearance expiry collisions</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_clearance_expiry</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">sweep_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Detect assigned resources whose clearance expires before task end.</span>
+
+<span class="sd">    Cross-references ResourceAssignment records with User.clearance_expiry_date</span>
+<span class="sd">    to find cases where a resource's personnel clearance expires before the</span>
+<span class="sd">    task's planned end date.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of ScheduleClashIssue</span>
+<span class="sd">        CLEARANCE_EXPIRY_COLLISION clashes for each affected assignment.</span>
+<span class="sd">    """</span>
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">clashes</span>
+
+    <span class="c1"># Find assignments with users who have clearance expiry dates</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">User</span><span class="p">,</span> <span class="n">ResourceNode</span><span class="o">.</span><span class="n">code</span> <span class="o">==</span> <span class="n">User</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">op</span><span class="p">(</span><span class="s2">"&lt;@"</span><span class="p">)(</span><span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">),</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">User</span><span class="o">.</span><span class="n">clearance_expiry_date</span><span class="o">.</span><span class="n">isnot</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"CONFIRMED"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">assignment</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">clearance_expiry_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">clearance_expiry_date</span> <span class="o">&lt;</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="n">days_until</span> <span class="o">=</span> <span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">clearance_expiry_date</span> <span class="o">-</span> <span class="n">today</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+            <span class="k">if</span> <span class="n">days_until</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">severity</span> <span class="o">=</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span>
+            <span class="k">elif</span> <span class="n">days_until</span> <span class="o">&lt;=</span> <span class="mi">30</span><span class="p">:</span>
+                <span class="n">severity</span> <span class="o">=</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">MAJOR</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">severity</span> <span class="o">=</span> <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">ADVISORY</span>
+
+            <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+                <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">CREDENTIAL_LAPSE</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="n">severity</span><span class="p">,</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">conflicting_resource_id</span><span class="o">=</span><span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">,</span>
+                <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">clearance_expiry_date</span><span class="p">,</span>
+                <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Clearance expiry: </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Resource </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">clearance_type</span><span class="o">.</span><span class="n">value</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">user</span><span class="o">.</span><span class="n">clearance_type</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'N/A'</span><span class="si">}</span><span class="s2">) "</span>
+                    <span class="sa">f</span><span class="s2">"clearance expires on </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">clearance_expiry_date</span><span class="si">}</span><span class="s2">, "</span>
+                    <span class="sa">f</span><span class="s2">"but task '</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' ends on </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">days_until</span><span class="si">}</span><span class="s2"> days until expiry."</span>
+                <span class="p">),</span>
+                <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Initiate re-vetting for </span><span class="si">{</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2"> or reassign task "</span>
+                    <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' to cleared personnel."</span>
+                <span class="p">),</span>
+                <span class="n">is_resolved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">clashes</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Check 7: SCIF escort capacity impact</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_scif_escort_impact</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">sweep_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">project_start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">project_end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Detect SCIF locations with insufficient escort capacity.</span>
+
+<span class="sd">    For each SCIF location with tasks in the project window, counts</span>
+<span class="sd">    cleared vs uncleared personnel and flags clashes when there are</span>
+<span class="sd">    not enough SC/DV cleared staff to escort uncleared contractors.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of ScheduleClashIssue</span>
+<span class="sd">        FACILITY_CONTRAVENTION clashes for escort deficits.</span>
+<span class="sd">    """</span>
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">clashes</span>
+
+    <span class="c1"># Find SCIF locations</span>
+    <span class="n">scif_locations</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">LocationNode</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">,</span> <span class="n">LocationNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">op</span><span class="p">(</span><span class="s2">"&lt;@"</span><span class="p">)(</span><span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">),</span>
+            <span class="n">LocationNode</span><span class="o">.</span><span class="n">is_scif_or_tempest</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">escort_minimum</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"SC"</span><span class="p">,</span> <span class="s2">"DV"</span><span class="p">,</span> <span class="s2">"NATO_SECRET"</span><span class="p">}</span>
+    <span class="n">escort_ratio</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># 1 cleared per 2 uncleared</span>
+
+    <span class="k">for</span> <span class="n">location</span> <span class="ow">in</span> <span class="n">scif_locations</span><span class="p">:</span>
+        <span class="c1"># Find resources at this location</span>
+        <span class="n">resources</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">current_location_id</span> <span class="o">==</span> <span class="n">location</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="n">cleared</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">uncleared</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">resources</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">res</span><span class="o">.</span><span class="n">resource_type</span> <span class="o">!=</span> <span class="s2">"PERSON"</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">User</span><span class="o">.</span><span class="n">username</span> <span class="o">==</span> <span class="n">res</span><span class="o">.</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">user</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">clearance_type</span> <span class="ow">and</span> <span class="n">user</span><span class="o">.</span><span class="n">clearance_type</span><span class="o">.</span><span class="n">value</span> <span class="ow">in</span> <span class="n">escort_minimum</span><span class="p">:</span>
+                    <span class="n">cleared</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">uncleared</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">escorts_required</span> <span class="o">=</span> <span class="p">(</span><span class="n">uncleared</span> <span class="o">+</span> <span class="n">escort_ratio</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">escort_ratio</span> <span class="k">if</span> <span class="n">uncleared</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">escort_deficit</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">escorts_required</span> <span class="o">-</span> <span class="n">cleared</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">escort_deficit</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+                <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">FACILITY_CONTRAVENTION</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">,</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">root</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">project_start</span><span class="p">,</span>
+                <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">project_end</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"SCIF escort deficit: </span><span class="si">{</span><span class="n">location</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"SCIF location '</span><span class="si">{</span><span class="n">location</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' has </span><span class="si">{</span><span class="n">uncleared</span><span class="si">}</span><span class="s2"> uncleared "</span>
+                    <span class="sa">f</span><span class="s2">"personnel but only </span><span class="si">{</span><span class="n">cleared</span><span class="si">}</span><span class="s2"> cleared staff. "</span>
+                    <span class="sa">f</span><span class="s2">"Requires </span><span class="si">{</span><span class="n">escorts_required</span><span class="si">}</span><span class="s2"> escorts, deficit of </span><span class="si">{</span><span class="n">escort_deficit</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">),</span>
+                <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Assign </span><span class="si">{</span><span class="n">escort_deficit</span><span class="si">}</span><span class="s2"> additional SC/DV cleared staff to "</span>
+                    <span class="sa">f</span><span class="s2">"escort duty at '</span><span class="si">{</span><span class="n">location</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">' or reduce uncleared personnel."</span>
+                <span class="p">),</span>
+                <span class="n">is_resolved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">clashes</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Check 8: Perishable material shelf-life</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_perishable_shelf_life</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">sweep_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Detect perishable material lots that have expired or are expiring.</span>
+
+<span class="sd">    Checks all active material lots allocated to tasks in the project</span>
+<span class="sd">    for cold storage expiry and out-time exceeded conditions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of ScheduleClashIssue</span>
+<span class="sd">        RESOURCE_UNAVAILABLE clashes for expired material lots.</span>
+<span class="sd">    """</span>
+    <span class="n">clashes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PerishableMaterialLot</span><span class="p">,</span> <span class="n">LotStatus</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">clashes</span>
+
+    <span class="c1"># Find active lots allocated to tasks in this project</span>
+    <span class="n">lots</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PerishableMaterialLot</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">PerishableMaterialLot</span><span class="o">.</span><span class="n">allocated_task_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">op</span><span class="p">(</span><span class="s2">"&lt;@"</span><span class="p">)(</span><span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">),</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">PerishableMaterialLot</span><span class="o">.</span><span class="n">lot_status</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
+                <span class="n">LotStatus</span><span class="o">.</span><span class="n">IN_COLD_STORAGE</span><span class="p">,</span>
+                <span class="n">LotStatus</span><span class="o">.</span><span class="n">THAWED_IN_USE</span><span class="p">,</span>
+            <span class="p">]),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">lot</span> <span class="ow">in</span> <span class="n">lots</span><span class="p">:</span>
+        <span class="n">expiry_reason</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Check cold storage expiry</span>
+        <span class="k">if</span> <span class="n">lot</span><span class="o">.</span><span class="n">cold_storage_expiry</span> <span class="ow">and</span> <span class="n">lot</span><span class="o">.</span><span class="n">cold_storage_expiry</span> <span class="o">&lt;</span> <span class="n">today</span><span class="p">:</span>
+            <span class="n">expiry_reason</span> <span class="o">=</span> <span class="s2">"COLD_STORAGE_EXPIRED"</span>
+
+        <span class="c1"># Check out-time exceeded</span>
+        <span class="k">if</span> <span class="n">expiry_reason</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">lot</span><span class="o">.</span><span class="n">thawed_timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">max_out</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lot</span><span class="o">.</span><span class="n">maximum_out_time_hours</span><span class="p">)</span>
+            <span class="n">acc_out</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lot</span><span class="o">.</span><span class="n">accumulated_out_time_hours</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">acc_out</span> <span class="o">&gt;=</span> <span class="n">max_out</span><span class="p">:</span>
+                <span class="n">expiry_reason</span> <span class="o">=</span> <span class="s2">"OUT_TIME_EXCEEDED"</span>
+
+        <span class="k">if</span> <span class="n">expiry_reason</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Mark as expired</span>
+            <span class="n">lot</span><span class="o">.</span><span class="n">lot_status</span> <span class="o">=</span> <span class="n">LotStatus</span><span class="o">.</span><span class="n">EXPIRED_SCRAP</span>
+
+            <span class="n">clashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+                <span class="n">sweep_run_id</span><span class="o">=</span><span class="n">sweep_id</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="n">ClashCategory</span><span class="o">.</span><span class="n">RESOURCE_UNAVAILABLE</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span>
+                <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">lot</span><span class="o">.</span><span class="n">allocated_task_id</span><span class="p">,</span>
+                <span class="n">conflict_window_start</span><span class="o">=</span><span class="n">today</span><span class="p">,</span>
+                <span class="n">conflict_window_end</span><span class="o">=</span><span class="n">today</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Perishable material expired: </span><span class="si">{</span><span class="n">lot</span><span class="o">.</span><span class="n">lot_number</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Material lot </span><span class="si">{</span><span class="n">lot</span><span class="o">.</span><span class="n">lot_number</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">lot</span><span class="o">.</span><span class="n">part_number</span><span class="si">}</span><span class="s2">) "</span>
+                    <span class="sa">f</span><span class="s2">"has expired: </span><span class="si">{</span><span class="n">expiry_reason</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="sa">f</span><span class="s2">"Material type: </span><span class="si">{</span><span class="n">lot</span><span class="o">.</span><span class="n">material_type</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">. "</span>
+                    <span class="sa">f</span><span class="s2">"Allocated task cannot proceed."</span>
+                <span class="p">),</span>
+                <span class="n">recommended_action</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Allocate a replacement lot of </span><span class="si">{</span><span class="n">lot</span><span class="o">.</span><span class="n">part_number</span><span class="si">}</span><span class="s2"> to the "</span>
+                    <span class="sa">f</span><span class="s2">"task or reschedule the task after a new lot is available."</span>
+                <span class="p">),</span>
+                <span class="n">is_resolved</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">clashes</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Query helpers</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="get_active_clashes">
+<a class="viewcode-back" href="../../../modules.html#app.services.clash_daemon.get_active_clashes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_active_clashes</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">severity</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClashSeverity</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">ScheduleClashIssue</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Retrieve active (unresolved) clashes, optionally filtered.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    root_node_id : UUID or None</span>
+<span class="sd">        If provided, only return clashes for nodes under this project root.</span>
+<span class="sd">    severity : ClashSeverity or None</span>
+<span class="sd">        If provided, only return clashes of this severity.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of ScheduleClashIssue</span>
+<span class="sd">        Matching clash issues, ordered by severity (CRITICAL first) and</span>
+<span class="sd">        then by creation time (newest first).</span>
+<span class="sd">    """</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ScheduleClashIssue</span><span class="o">.</span><span class="n">is_resolved</span> <span class="o">==</span> <span class="kc">False</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">severity</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="o">.</span><span class="n">severity</span> <span class="o">==</span> <span class="n">severity</span><span class="p">)</span>
+
+    <span class="c1"># Order by severity (CRITICAL first) then by created_at desc</span>
+    <span class="n">severity_order</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">MAJOR</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">ClashSeverity</span><span class="o">.</span><span class="n">ADVISORY</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">clashes</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span>
+        <span class="n">ScheduleClashIssue</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">()</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Sort by severity in Python since PostgreSQL enum ordering may vary</span>
+    <span class="n">clashes</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">severity_order</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span> <span class="mi">99</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">clashes</span></div>
+
+
+
+<div class="viewcode-block" id="resolve_clash">
+<a class="viewcode-back" href="../../../modules.html#app.services.clash_daemon.resolve_clash">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_clash</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">clash_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Mark a clash as resolved.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    clash_id : UUID</span>
+<span class="sd">        The clash issue to resolve.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the clash was found and resolved, False if not found.</span>
+<span class="sd">    """</span>
+    <span class="n">clash</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ScheduleClashIssue</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">ScheduleClashIssue</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">clash_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">clash</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">clash</span><span class="o">.</span><span class="n">is_resolved</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

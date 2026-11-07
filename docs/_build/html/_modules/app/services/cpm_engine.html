@@ -1,0 +1,1448 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.cpm_engine &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.cpm_engine</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.cpm_engine</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Critical Path Method (CPM) calculation engine.</span>
+
+<span class="sd">Builds a Directed Acyclic Graph from PortfolioNode records and DependencyLink</span>
+<span class="sd">edges, performs forward and backward passes to compute schedule metrics,</span>
+<span class="sd">identifies the critical path, and runs DCMA 14-Point integrity checks.</span>
+
+<span class="sd">Calendar-Aware Scheduling</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The CPM engine now supports full calendar-aware date arithmetic.  Instead of</span>
+<span class="sd">naively skipping weekends, it consults :class:`WorkingCalendar` and</span>
+<span class="sd">:class:`CalendarException` records to determine which days are working days</span>
+<span class="sd">and how many hours are available on each day.</span>
+
+<span class="sd">When a PortfolioNode has a ``calendar_id`` assigned, the engine uses that</span>
+<span class="sd">calendar's working days mask and exception records.  If no calendar is</span>
+<span class="sd">assigned, it falls back to the default calendar (Mon–Fri, no exceptions).</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">date</span> <span class="k">as</span> <span class="n">date_type</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">sa_text</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CalendarException</span><span class="p">,</span> <span class="n">CalendarExceptionType</span><span class="p">,</span> <span class="n">DependencyLink</span><span class="p">,</span> <span class="n">DependencyType</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ProcurementItem</span><span class="p">,</span> <span class="n">TaskProcurementConstraint</span><span class="p">,</span> <span class="n">WorkingCalendar</span><span class="p">,</span>
+    <span class="n">CPMCalculationMode</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Calendar-aware working day helpers</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_working_day_naive</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return True if *dt* falls on a weekday (Mon–Fri).</span>
+
+<span class="sd">    This is the legacy fallback when no calendar is available.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">5</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_working_day_mask</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return True if *dt*'s weekday bit is set in *mask*.</span>
+
+<span class="sd">    The mask is a bitmask where each bit represents a day of the week:</span>
+<span class="sd">    Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64.</span>
+<span class="sd">    """</span>
+    <span class="n">weekday</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span>  <span class="c1"># 0=Mon, 6=Sun</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">weekday</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_exception_set</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">calendar_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">date_type</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Load all CalendarException records for a calendar into a date-&gt;hours dict.</span>
+
+<span class="sd">    Returns a dictionary mapping exception dates to their working_hours_override</span>
+<span class="sd">    values.  A value of 0.00 means the day is non-working.</span>
+<span class="sd">    """</span>
+    <span class="n">exceptions</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">CalendarException</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">CalendarException</span><span class="o">.</span><span class="n">calendar_id</span> <span class="o">==</span> <span class="n">calendar_id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">exc_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">date_type</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">exc</span> <span class="ow">in</span> <span class="n">exceptions</span><span class="p">:</span>
+        <span class="n">exc_map</span><span class="p">[</span><span class="n">exc</span><span class="o">.</span><span class="n">exception_date</span><span class="p">]</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">working_hours_override</span>
+    <span class="k">return</span> <span class="n">exc_map</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_working_day_with_calendar</span><span class="p">(</span>
+    <span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+    <span class="n">calendar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WorkingCalendar</span><span class="p">],</span>
+    <span class="n">exception_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">date_type</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if *dt* is a working day under the given calendar.</span>
+
+<span class="sd">    A day is working if:</span>
+<span class="sd">    1. Its weekday bit is set in the calendar's working_days_mask, AND</span>
+<span class="sd">    2. There is no CalendarException for this date with 0.00 hours.</span>
+
+<span class="sd">    If no calendar is provided, falls back to Mon–Fri naive check.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">calendar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_is_working_day_naive</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+
+    <span class="c1"># Check weekday mask</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_working_day_mask</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">calendar</span><span class="o">.</span><span class="n">working_days_mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Check exceptions — a 0.00 override means non-working day</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">datetime</span><span class="p">)</span> <span class="k">else</span> <span class="n">dt</span>
+    <span class="k">if</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">exception_map</span><span class="p">:</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="n">exception_map</span><span class="p">[</span><span class="n">d</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">hours</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">)</span> <span class="ow">and</span> <span class="n">hours</span> <span class="o">==</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.00"</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_calendar</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WorkingCalendar</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Resolve the effective WorkingCalendar for a node.</span>
+
+<span class="sd">    Priority:</span>
+<span class="sd">    1. Node's calendar_id (if set)</span>
+<span class="sd">    2. Default calendar (is_default=True)</span>
+<span class="sd">    3. None (falls back to naive Mon–Fri)</span>
+<span class="sd">    """</span>
+    <span class="n">cal_id</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">calendar_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cal_id</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">calendar_id</span>
+
+    <span class="k">if</span> <span class="n">cal_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cal</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">cal_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cal</span>
+
+    <span class="c1"># Fall back to default calendar</span>
+    <span class="n">default_cal</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">is_default</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)</span>  <span class="c1"># noqa: E712</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">default_cal</span>
+
+
+<div class="viewcode-block" id="add_working_days">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.add_working_days">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_working_days</span><span class="p">(</span>
+    <span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+    <span class="n">days</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">calendar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WorkingCalendar</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exception_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">date_type</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add *days* working days to *start*, respecting the calendar.</span>
+
+<span class="sd">    Advances day by day, skipping non-working weekdays and CalendarException</span>
+<span class="sd">    records where working_hours_override = 0.00.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start : datetime</span>
+<span class="sd">        The starting date.</span>
+<span class="sd">    days : int</span>
+<span class="sd">        Number of working days to add.</span>
+<span class="sd">    calendar : WorkingCalendar or None</span>
+<span class="sd">        The calendar to use.  If None, falls back to Mon–Fri.</span>
+<span class="sd">    exception_map : dict or None</span>
+<span class="sd">        Pre-loaded exception map (date -&gt; hours).  If None, no exceptions</span>
+<span class="sd">        are checked.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    datetime</span>
+<span class="sd">        The date after adding the specified working days.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">exception_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exception_map</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">days</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">start</span>
+    <span class="k">if</span> <span class="n">days</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">subtract_working_days</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">days</span><span class="p">),</span> <span class="n">calendar</span><span class="p">,</span> <span class="n">exception_map</span><span class="p">)</span>
+
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="n">remaining</span> <span class="o">=</span> <span class="n">days</span>
+    <span class="c1"># Safety limit to prevent infinite loops</span>
+    <span class="n">max_iterations</span> <span class="o">=</span> <span class="n">remaining</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">365</span>
+    <span class="n">iterations</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">remaining</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">iterations</span> <span class="o">&lt;</span> <span class="n">max_iterations</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">iterations</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">_is_working_day_with_calendar</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">calendar</span><span class="p">,</span> <span class="n">exception_map</span><span class="p">):</span>
+            <span class="n">remaining</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">current</span></div>
+
+
+
+<div class="viewcode-block" id="subtract_working_days">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.subtract_working_days">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">subtract_working_days</span><span class="p">(</span>
+    <span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+    <span class="n">days</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">calendar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WorkingCalendar</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exception_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">date_type</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Subtract *days* working days from *start*, respecting the calendar.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start : datetime</span>
+<span class="sd">        The starting date.</span>
+<span class="sd">    days : int</span>
+<span class="sd">        Number of working days to subtract.</span>
+<span class="sd">    calendar : WorkingCalendar or None</span>
+<span class="sd">        The calendar to use.</span>
+<span class="sd">    exception_map : dict or None</span>
+<span class="sd">        Pre-loaded exception map.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    datetime</span>
+<span class="sd">        The date after subtracting the specified working days.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">exception_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exception_map</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="n">remaining</span> <span class="o">=</span> <span class="n">days</span>
+    <span class="n">max_iterations</span> <span class="o">=</span> <span class="n">remaining</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="mi">365</span>
+    <span class="n">iterations</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">remaining</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">iterations</span> <span class="o">&lt;</span> <span class="n">max_iterations</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">-=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">iterations</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">_is_working_day_with_calendar</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">calendar</span><span class="p">,</span> <span class="n">exception_map</span><span class="p">):</span>
+            <span class="n">remaining</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">current</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_working_day_difference">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.calculate_working_day_difference">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_working_day_difference</span><span class="p">(</span>
+    <span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+    <span class="n">end</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+    <span class="n">calendar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WorkingCalendar</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exception_map</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="n">date_type</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute actual working days between two dates under the specified calendar.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start : datetime</span>
+<span class="sd">        The start date (exclusive).</span>
+<span class="sd">    end : datetime</span>
+<span class="sd">        The end date (inclusive).</span>
+<span class="sd">    calendar : WorkingCalendar or None</span>
+<span class="sd">        The calendar to use.</span>
+<span class="sd">    exception_map : dict or None</span>
+<span class="sd">        Pre-loaded exception map.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int</span>
+<span class="sd">        Number of working days between start and end.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">exception_map</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">exception_map</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">calculate_working_day_difference</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">calendar</span><span class="p">,</span> <span class="n">exception_map</span><span class="p">)</span>
+
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="n">max_iterations</span> <span class="o">=</span> <span class="mi">365</span> <span class="o">*</span> <span class="mi">5</span>  <span class="c1"># Safety limit: ~5 years</span>
+    <span class="n">iterations</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">current</span> <span class="o">&lt;</span> <span class="n">end</span> <span class="ow">and</span> <span class="n">iterations</span> <span class="o">&lt;</span> <span class="n">max_iterations</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">iterations</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">_is_working_day_with_calendar</span><span class="p">(</span><span class="n">current</span><span class="p">,</span> <span class="n">calendar</span><span class="p">,</span> <span class="n">exception_map</span><span class="p">):</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">count</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Legacy helpers (backward compatibility)</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_workday</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Legacy alias for _is_working_day_naive."""</span>
+    <span class="k">return</span> <span class="n">_is_working_day_naive</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_workdays</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">days</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Legacy alias — naive Mon–Fri add."""</span>
+    <span class="k">return</span> <span class="n">add_working_days</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">days</span><span class="p">,</span> <span class="n">calendar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exception_map</span><span class="o">=</span><span class="p">{})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_subtract_workdays</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">days</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Legacy alias — naive Mon–Fri subtract."""</span>
+    <span class="k">return</span> <span class="n">subtract_working_days</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">days</span><span class="p">,</span> <span class="n">calendar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exception_map</span><span class="o">=</span><span class="p">{})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_workday_diff</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Legacy alias — naive Mon–Fri diff."""</span>
+    <span class="k">return</span> <span class="n">calculate_working_day_difference</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">calendar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exception_map</span><span class="o">=</span><span class="p">{})</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Duration calculation</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_duration_days</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute task duration in working days from planned dates.</span>
+
+<span class="sd">    Falls back to 0 if dates are not set (milestone/summary level).</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">diff</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># DAG construction</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="build_schedule_dag">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.build_schedule_dag">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_schedule_dag</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">DependencyLink</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Build a networkx DAG from PortfolioNode + DependencyLink for a project tree.</span>
+
+<span class="sd">    Returns the graph, a node lookup dict, and the list of dependency edges used.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Gather all PortfolioNodes under the root (including the root itself)</span>
+    <span class="c1"># Use ltree path containment: root.path.%</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">root_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># All descendants (including self) via ltree path prefix</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">sa_text</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">sa_text</span><span class="p">(</span>
+            <span class="s2">"SELECT * FROM portfolio_nodes pn "</span>
+            <span class="s2">"JOIN universal_breakdown_nodes ubn ON pn.id = ubn.id "</span>
+            <span class="s2">"WHERE ubn.path &lt;@ :root_path AND ubn.is_active = true"</span>
+        <span class="p">),</span>
+        <span class="p">{</span><span class="s2">"root_path"</span><span class="p">:</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">},</span>
+    <span class="p">)</span>
+    <span class="c1"># Reconstruct PortfolioNode objects from rows</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">inspect</span> <span class="k">as</span> <span class="n">sa_inspect</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">row_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">row</span><span class="p">))</span>
+        <span class="c1"># Reconstruct using SQLAlchemy's instance constructor</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span>
+
+    <span class="c1"># Build the DAG</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span>
+            <span class="n">node_id</span><span class="p">,</span>
+            <span class="n">node</span><span class="o">=</span><span class="n">node</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">_compute_duration_days</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Add dependency edges</span>
+    <span class="n">deps</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+            <span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">nodes</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span>
+            <span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">,</span>
+            <span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">,</span>
+            <span class="n">dependency</span><span class="o">=</span><span class="n">dep</span><span class="p">,</span>
+            <span class="n">dep_type</span><span class="o">=</span><span class="n">dep</span><span class="o">.</span><span class="n">dependency_type</span><span class="p">,</span>
+            <span class="n">lag_days</span><span class="o">=</span><span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">deps</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Cycle detection</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="check_circular_dependencies">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.check_circular_dependencies">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_circular_dependencies</span><span class="p">(</span><span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise a descriptive error if the schedule graph contains cycles."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nx</span><span class="o">.</span><span class="n">is_directed_acyclic_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+        <span class="n">cycles</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">simple_cycles</span><span class="p">(</span><span class="n">graph</span><span class="p">))</span>
+        <span class="n">cycle_strs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">cycle</span> <span class="ow">in</span> <span class="n">cycles</span><span class="p">[:</span><span class="mi">5</span><span class="p">]:</span>  <span class="c1"># Limit to 5 cycles for readability</span>
+            <span class="n">cycle_strs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">" -&gt; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">cycle</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Circular dependency detected in schedule. "</span>
+            <span class="sa">f</span><span class="s2">"Cycles: </span><span class="si">{</span><span class="s1">'; '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cycle_strs</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Forward pass — Early Start / Early Finish</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="forward_pass">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.forward_pass">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">forward_pass</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">,</span>
+    <span class="n">project_start</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Session</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">status_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Compute Early Start (ES) and Early Finish (EF) for every node.</span>
+
+<span class="sd">    Handles all four dependency types (FS, SS, FF, SF) with lag.</span>
+<span class="sd">    Additionally evaluates procurement constraints: if a task has linked</span>
+<span class="sd">    :class:`TaskProcurementConstraint` records, the procurement item's</span>
+<span class="sd">    forecast delivery date acts as a hard early-start gate.</span>
+
+<span class="sd">    Calendar-Aware Scheduling</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    If a database session is provided, the engine resolves the effective</span>
+<span class="sd">    :class:`WorkingCalendar` for the project root node and uses it for all</span>
+<span class="sd">    date arithmetic.  This means statutory holidays, planned maintenance</span>
+<span class="sd">    windows, and custom working day masks are all respected.</span>
+
+<span class="sd">    Out-of-Sequence Execution</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    When a task has partial progress (0 &lt; percent_complete &lt; 100) but has</span>
+<span class="sd">    incomplete predecessors, the engine checks the node's</span>
+<span class="sd">    ``cpm_calculation_mode`` in ``custom_attributes``:</span>
+
+<span class="sd">    - **RETAINED_LOGIC** (default): Remaining duration cannot start until</span>
+<span class="sd">      incomplete predecessors finish.</span>
+
+<span class="sd">      .. math::</span>
+
+<span class="sd">          ES_{\\text{remaining}}(i) = \\max\\left(</span>
+<span class="sd">          \\text{Status Date}, \\max_{p \\in \\text{UnfinishedPreds}}(EF_p) + \\text{Lag}</span>
+<span class="sd">          \\right)</span>
+
+<span class="sd">    - **PROGRESS_OVERRIDE**: Disregard unfinished predecessor logic for</span>
+<span class="sd">      remaining work.</span>
+
+<span class="sd">      .. math::</span>
+
+<span class="sd">          ES_{\\text{remaining}}(i) = \\text{Status Date}</span>
+
+<span class="sd">    The final ES is:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        ES = \\max\\left(\\max_{p \\in \\text{Pred}} (EF_p + \\text{Lag}_p),\\</span>
+<span class="sd">        \\text{Forecast Delivery Date of Constrained Parts}\\right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    graph : nx.DiGraph</span>
+<span class="sd">        The schedule DAG.</span>
+<span class="sd">    project_start : datetime or None</span>
+<span class="sd">        Optional project start date override.</span>
+<span class="sd">    db : Session or None</span>
+<span class="sd">        Optional database session for querying procurement constraints</span>
+<span class="sd">        and calendar data.  If provided, the engine uses calendar-aware</span>
+<span class="sd">        date arithmetic.</span>
+<span class="sd">    status_date : datetime or None</span>
+<span class="sd">        The project status date for out-of-sequence calculations.</span>
+<span class="sd">        If not provided, defaults to the current UTC date.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dict keyed by node_id with ES, EF values.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Resolve the project calendar (if DB available)</span>
+    <span class="n">project_calendar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WorkingCalendar</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">project_exception_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">date_type</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">db</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Find the root node to resolve its calendar</span>
+        <span class="n">root_node</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">parent_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">root_node</span> <span class="o">=</span> <span class="n">node_obj</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">root_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">root_node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)[</span><span class="mi">0</span><span class="p">]][</span><span class="s2">"node"</span><span class="p">]</span>
+        <span class="n">project_calendar</span> <span class="o">=</span> <span class="n">_resolve_calendar</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">project_calendar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">project_exception_map</span> <span class="o">=</span> <span class="n">_get_exception_set</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_calendar</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="c1"># Determine project start date</span>
+    <span class="k">if</span> <span class="n">project_start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">earliest</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">earliest</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&lt;</span> <span class="n">earliest</span><span class="p">:</span>
+                    <span class="n">earliest</span> <span class="o">=</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">planned_start_date</span>
+        <span class="n">project_start</span> <span class="o">=</span> <span class="n">earliest</span> <span class="ow">or</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Ensure project_start is a working day under the project calendar</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">_is_working_day_with_calendar</span><span class="p">(</span><span class="n">project_start</span><span class="p">,</span> <span class="n">project_calendar</span><span class="p">,</span> <span class="n">project_exception_map</span><span class="p">):</span>
+        <span class="n">project_start</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">early_start</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">early_finish</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Pre-load procurement constraints if DB session is available</span>
+    <span class="n">procurement_constraints</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">equipment_assignments</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">db</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">node_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="n">constraints</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TaskProcurementConstraint</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">TaskProcurementConstraint</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constraints</span><span class="p">:</span>
+            <span class="n">procurement_constraints</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+                <span class="n">constraint</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span> <span class="p">[]</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+
+        <span class="c1"># Pre-load ASSET-type resource assignments for calibration checks</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ResourceAssignment</span><span class="p">,</span> <span class="n">ResourceNode</span>
+        <span class="n">assignments</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">outerjoin</span><span class="p">(</span><span class="n">ResourceNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">))</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">equipment_assignments</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+                    <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span> <span class="p">[]</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">assignment</span><span class="p">)</span>
+
+    <span class="c1"># Topological order ensures predecessors are processed first</span>
+    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"duration"</span><span class="p">]</span>
+        <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+
+        <span class="c1"># Resolve per-node calendar (falls back to project calendar)</span>
+        <span class="n">node_calendar</span> <span class="o">=</span> <span class="n">project_calendar</span>
+        <span class="n">node_exc_map</span> <span class="o">=</span> <span class="n">project_exception_map</span>
+        <span class="k">if</span> <span class="n">db</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">calendar_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node_cal</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">calendar_id</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">node_cal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">node_calendar</span> <span class="o">=</span> <span class="n">node_cal</span>
+                <span class="n">node_exc_map</span> <span class="o">=</span> <span class="n">_get_exception_set</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node_cal</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="c1"># Default ES: project start (will be pushed by predecessors)</span>
+        <span class="n">es</span> <span class="o">=</span> <span class="n">project_start</span>
+
+        <span class="c1"># If the node has its own planned_start_date, use it as a floor</span>
+        <span class="k">if</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&gt;</span> <span class="n">es</span><span class="p">:</span>
+            <span class="n">es</span> <span class="o">=</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">planned_start_date</span>
+
+        <span class="c1"># Process incoming edges (predecessors)</span>
+        <span class="k">for</span> <span class="n">pred_id</span><span class="p">,</span> <span class="n">_target</span><span class="p">,</span> <span class="n">edge_data</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">dep_type</span> <span class="o">=</span> <span class="n">edge_data</span><span class="p">[</span><span class="s2">"dep_type"</span><span class="p">]</span>
+            <span class="n">lag</span> <span class="o">=</span> <span class="n">edge_data</span><span class="p">[</span><span class="s2">"lag_days"</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">pred_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">early_start</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">pred_es</span> <span class="o">=</span> <span class="n">early_start</span><span class="p">[</span><span class="n">pred_id</span><span class="p">]</span>
+            <span class="n">pred_ef</span> <span class="o">=</span> <span class="n">early_finish</span><span class="p">[</span><span class="n">pred_id</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">dep_type</span> <span class="o">==</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">:</span>
+                <span class="c1"># Finish-to-Start: successor ES &gt;= predecessor EF + lag</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="n">add_working_days</span><span class="p">(</span><span class="n">pred_ef</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="o">&gt;</span> <span class="n">es</span><span class="p">:</span>
+                    <span class="n">es</span> <span class="o">=</span> <span class="n">candidate</span>
+
+            <span class="k">elif</span> <span class="n">dep_type</span> <span class="o">==</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">SS</span><span class="p">:</span>
+                <span class="c1"># Start-to-Start: successor ES &gt;= predecessor ES + lag</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="n">add_working_days</span><span class="p">(</span><span class="n">pred_es</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="o">&gt;</span> <span class="n">es</span><span class="p">:</span>
+                    <span class="n">es</span> <span class="o">=</span> <span class="n">candidate</span>
+
+            <span class="k">elif</span> <span class="n">dep_type</span> <span class="o">==</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FF</span><span class="p">:</span>
+                <span class="c1"># Finish-to-Finish: successor EF &gt;= predecessor EF + lag</span>
+                <span class="c1"># =&gt; successor ES &gt;= predecessor EF + lag - duration</span>
+                <span class="n">pred_ef_adj</span> <span class="o">=</span> <span class="n">add_working_days</span><span class="p">(</span><span class="n">pred_ef</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">candidate</span> <span class="o">=</span> <span class="n">subtract_working_days</span><span class="p">(</span><span class="n">pred_ef_adj</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">candidate</span> <span class="o">=</span> <span class="n">pred_ef_adj</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="o">&gt;</span> <span class="n">es</span><span class="p">:</span>
+                    <span class="n">es</span> <span class="o">=</span> <span class="n">candidate</span>
+
+            <span class="k">elif</span> <span class="n">dep_type</span> <span class="o">==</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">SF</span><span class="p">:</span>
+                <span class="c1"># Start-to-Finish: successor EF &gt;= predecessor ES + lag</span>
+                <span class="c1"># =&gt; successor ES &gt;= predecessor ES + lag - duration</span>
+                <span class="n">pred_es_adj</span> <span class="o">=</span> <span class="n">add_working_days</span><span class="p">(</span><span class="n">pred_es</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">candidate</span> <span class="o">=</span> <span class="n">subtract_working_days</span><span class="p">(</span><span class="n">pred_es_adj</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">candidate</span> <span class="o">=</span> <span class="n">pred_es_adj</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="o">&gt;</span> <span class="n">es</span><span class="p">:</span>
+                    <span class="n">es</span> <span class="o">=</span> <span class="n">candidate</span>
+
+        <span class="c1"># --- Procurement constraint gate ---</span>
+        <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">procurement_constraints</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">procurement_constraints</span><span class="p">[</span><span class="n">node_id</span><span class="p">]:</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">procurement_item</span>
+                <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">item</span><span class="o">.</span><span class="n">forecast_delivery_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">forecast_dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span>
+                        <span class="n">item</span><span class="o">.</span><span class="n">forecast_delivery_date</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+                        <span class="n">item</span><span class="o">.</span><span class="n">forecast_delivery_date</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+                        <span class="n">item</span><span class="o">.</span><span class="n">forecast_delivery_date</span><span class="o">.</span><span class="n">day</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">while</span> <span class="ow">not</span> <span class="n">_is_working_day_with_calendar</span><span class="p">(</span><span class="n">forecast_dt</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">):</span>
+                        <span class="n">forecast_dt</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">forecast_dt</span> <span class="o">&gt;</span> <span class="n">es</span><span class="p">:</span>
+                        <span class="n">es</span> <span class="o">=</span> <span class="n">forecast_dt</span>
+
+        <span class="c1"># --- Calibration expiry and maintenance window gate ---</span>
+        <span class="k">if</span> <span class="n">db</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">equipment_assignments</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">equipment_assignments</span><span class="p">[</span><span class="n">node_id</span><span class="p">]:</span>
+                <span class="n">resource</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">resource_node</span>
+                <span class="k">if</span> <span class="n">resource</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">resource</span><span class="o">.</span><span class="n">resource_type</span> <span class="o">!=</span> <span class="s2">"ASSET"</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="c1"># Check if calibration expires before the task's planned end</span>
+                <span class="c1"># If so, flag a CREDENTIAL_LAPSE clash (handled by clash daemon)</span>
+                <span class="c1"># The CPM forward pass does not block on calibration expiry,</span>
+                <span class="c1"># but the clash daemon will detect it</span>
+
+                <span class="c1"># Check for active maintenance windows on the resource</span>
+                <span class="k">if</span> <span class="n">resource</span><span class="o">.</span><span class="n">next_calibration_due</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># If calibration expires before ES, push ES to after expiry</span>
+                    <span class="c1"># so the task doesn't start with expired equipment</span>
+                    <span class="n">cal_due_dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span>
+                        <span class="n">resource</span><span class="o">.</span><span class="n">next_calibration_due</span><span class="o">.</span><span class="n">year</span><span class="p">,</span>
+                        <span class="n">resource</span><span class="o">.</span><span class="n">next_calibration_due</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+                        <span class="n">resource</span><span class="o">.</span><span class="n">next_calibration_due</span><span class="o">.</span><span class="n">day</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="c1"># If ES is before calibration expiry, task can proceed</span>
+                    <span class="c1"># If ES is after calibration expiry, flag for clash daemon</span>
+                    <span class="k">pass</span>
+
+                <span class="c1"># Check maintenance windows: if ES falls within a maintenance</span>
+                <span class="c1"># window, push ES to the first working day after the window</span>
+                <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.calibration_interlock</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+                    <span class="n">get_active_maintenance_windows</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">windows</span> <span class="o">=</span> <span class="n">get_active_maintenance_windows</span><span class="p">(</span>
+                    <span class="n">resource</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">start_date</span><span class="o">=</span><span class="n">es</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">es</span><span class="p">,</span> <span class="s1">'date'</span><span class="p">)</span> <span class="k">else</span> <span class="n">es</span><span class="p">,</span>
+                    <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">window</span> <span class="ow">in</span> <span class="n">windows</span><span class="p">:</span>
+                    <span class="c1"># If ES falls within this maintenance window, push forward</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">window</span><span class="o">.</span><span class="n">downtime_start</span> <span class="o">&lt;=</span> <span class="n">es</span> <span class="o">&lt;</span> <span class="n">window</span><span class="o">.</span><span class="n">downtime_end</span><span class="p">):</span>
+                        <span class="n">es</span> <span class="o">=</span> <span class="n">window</span><span class="o">.</span><span class="n">downtime_end</span>
+                        <span class="c1"># Advance to next working day</span>
+                        <span class="k">while</span> <span class="ow">not</span> <span class="n">_is_working_day_with_calendar</span><span class="p">(</span>
+                            <span class="n">es</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span>
+                        <span class="p">):</span>
+                            <span class="n">es</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># --- Out-of-Sequence Execution Check ---</span>
+        <span class="c1"># If the task has partial progress and incomplete predecessors,</span>
+        <span class="c1"># apply the configured CPM calculation mode</span>
+        <span class="n">pct_complete</span> <span class="o">=</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">percent_complete</span> <span class="ow">or</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">pct_complete</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="c1"># Determine the CPM calculation mode</span>
+            <span class="n">custom_attrs</span> <span class="o">=</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+            <span class="n">cpm_mode_str</span> <span class="o">=</span> <span class="n">custom_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">"cpm_calculation_mode"</span><span class="p">,</span>
+                <span class="n">CPMCalculationMode</span><span class="o">.</span><span class="n">RETAINED_LOGIC</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">cpm_mode</span> <span class="o">=</span> <span class="n">CPMCalculationMode</span><span class="p">(</span><span class="n">cpm_mode_str</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">cpm_mode</span> <span class="o">=</span> <span class="n">CPMCalculationMode</span><span class="o">.</span><span class="n">RETAINED_LOGIC</span>
+
+            <span class="c1"># Determine the status date</span>
+            <span class="k">if</span> <span class="n">status_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">status_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                    <span class="n">hour</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span>
+                <span class="p">)</span>
+            <span class="c1"># Ensure status_date is a working day</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="n">_is_working_day_with_calendar</span><span class="p">(</span>
+                <span class="n">status_date</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span>
+            <span class="p">):</span>
+                <span class="n">status_date</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Check if any predecessor is incomplete</span>
+            <span class="n">has_unfinished_pred</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">max_unfinished_pred_ef</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">pred_id</span><span class="p">,</span> <span class="n">_target</span><span class="p">,</span> <span class="n">edge_data</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">pred_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">early_start</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">pred_node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">pred_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+                <span class="n">pred_pct</span> <span class="o">=</span> <span class="n">pred_node</span><span class="o">.</span><span class="n">percent_complete</span> <span class="ow">or</span> <span class="mf">0.0</span>
+                <span class="k">if</span> <span class="n">pred_pct</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+                    <span class="n">has_unfinished_pred</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">pred_ef</span> <span class="o">=</span> <span class="n">early_finish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pred_id</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">pred_ef</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">max_unfinished_pred_ef</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">pred_ef</span> <span class="o">&gt;</span> <span class="n">max_unfinished_pred_ef</span><span class="p">:</span>
+                            <span class="n">max_unfinished_pred_ef</span> <span class="o">=</span> <span class="n">pred_ef</span>
+
+            <span class="k">if</span> <span class="n">has_unfinished_pred</span><span class="p">:</span>
+                <span class="c1"># Mark this node as out-of-sequence</span>
+                <span class="k">if</span> <span class="s2">"is_out_of_sequence"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">]:</span>
+                    <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"is_out_of_sequence"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+                <span class="k">if</span> <span class="n">cpm_mode</span> <span class="o">==</span> <span class="n">CPMCalculationMode</span><span class="o">.</span><span class="n">PROGRESS_OVERRIDE</span><span class="p">:</span>
+                    <span class="c1"># Disregard unfinished predecessor logic</span>
+                    <span class="c1"># ES_remaining = Status Date</span>
+                    <span class="k">if</span> <span class="n">status_date</span> <span class="o">&gt;</span> <span class="n">es</span><span class="p">:</span>
+                        <span class="n">es</span> <span class="o">=</span> <span class="n">status_date</span>
+
+                <span class="k">elif</span> <span class="n">cpm_mode</span> <span class="o">==</span> <span class="n">CPMCalculationMode</span><span class="o">.</span><span class="n">RETAINED_LOGIC</span><span class="p">:</span>
+                    <span class="c1"># Remaining work waits for incomplete predecessors</span>
+                    <span class="c1"># ES_remaining = max(Status Date, max(EF_unfinished_preds) + lag)</span>
+                    <span class="k">if</span> <span class="n">max_unfinished_pred_ef</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="c1"># Find the lag for the unfinished predecessor</span>
+                        <span class="k">for</span> <span class="n">pred_id</span><span class="p">,</span> <span class="n">_target</span><span class="p">,</span> <span class="n">edge_data</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">in_edges</span><span class="p">(</span>
+                            <span class="n">node_id</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span>
+                        <span class="p">):</span>
+                            <span class="n">pred_node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">pred_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+                            <span class="n">pred_pct</span> <span class="o">=</span> <span class="n">pred_node</span><span class="o">.</span><span class="n">percent_complete</span> <span class="ow">or</span> <span class="mf">0.0</span>
+                            <span class="k">if</span> <span class="n">pred_pct</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+                                <span class="n">pred_ef</span> <span class="o">=</span> <span class="n">early_finish</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pred_id</span><span class="p">)</span>
+                                <span class="k">if</span> <span class="n">pred_ef</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                                    <span class="n">lag</span> <span class="o">=</span> <span class="n">edge_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lag_days"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                                    <span class="n">candidate</span> <span class="o">=</span> <span class="n">add_working_days</span><span class="p">(</span>
+                                        <span class="n">pred_ef</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span>
+                                    <span class="p">)</span>
+                                    <span class="k">if</span> <span class="n">candidate</span> <span class="o">&gt;</span> <span class="n">es</span><span class="p">:</span>
+                                        <span class="n">es</span> <span class="o">=</span> <span class="n">candidate</span>
+                        <span class="c1"># Also ensure ES is at least the status date</span>
+                        <span class="k">if</span> <span class="n">status_date</span> <span class="o">&gt;</span> <span class="n">es</span><span class="p">:</span>
+                            <span class="n">es</span> <span class="o">=</span> <span class="n">status_date</span>
+
+        <span class="n">early_start</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">es</span>
+        <span class="n">early_finish</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">add_working_days</span><span class="p">(</span><span class="n">es</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"early_start"</span><span class="p">:</span> <span class="n">early_start</span><span class="p">[</span><span class="n">node_id</span><span class="p">],</span>
+            <span class="s2">"early_finish"</span><span class="p">:</span> <span class="n">early_finish</span><span class="p">[</span><span class="n">node_id</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Backward pass — Late Start / Late Finish</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="backward_pass">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.backward_pass">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">backward_pass</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">,</span>
+    <span class="n">forward_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]],</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Session</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Compute Late Start (LS) and Late Finish (LF) for every node.</span>
+
+<span class="sd">    Processes nodes in reverse topological order.</span>
+
+<span class="sd">    Calendar-Aware Scheduling</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    If a database session is provided, the engine resolves the effective</span>
+<span class="sd">    calendar for each node and uses it for backward date arithmetic.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Resolve the project calendar (if DB available)</span>
+    <span class="n">project_calendar</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">WorkingCalendar</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">project_exception_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">date_type</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">db</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">root_node</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+            <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">nid</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">parent_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">root_node</span> <span class="o">=</span> <span class="n">node_obj</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">root_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">root_node</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)[</span><span class="mi">0</span><span class="p">]][</span><span class="s2">"node"</span><span class="p">]</span>
+        <span class="n">project_calendar</span> <span class="o">=</span> <span class="n">_resolve_calendar</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">project_calendar</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">project_exception_map</span> <span class="o">=</span> <span class="n">_get_exception_set</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_calendar</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+    <span class="c1"># Project finish is the maximum EF</span>
+    <span class="n">project_finish</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="n">fr</span><span class="p">[</span><span class="s2">"early_finish"</span><span class="p">]</span> <span class="k">for</span> <span class="n">fr</span> <span class="ow">in</span> <span class="n">forward_results</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">late_finish</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">late_start</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">topological_sort</span><span class="p">(</span><span class="n">graph</span><span class="p">))):</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"duration"</span><span class="p">]</span>
+        <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+
+        <span class="c1"># Resolve per-node calendar</span>
+        <span class="n">node_calendar</span> <span class="o">=</span> <span class="n">project_calendar</span>
+        <span class="n">node_exc_map</span> <span class="o">=</span> <span class="n">project_exception_map</span>
+        <span class="k">if</span> <span class="n">db</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">calendar_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">node_cal</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">WorkingCalendar</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">WorkingCalendar</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">calendar_id</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">node_cal</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">node_calendar</span> <span class="o">=</span> <span class="n">node_cal</span>
+                <span class="n">node_exc_map</span> <span class="o">=</span> <span class="n">_get_exception_set</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node_cal</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="c1"># Default LF: project finish (will be pulled by successors)</span>
+        <span class="n">lf</span> <span class="o">=</span> <span class="n">project_finish</span>
+
+        <span class="c1"># Process outgoing edges (successors)</span>
+        <span class="k">for</span> <span class="n">_target</span><span class="p">,</span> <span class="n">succ_id</span><span class="p">,</span> <span class="n">edge_data</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">out_edges</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">dep_type</span> <span class="o">=</span> <span class="n">edge_data</span><span class="p">[</span><span class="s2">"dep_type"</span><span class="p">]</span>
+            <span class="n">lag</span> <span class="o">=</span> <span class="n">edge_data</span><span class="p">[</span><span class="s2">"lag_days"</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">succ_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">late_finish</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">succ_ls</span> <span class="o">=</span> <span class="n">late_start</span><span class="p">[</span><span class="n">succ_id</span><span class="p">]</span>
+            <span class="n">succ_lf</span> <span class="o">=</span> <span class="n">late_finish</span><span class="p">[</span><span class="n">succ_id</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">dep_type</span> <span class="o">==</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FS</span><span class="p">:</span>
+                <span class="c1"># predecessor LF &lt;= successor LS - lag</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="n">subtract_working_days</span><span class="p">(</span><span class="n">succ_ls</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="o">&lt;</span> <span class="n">lf</span><span class="p">:</span>
+                    <span class="n">lf</span> <span class="o">=</span> <span class="n">candidate</span>
+
+            <span class="k">elif</span> <span class="n">dep_type</span> <span class="o">==</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">SS</span><span class="p">:</span>
+                <span class="c1"># predecessor LF &lt;= successor LF - lag</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="n">subtract_working_days</span><span class="p">(</span><span class="n">succ_lf</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="o">&lt;</span> <span class="n">lf</span><span class="p">:</span>
+                    <span class="n">lf</span> <span class="o">=</span> <span class="n">candidate</span>
+
+            <span class="k">elif</span> <span class="n">dep_type</span> <span class="o">==</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">FF</span><span class="p">:</span>
+                <span class="c1"># predecessor LF &lt;= successor LF - lag</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="n">subtract_working_days</span><span class="p">(</span><span class="n">succ_lf</span><span class="p">,</span> <span class="n">lag</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="o">&lt;</span> <span class="n">lf</span><span class="p">:</span>
+                    <span class="n">lf</span> <span class="o">=</span> <span class="n">candidate</span>
+
+            <span class="k">elif</span> <span class="n">dep_type</span> <span class="o">==</span> <span class="n">DependencyType</span><span class="o">.</span><span class="n">SF</span><span class="p">:</span>
+                <span class="c1"># predecessor ES + lag &lt;= succ EF</span>
+                <span class="c1"># backward: pred LS &lt;= succ LF - duration - lag</span>
+                <span class="n">succ_duration</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">succ_id</span><span class="p">][</span><span class="s2">"duration"</span><span class="p">]</span>
+                <span class="n">candidate</span> <span class="o">=</span> <span class="n">subtract_working_days</span><span class="p">(</span>
+                    <span class="n">succ_lf</span><span class="p">,</span> <span class="n">succ_duration</span> <span class="o">+</span> <span class="n">lag</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">candidate</span> <span class="o">&lt;</span> <span class="n">lf</span><span class="p">:</span>
+                    <span class="n">lf</span> <span class="o">=</span> <span class="n">candidate</span>
+
+        <span class="n">late_finish</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">lf</span>
+        <span class="n">late_start</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">subtract_working_days</span><span class="p">(</span><span class="n">lf</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">node_calendar</span><span class="p">,</span> <span class="n">node_exc_map</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"late_start"</span><span class="p">:</span> <span class="n">late_start</span><span class="p">[</span><span class="n">node_id</span><span class="p">],</span>
+            <span class="s2">"late_finish"</span><span class="p">:</span> <span class="n">late_finish</span><span class="p">[</span><span class="n">node_id</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Float calculations</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="compute_floats">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.compute_floats">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_floats</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">,</span>
+    <span class="n">forward_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]],</span>
+    <span class="n">backward_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Calculate Total Float (TF) and Free Float (FF) in working days."""</span>
+    <span class="n">floats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">es</span> <span class="o">=</span> <span class="n">forward_results</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"early_start"</span><span class="p">]</span>
+        <span class="n">ef</span> <span class="o">=</span> <span class="n">forward_results</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"early_finish"</span><span class="p">]</span>
+        <span class="n">ls</span> <span class="o">=</span> <span class="n">backward_results</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"late_start"</span><span class="p">]</span>
+        <span class="n">lf</span> <span class="o">=</span> <span class="n">backward_results</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"late_finish"</span><span class="p">]</span>
+
+        <span class="c1"># Total Float = LS - ES (in work days)</span>
+        <span class="n">tf</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">es</span><span class="p">,</span> <span class="n">ls</span><span class="p">)</span>
+
+        <span class="c1"># Free Float = min(successor ES) - EF</span>
+        <span class="n">ff</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">succ_id</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">out_edges</span><span class="p">(</span><span class="n">node_id</span><span class="p">):</span>
+            <span class="n">succ_es</span> <span class="o">=</span> <span class="n">forward_results</span><span class="p">[</span><span class="n">succ_id</span><span class="p">][</span><span class="s2">"early_start"</span><span class="p">]</span>
+            <span class="n">succ_ff</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">ef</span><span class="p">,</span> <span class="n">succ_es</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ff</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">succ_ff</span> <span class="o">&lt;</span> <span class="n">ff</span><span class="p">:</span>
+                <span class="n">ff</span> <span class="o">=</span> <span class="n">succ_ff</span>
+        <span class="c1"># If no successors, FF = TF (leaf node)</span>
+        <span class="k">if</span> <span class="n">ff</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ff</span> <span class="o">=</span> <span class="n">tf</span>
+
+        <span class="n">floats</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"total_float"</span><span class="p">:</span> <span class="n">tf</span><span class="p">,</span>
+            <span class="s2">"free_float"</span><span class="p">:</span> <span class="n">ff</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">floats</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Critical path identification</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="identify_critical_path">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.identify_critical_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">identify_critical_path</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">,</span>
+    <span class="n">floats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UUID</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the list of node IDs on the critical path (TF &lt;= 0)."""</span>
+    <span class="n">critical_nodes</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">node_id</span> <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">floats</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s2">"total_float"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Build a subgraph of critical nodes and find the longest path</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">critical_nodes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">critical_subgraph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">critical_nodes</span><span class="p">)</span>
+
+    <span class="c1"># The critical path is the longest path through the critical subgraph</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">dag_longest_path</span><span class="p">(</span><span class="n">critical_subgraph</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">:</span>
+        <span class="c1"># If subgraph is disconnected, return all critical nodes</span>
+        <span class="k">return</span> <span class="n">critical_nodes</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># DCMA 14-Point integrity check</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="DCMAFlag">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.DCMAFlag">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DCMAFlag</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A single integrity flag raised during DCMA 14-Point schedule checking.</span>
+
+<span class="sd">    Represents one violation or warning detected during the DCMA integrity</span>
+<span class="sd">    analysis, such as dangling activities, invalid leads/lags, negative float,</span>
+<span class="sd">    or date validation failures.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="DCMAFlag.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.DCMAFlag.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">],</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"WARNING"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialize a DCMA integrity flag.</span>
+
+<span class="sd">        Args</span>
+<span class="sd">        ----\n        point : int</span>
+<span class="sd">            The DCMA 14-Point check number (1–14) that raised this flag.</span>
+<span class="sd">        node_id : UUID, optional</span>
+<span class="sd">            The UUID of the node that triggered the flag (default ``None`` for</span>
+<span class="sd">            schedule-level flags).</span>
+<span class="sd">        message : str</span>
+<span class="sd">            Human-readable description of the violation.</span>
+<span class="sd">        severity : str, optional</span>
+<span class="sd">            Severity level: ``\"WARNING\"`` or ``\"ERROR\"`` (default ``\"WARNING\"``).</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">point</span> <span class="o">=</span> <span class="n">point</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span> <span class="o">=</span> <span class="n">node_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">severity</span> <span class="o">=</span> <span class="n">severity</span></div>
+
+
+<div class="viewcode-block" id="DCMAFlag.to_dict">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.DCMAFlag.to_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Serialize the flag to a dictionary.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A dictionary containing the DCMA point number, node ID (as string),</span>
+<span class="sd">            message, and severity, suitable for JSON serialization.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"point"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">,</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+            <span class="s2">"severity"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">severity</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="dcma_14_point_check">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.dcma_14_point_check">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">dcma_14_point_check</span><span class="p">(</span>
+    <span class="n">graph</span><span class="p">:</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">,</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">],</span>
+    <span class="n">deps</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DependencyLink</span><span class="p">],</span>
+    <span class="n">forward_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]],</span>
+    <span class="n">backward_results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">any</span><span class="p">]],</span>
+    <span class="n">floats</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">DCMAFlag</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Run a basic DCMA 14-Point schedule integrity check.</span>
+
+<span class="sd">    Checks implemented:</span>
+<span class="sd">    - Point 1: Logic ties (dangling activities with no predecessor or successor)</span>
+<span class="sd">    - Point 2: Invalid leads/lags</span>
+<span class="sd">    - Point 3: Negative float</span>
+<span class="sd">    - Point 4: Start/finish date validation</span>
+<span class="sd">    - Point 5: Duration validation</span>
+<span class="sd">    - Additional: Critical path validation, milestone checks</span>
+<span class="sd">    """</span>
+    <span class="n">flags</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">DCMAFlag</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># --- Point 1: Dangling activities ---</span>
+    <span class="c1"># Activities with no predecessor (except project start nodes)</span>
+    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">in_degree</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+        <span class="n">out_degree</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+
+        <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+
+        <span class="c1"># Non-root nodes with no predecessors are dangling</span>
+        <span class="k">if</span> <span class="n">in_degree</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Check if it's a root-level node (acceptable)</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">parent_id</span>
+            <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DCMAFlag</span><span class="p">(</span>
+                    <span class="n">point</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+                    <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Activity '</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' (</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">) has no predecessors "</span>
+                            <span class="sa">f</span><span class="s2">"but is not a root node — potential dangling activity."</span><span class="p">,</span>
+                    <span class="n">severity</span><span class="o">=</span><span class="s2">"WARNING"</span><span class="p">,</span>
+                <span class="p">))</span>
+
+        <span class="c1"># Non-leaf nodes with no successors</span>
+        <span class="k">if</span> <span class="n">out_degree</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">in_degree</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Check if it has zero duration (milestone — acceptable)</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"duration"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DCMAFlag</span><span class="p">(</span>
+                    <span class="n">point</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+                    <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Activity '</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' (</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">) has no successors "</span>
+                            <span class="sa">f</span><span class="s2">"but is not a terminal node — potential dangling activity."</span><span class="p">,</span>
+                    <span class="n">severity</span><span class="o">=</span><span class="s2">"WARNING"</span><span class="p">,</span>
+                <span class="p">))</span>
+
+    <span class="c1"># --- Point 2: Invalid leads/lags ---</span>
+    <span class="k">for</span> <span class="n">dep</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="c1"># Large lags may indicate errors</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">365</span><span class="p">:</span>
+            <span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DCMAFlag</span><span class="p">(</span>
+                <span class="n">point</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">node_id</span><span class="o">=</span><span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">,</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Dependency from '</span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="si">}</span><span class="s2">' to '</span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="si">}</span><span class="s2">' "</span>
+                        <span class="sa">f</span><span class="s2">"has an extreme lag of </span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span><span class="si">}</span><span class="s2"> days."</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="s2">"ERROR"</span><span class="p">,</span>
+            <span class="p">))</span>
+
+        <span class="c1"># Negative leads (negative lag) should be flagged for review</span>
+        <span class="k">if</span> <span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DCMAFlag</span><span class="p">(</span>
+                <span class="n">point</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                <span class="n">node_id</span><span class="o">=</span><span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">,</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Dependency from '</span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="si">}</span><span class="s2">' to '</span><span class="si">{</span><span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="si">}</span><span class="s2">' "</span>
+                        <span class="sa">f</span><span class="s2">"uses a lead of </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span><span class="p">)</span><span class="si">}</span><span class="s2"> days — verify intentional."</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="s2">"WARNING"</span><span class="p">,</span>
+            <span class="p">))</span>
+
+    <span class="c1"># --- Point 3: Negative float ---</span>
+    <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">floats</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s2">"total_float"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+            <span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DCMAFlag</span><span class="p">(</span>
+                <span class="n">point</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Activity '</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' (</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">) has negative "</span>
+                        <span class="sa">f</span><span class="s2">"total float (</span><span class="si">{</span><span class="n">f</span><span class="p">[</span><span class="s1">'total_float'</span><span class="p">]</span><span class="si">}</span><span class="s2"> days) — schedule is over-constrained."</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="s2">"ERROR"</span><span class="p">,</span>
+            <span class="p">))</span>
+
+    <span class="c1"># --- Point 4: Start/finish date validation ---</span>
+    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"duration"</span><span class="p">]</span>
+
+        <span class="c1"># Check for planned dates that don't match calculated dates significantly</span>
+        <span class="n">es</span> <span class="o">=</span> <span class="n">forward_results</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"early_start"</span><span class="p">]</span>
+        <span class="n">ef</span> <span class="o">=</span> <span class="n">forward_results</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"early_finish"</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="n">planned_duration</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">node_obj</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">planned_duration</span> <span class="o">!=</span> <span class="n">duration</span> <span class="ow">and</span> <span class="n">duration</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DCMAFlag</span><span class="p">(</span>
+                    <span class="n">point</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                    <span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+                    <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Activity '</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' (</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">) planned duration "</span>
+                            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">planned_duration</span><span class="si">}</span><span class="s2"> days) differs from calculated duration "</span>
+                            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="n">duration</span><span class="si">}</span><span class="s2"> days)."</span><span class="p">,</span>
+                    <span class="n">severity</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+                <span class="p">))</span>
+
+    <span class="c1"># --- Point 5: Duration validation ---</span>
+    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"duration"</span><span class="p">]</span>
+
+        <span class="c1"># Zero-duration activities with incoming and outgoing dependencies</span>
+        <span class="k">if</span> <span class="n">duration</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">graph</span><span class="o">.</span><span class="n">in_degree</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">graph</span><span class="o">.</span><span class="n">out_degree</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DCMAFlag</span><span class="p">(</span>
+                <span class="n">point</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                <span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+                <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Activity '</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">' (</span><span class="si">{</span><span class="n">node_obj</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">) has zero duration "</span>
+                        <span class="sa">f</span><span class="s2">"but has both predecessors and successors — consider if it should be a milestone."</span><span class="p">,</span>
+                <span class="n">severity</span><span class="o">=</span><span class="s2">"INFO"</span><span class="p">,</span>
+            <span class="p">))</span>
+
+    <span class="c1"># --- Additional: Critical path length check ---</span>
+    <span class="n">critical_count</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">floats</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="s2">"total_float"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">total_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">total_count</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">critical_count</span> <span class="o">/</span> <span class="n">total_count</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
+        <span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DCMAFlag</span><span class="p">(</span>
+            <span class="n">point</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"More than 50% of activities (</span><span class="si">{</span><span class="n">critical_count</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total_count</span><span class="si">}</span><span class="s2">) are on the "</span>
+                    <span class="sa">f</span><span class="s2">"critical path — schedule may be over-constrained."</span><span class="p">,</span>
+            <span class="n">severity</span><span class="o">=</span><span class="s2">"WARNING"</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">flags</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Main CPM calculation orchestrator</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="calculate_cpm">
+<a class="viewcode-back" href="../../../modules.html#app.services.cpm_engine.calculate_cpm">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">calculate_cpm</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Run the full CPM calculation for a project.</span>
+
+<span class="sd">    Steps:</span>
+<span class="sd">    1. Build DAG from database</span>
+<span class="sd">    2. Check for circular dependencies</span>
+<span class="sd">    3. Forward pass (ES/EF)</span>
+<span class="sd">    4. Backward pass (LS/LF)</span>
+<span class="sd">    5. Compute floats</span>
+<span class="sd">    6. Identify critical path</span>
+<span class="sd">    7. Run DCMA integrity checks</span>
+<span class="sd">    8. Update node custom_attributes with schedule metrics</span>
+<span class="sd">    9. Return results</span>
+<span class="sd">    """</span>
+    <span class="c1"># Step 1: Build DAG</span>
+    <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">deps</span> <span class="o">=</span> <span class="n">build_schedule_dag</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No active PortfolioNodes found under project </span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="c1"># Step 2: Check cycles</span>
+    <span class="n">check_circular_dependencies</span><span class="p">(</span><span class="n">graph</span><span class="p">)</span>
+
+    <span class="c1"># Step 3: Forward pass (with procurement constraint evaluation)</span>
+    <span class="n">forward</span> <span class="o">=</span> <span class="n">forward_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">)</span>
+
+    <span class="c1"># Step 4: Backward pass (calendar-aware)</span>
+    <span class="n">backward</span> <span class="o">=</span> <span class="n">backward_pass</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">forward</span><span class="p">,</span> <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">)</span>
+
+    <span class="c1"># Step 5: Floats</span>
+    <span class="n">floats</span> <span class="o">=</span> <span class="n">compute_floats</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">forward</span><span class="p">,</span> <span class="n">backward</span><span class="p">)</span>
+
+    <span class="c1"># Step 6: Critical path</span>
+    <span class="n">critical_path</span> <span class="o">=</span> <span class="n">identify_critical_path</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">floats</span><span class="p">)</span>
+
+    <span class="c1"># Step 7: DCMA checks</span>
+    <span class="n">dcma_flags</span> <span class="o">=</span> <span class="n">dcma_14_point_check</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">deps</span><span class="p">,</span> <span class="n">forward</span><span class="p">,</span> <span class="n">backward</span><span class="p">,</span> <span class="n">floats</span><span class="p">)</span>
+
+    <span class="c1"># Step 7.5: Procurement constraint impact analysis</span>
+    <span class="n">procurement_impacts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">node_procurement_constraints</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">constraints</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">TaskProcurementConstraint</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ProcurementItem</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">TaskProcurementConstraint</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)))</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constraints</span><span class="p">:</span>
+        <span class="n">node_procurement_constraints</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+            <span class="n">constraint</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">,</span> <span class="p">[]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">constraint</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">constr_list</span> <span class="ow">in</span> <span class="n">node_procurement_constraints</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">node_obj</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">constr_list</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">procurement_item</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">forecast_date</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">forecast_delivery_date</span>
+            <span class="n">required_date</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">required_on_site_date</span>
+            <span class="n">is_delaying</span> <span class="o">=</span> <span class="n">forecast_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">forecast_date</span> <span class="o">&gt;</span> <span class="n">required_date</span>
+            <span class="n">delay_days</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">is_delaying</span> <span class="ow">and</span> <span class="n">forecast_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">delay_days</span> <span class="o">=</span> <span class="p">(</span><span class="n">forecast_date</span> <span class="o">-</span> <span class="n">required_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+
+            <span class="n">procurement_impacts</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"task_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_id</span><span class="p">),</span>
+                <span class="s2">"task_code"</span><span class="p">:</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">"procurement_item_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="s2">"part_number"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">part_number</span><span class="p">,</span>
+                <span class="s2">"forecast_delivery_date"</span><span class="p">:</span> <span class="n">forecast_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">forecast_date</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"required_on_site_date"</span><span class="p">:</span> <span class="n">required_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="s2">"is_delaying"</span><span class="p">:</span> <span class="n">is_delaying</span><span class="p">,</span>
+                <span class="s2">"delay_days"</span><span class="p">:</span> <span class="n">delay_days</span><span class="p">,</span>
+            <span class="p">})</span>
+
+    <span class="c1"># Step 8: Build per-node schedule results</span>
+    <span class="n">schedule_results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">node_obj</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">]</span>
+        <span class="n">duration</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"duration"</span><span class="p">]</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">floats</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="n">fr</span> <span class="o">=</span> <span class="n">forward</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="n">br</span> <span class="o">=</span> <span class="n">backward</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="n">is_critical</span> <span class="o">=</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">critical_path</span>
+
+        <span class="c1"># Check if this task is procurement-constrained</span>
+        <span class="n">is_procurement_constrained</span> <span class="o">=</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">node_procurement_constraints</span>
+        <span class="n">procurement_constrained_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">is_procurement_constrained</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">constraint</span> <span class="ow">in</span> <span class="n">node_procurement_constraints</span><span class="p">[</span><span class="n">node_id</span><span class="p">]:</span>
+                <span class="n">item</span> <span class="o">=</span> <span class="n">constraint</span><span class="o">.</span><span class="n">procurement_item</span>
+                <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">procurement_constrained_parts</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                        <span class="s2">"part_number"</span><span class="p">:</span> <span class="n">item</span><span class="o">.</span><span class="n">part_number</span><span class="p">,</span>
+                        <span class="s2">"forecast_delivery_date"</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="n">item</span><span class="o">.</span><span class="n">forecast_delivery_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">forecast_delivery_date</span> <span class="k">else</span> <span class="kc">None</span>
+                        <span class="p">),</span>
+                    <span class="p">})</span>
+
+        <span class="n">schedule_results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_id</span><span class="p">),</span>
+            <span class="s2">"code"</span><span class="p">:</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"duration_days"</span><span class="p">:</span> <span class="n">duration</span><span class="p">,</span>
+            <span class="s2">"early_start"</span><span class="p">:</span> <span class="n">fr</span><span class="p">[</span><span class="s2">"early_start"</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"early_finish"</span><span class="p">:</span> <span class="n">fr</span><span class="p">[</span><span class="s2">"early_finish"</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"late_start"</span><span class="p">:</span> <span class="n">br</span><span class="p">[</span><span class="s2">"late_start"</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"late_finish"</span><span class="p">:</span> <span class="n">br</span><span class="p">[</span><span class="s2">"late_finish"</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"total_float"</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">"total_float"</span><span class="p">],</span>
+            <span class="s2">"free_float"</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">"free_float"</span><span class="p">],</span>
+            <span class="s2">"is_critical"</span><span class="p">:</span> <span class="n">is_critical</span><span class="p">,</span>
+            <span class="s2">"is_procurement_constrained"</span><span class="p">:</span> <span class="n">is_procurement_constrained</span><span class="p">,</span>
+            <span class="s2">"procurement_constrained_parts"</span><span class="p">:</span> <span class="n">procurement_constrained_parts</span><span class="p">,</span>
+        <span class="p">})</span>
+
+    <span class="c1"># Sort by early_start for readability</span>
+    <span class="n">schedule_results</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="s2">"early_start"</span><span class="p">])</span>
+
+    <span class="c1"># Step 9: Update node custom_attributes with CPM results</span>
+    <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">:</span>
+        <span class="n">node_obj</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">floats</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="n">fr</span> <span class="o">=</span> <span class="n">forward</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="n">br</span> <span class="o">=</span> <span class="n">backward</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+        <span class="n">is_critical</span> <span class="o">=</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">critical_path</span>
+
+        <span class="c1"># Preserve existing custom_attributes</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="n">node_obj</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">existing</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"duration_days"</span><span class="p">:</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"duration"</span><span class="p">],</span>
+            <span class="s2">"early_start"</span><span class="p">:</span> <span class="n">fr</span><span class="p">[</span><span class="s2">"early_start"</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"early_finish"</span><span class="p">:</span> <span class="n">fr</span><span class="p">[</span><span class="s2">"early_finish"</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"late_start"</span><span class="p">:</span> <span class="n">br</span><span class="p">[</span><span class="s2">"late_start"</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"late_finish"</span><span class="p">:</span> <span class="n">br</span><span class="p">[</span><span class="s2">"late_finish"</span><span class="p">]</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"total_float"</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">"total_float"</span><span class="p">],</span>
+            <span class="s2">"free_float"</span><span class="p">:</span> <span class="n">f</span><span class="p">[</span><span class="s2">"free_float"</span><span class="p">],</span>
+            <span class="s2">"is_critical"</span><span class="p">:</span> <span class="n">is_critical</span><span class="p">,</span>
+            <span class="s2">"calculated_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">}</span>
+        <span class="n">node_obj</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="o">=</span> <span class="n">existing</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Project-level summary</span>
+    <span class="n">project_duration</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span>
+        <span class="nb">min</span><span class="p">(</span><span class="n">fr</span><span class="p">[</span><span class="s2">"early_start"</span><span class="p">]</span> <span class="k">for</span> <span class="n">fr</span> <span class="ow">in</span> <span class="n">forward</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+        <span class="nb">max</span><span class="p">(</span><span class="n">fr</span><span class="p">[</span><span class="s2">"early_finish"</span><span class="p">]</span> <span class="k">for</span> <span class="n">fr</span> <span class="ow">in</span> <span class="n">forward</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"project_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
+        <span class="s2">"total_activities"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">),</span>
+        <span class="s2">"total_dependencies"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">edges</span><span class="p">),</span>
+        <span class="s2">"project_duration_days"</span><span class="p">:</span> <span class="n">project_duration</span><span class="p">,</span>
+        <span class="s2">"critical_path_length"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">critical_path</span><span class="p">),</span>
+        <span class="s2">"critical_path_codes"</span><span class="p">:</span> <span class="p">[</span><span class="n">nodes</span><span class="p">[</span><span class="n">nid</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">critical_path</span><span class="p">],</span>
+        <span class="s2">"schedule"</span><span class="p">:</span> <span class="n">schedule_results</span><span class="p">,</span>
+        <span class="s2">"procurement_impacts"</span><span class="p">:</span> <span class="n">procurement_impacts</span><span class="p">,</span>
+        <span class="s2">"dcma_flags"</span><span class="p">:</span> <span class="p">[</span><span class="n">flag</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">dcma_flags</span><span class="p">],</span>
+        <span class="s2">"calculated_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

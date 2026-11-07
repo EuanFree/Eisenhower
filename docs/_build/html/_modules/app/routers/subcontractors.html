@@ -1,0 +1,849 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.subcontractors &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.subcontractors</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.subcontractors</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Subcontractor schedule submission API router.</span>
+
+<span class="sd">This module provides the REST API endpoints for the subcontractor</span>
+<span class="sd">schedule ingest pipeline.  It allows defence subcontractors to submit</span>
+<span class="sd">schedule updates (Primavera P6 .xer or MS Project .xml) for integration</span>
+<span class="sd">into the prime contractor's master programme.</span>
+
+<span class="sd">The ingest pipeline ensures that external schedule data is validated</span>
+<span class="sd">against contractual boundary gates before being merged into the live</span>
+<span class="sd">WBS.  This prevents milestone slippage, logic tampering, and negative</span>
+<span class="sd">float inflation from subcontractor submissions.</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">~~~~~~~~~</span>
+
+<span class="sd">- ``POST /submissions/upload`` — Upload a schedule file and trigger</span>
+<span class="sd">  automated validation against contractual boundary gates.</span>
+<span class="sd">- ``GET /submissions/{id}/validation-report`` — Retrieve the automated</span>
+<span class="sd">  compliance score and boundary breach report for a submission.</span>
+<span class="sd">- ``POST /submissions/{id}/approve-merge`` — Approve a validated</span>
+<span class="sd">  submission and merge it into the live WBS.</span>
+<span class="sd">- ``GET /submissions`` — List all submissions with optional filtering.</span>
+<span class="sd">- ``GET /submissions/{id}`` — Get a single submission by ID.</span>
+<span class="sd">- ``POST /submissions/{id}/staging-diff`` — Generate the staging diff</span>
+<span class="sd">  showing the impact of merging the submission.</span>
+
+<span class="sd">Workflow</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">1. A subcontractor (or prime contractor on their behalf) uploads a</span>
+<span class="sd">   schedule file via ``POST /submissions/upload``.</span>
+
+<span class="sd">2. The system parses the file, extracts tasks and dependencies, and</span>
+<span class="sd">   runs automated DCMA checks against the contractual boundary gates.</span>
+
+<span class="sd">3. The validation report is retrieved via</span>
+<span class="sd">   ``GET /submissions/{id}/validation-report``.  If critical breaches</span>
+<span class="sd">   are found, the submission is rejected and cannot be merged.</span>
+
+<span class="sd">4. If validation passes, the staging diff is generated via</span>
+<span class="sd">   ``POST /submissions/{id}/staging-diff`` to show the impact on</span>
+<span class="sd">   the prime schedule.</span>
+
+<span class="sd">5. A human reviewer examines the staging diff and approves the merge</span>
+<span class="sd">   via ``POST /submissions/{id}/approve-merge``.</span>
+
+<span class="sd">6. The merge is recorded in the ForensicAuditLog with action type</span>
+<span class="sd">   ``SUBCONTRACTOR_MERGE``.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All endpoints require JWT authentication.  The submitting user must</span>
+<span class="sd">have sufficient security clearance to access the target WBS node</span>
+<span class="sd">(checked via ABAC).  Submissions can only be merged by users with</span>
+<span class="sd">Manager or Admin role.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">UploadFile</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">Form</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SubcontractorSubmission</span><span class="p">,</span>
+    <span class="n">SubcontractorFormat</span><span class="p">,</span>
+    <span class="n">SubmissionStatus</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SubcontractorSubmissionCreate</span><span class="p">,</span>
+    <span class="n">SubcontractorSubmissionResponse</span><span class="p">,</span>
+    <span class="n">SubmissionListResponse</span><span class="p">,</span>
+    <span class="n">SubmissionMergeResponse</span><span class="p">,</span>
+    <span class="n">ValidationReport</span><span class="p">,</span>
+    <span class="n">StagingDiff</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.abac</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_node_visible</span><span class="p">,</span> <span class="n">has_sufficient_clearance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.subcontractor_ingest</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">parse_external_schedule</span><span class="p">,</span>
+    <span class="n">validate_against_contractual_boundary</span><span class="p">,</span>
+    <span class="n">generate_staging_diff</span><span class="p">,</span>
+    <span class="n">merge_submission_to_live</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="upload_submission">
+<a class="viewcode-back" href="../../../modules.html#app.routers.subcontractors.upload_submission">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/submissions/upload"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">upload_submission</span><span class="p">(</span>
+    <span class="n">vendor_cage_code</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">subcontract_reference</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">target_wbs_root_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">file_format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">file</span><span class="p">:</span> <span class="n">UploadFile</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Upload a subcontractor schedule file and trigger automated validation.</span>
+
+<span class="sd">    This endpoint accepts a schedule file (Primavera P6 .xer or MS Project</span>
+<span class="sd">    .xml) along with metadata identifying the vendor, subcontract reference,</span>
+<span class="sd">    and target integration boundary work package.</span>
+
+<span class="sd">    On upload, the system:</span>
+
+<span class="sd">    1. Creates a ``SubcontractorSubmission`` record with status ``RECEIVED``.</span>
+<span class="sd">    2. Parses the file to extract tasks and dependencies.</span>
+<span class="sd">    3. Runs automated DCMA checks against the contractual boundary gates.</span>
+<span class="sd">    4. Updates the submission status to ``STAGED_READY`` (if validation</span>
+<span class="sd">       passes) or ``REJECTED_BREACH`` (if critical breaches are found).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vendor_cage_code : str</span>
+<span class="sd">        NATO/CAGE code of the submitting vendor.</span>
+<span class="sd">    subcontract_reference : str</span>
+<span class="sd">        Subcontract reference number.</span>
+<span class="sd">    target_wbs_root_id : str</span>
+<span class="sd">        UUID of the integration boundary work package in the prime WBS.</span>
+<span class="sd">    file_format : str</span>
+<span class="sd">        File format: 'PRIMAVERA_XER' or 'MS_PROJECT_XML'.</span>
+<span class="sd">    file : UploadFile</span>
+<span class="sd">        The uploaded schedule file.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user submitting the file.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SubcontractorSubmissionResponse</span>
+<span class="sd">        The created submission with validation results.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the target WBS node is not found, 403 if clearance is</span>
+<span class="sd">        insufficient, 400 if the file format is invalid.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Validate file format</span>
+    <span class="k">if</span> <span class="n">file_format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"PRIMAVERA_XER"</span><span class="p">,</span> <span class="s2">"MS_PROJECT_XML"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid file format: </span><span class="si">{</span><span class="n">file_format</span><span class="si">}</span><span class="s2">. Must be PRIMAVERA_XER or MS_PROJECT_XML."</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Validate target WBS root node exists</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">target_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">target_wbs_root_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid target_wbs_root_id: </span><span class="si">{</span><span class="n">target_wbs_root_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">target_uuid</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Target WBS root node </span><span class="si">{</span><span class="n">target_wbs_root_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check ABAC clearance for the target node</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[],</span>
+        <span class="n">target_node</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for the target WBS node"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Read the file content</span>
+    <span class="n">file_content</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">file</span><span class="o">.</span><span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Create the submission record</span>
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">SubcontractorSubmission</span><span class="p">(</span>
+        <span class="n">vendor_cage_code</span><span class="o">=</span><span class="n">vendor_cage_code</span><span class="p">,</span>
+        <span class="n">subcontract_reference</span><span class="o">=</span><span class="n">subcontract_reference</span><span class="p">,</span>
+        <span class="n">target_wbs_root_id</span><span class="o">=</span><span class="n">target_uuid</span><span class="p">,</span>
+        <span class="n">submitted_filename</span><span class="o">=</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span> <span class="ow">or</span> <span class="s2">"unknown"</span><span class="p">,</span>
+        <span class="nb">format</span><span class="o">=</span><span class="n">SubcontractorFormat</span><span class="p">(</span><span class="n">file_format</span><span class="p">),</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">VALIDATING</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+
+    <span class="c1"># Parse the file</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">parsed_tasks</span><span class="p">,</span> <span class="n">parsed_deps</span> <span class="o">=</span> <span class="n">parse_external_schedule</span><span class="p">(</span>
+            <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">file_content</span><span class="p">),</span>
+            <span class="n">file_format</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">REJECTED_BREACH</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"compliance_score"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">"total_tasks"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"total_dependencies"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"boundary_breaches"</span><span class="p">:</span> <span class="p">[{</span>
+                <span class="s2">"breach_type"</span><span class="p">:</span> <span class="s2">"PARSE_ERROR"</span><span class="p">,</span>
+                <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"CRITICAL"</span><span class="p">,</span>
+                <span class="s2">"description"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Failed to parse file: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">}],</span>
+            <span class="s2">"has_critical_breaches"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"validation_status"</span><span class="p">:</span> <span class="s2">"FAILED"</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Failed to parse file: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Run validation against contractual boundary</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">validation_report</span> <span class="o">=</span> <span class="n">validate_against_contractual_boundary</span><span class="p">(</span>
+            <span class="n">submission</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">parsed_tasks</span><span class="p">,</span>
+            <span class="n">parsed_deps</span><span class="p">,</span>
+            <span class="n">db</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">REJECTED_BREACH</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"compliance_score"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">"total_tasks"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed_tasks</span><span class="p">),</span>
+            <span class="s2">"total_dependencies"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed_deps</span><span class="p">),</span>
+            <span class="s2">"boundary_breaches"</span><span class="p">:</span> <span class="p">[{</span>
+                <span class="s2">"breach_type"</span><span class="p">:</span> <span class="s2">"VALIDATION_ERROR"</span><span class="p">,</span>
+                <span class="s2">"severity"</span><span class="p">:</span> <span class="s2">"CRITICAL"</span><span class="p">,</span>
+                <span class="s2">"description"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="p">}],</span>
+            <span class="s2">"has_critical_breaches"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">"validation_status"</span><span class="p">:</span> <span class="s2">"FAILED"</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Validation error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Refresh the submission to get the updated status</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_submission_to_response</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_validation_report">
+<a class="viewcode-back" href="../../../modules.html#app.routers.subcontractors.get_validation_report">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/submissions/</span><span class="si">{submission_id}</span><span class="s2">/validation-report"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_validation_report</span><span class="p">(</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Retrieve the automated validation report for a submission.</span>
+
+<span class="sd">    This endpoint returns the compliance score, boundary breach list,</span>
+<span class="sd">    and staging diff (if available) for a specific submission.</span>
+
+<span class="sd">    The validation report is generated automatically when a file is</span>
+<span class="sd">    uploaded.  It contains:</span>
+
+<span class="sd">    - **Compliance score** (0–100%): Overall compliance with contractual</span>
+<span class="sd">      boundary gates.  A score of 100% means no breaches were found.</span>
+<span class="sd">    - **Boundary breaches**: List of contractual boundary violations</span>
+<span class="sd">      found during validation, with severity and description.</span>
+<span class="sd">    - **Staging diff**: If available, shows the impact of merging the</span>
+<span class="sd">      submission on the prime schedule (unchanged, shifted, and newly</span>
+<span class="sd">      critical tasks).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : str</span>
+<span class="sd">        UUID of the submission.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user requesting the report.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        The validation report containing compliance score, boundary</span>
+<span class="sd">        breaches, and optional staging diff.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the submission is not found, 403 if clearance is</span>
+<span class="sd">        insufficient.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sub_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid submission_id: </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SubcontractorSubmission</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">sub_uuid</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Submission </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check ABAC clearance for the target node</span>
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">target_node</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[],</span>
+        <span class="n">target_node</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for this submission"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">_submission_to_response</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"submission"</span><span class="p">:</span> <span class="n">response</span><span class="p">,</span>
+        <span class="s2">"validation_report"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">ValidationReport</span><span class="p">(</span><span class="o">**</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+        <span class="s2">"staging_diff"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">StagingDiff</span><span class="p">(</span><span class="o">**</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"staging_diff"</span><span class="p">,</span> <span class="p">{}))</span>
+            <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span> <span class="ow">and</span> <span class="s2">"staging_diff"</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="approve_and_merge_submission">
+<a class="viewcode-back" href="../../../modules.html#app.routers.subcontractors.approve_and_merge_submission">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/submissions/</span><span class="si">{submission_id}</span><span class="s2">/approve-merge"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">approve_and_merge_submission</span><span class="p">(</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Approve a validated submission and merge it into the live WBS.</span>
+
+<span class="sd">    This endpoint commits the subcontractor's proposed tasks and</span>
+<span class="sd">    dependencies into the live WBS in a single atomic transaction.</span>
+<span class="sd">    It records a ForensicAuditLog entry with action type</span>
+<span class="sd">    ``SUBCONTRACTOR_MERGE``.</span>
+
+<span class="sd">    Only submissions in ``STAGED_READY`` status can be merged.  The</span>
+<span class="sd">    approving user must have Manager or Admin role.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : str</span>
+<span class="sd">        UUID of the submission to merge.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user approving the merge.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SubmissionMergeResponse</span>
+<span class="sd">        Merge result with task/dependency counts and audit log ID.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the submission is not found, 403 if the user is not</span>
+<span class="sd">        authorised, 409 if the submission is not in STAGED_READY status.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check user role</span>
+    <span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">role</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"admin"</span><span class="p">,</span> <span class="s2">"manager"</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Only Admin and Manager roles can approve subcontractor merges"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sub_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid submission_id: </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SubcontractorSubmission</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">sub_uuid</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Submission </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check ABAC clearance for the target node</span>
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">target_node</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[],</span>
+        <span class="n">target_node</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for this submission"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check submission status</span>
+    <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">SubmissionStatus</span><span class="o">.</span><span class="n">STAGED_READY</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_409_CONFLICT</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Submission is in '</span><span class="si">{</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">' status; "</span>
+                <span class="sa">f</span><span class="s2">"only 'STAGED_READY' submissions can be merged."</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Perform the merge</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">merge_result</span> <span class="o">=</span> <span class="n">merge_submission_to_live</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="n">sub_uuid</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">user_upn</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">email</span> <span class="ow">or</span> <span class="s2">"unknown"</span><span class="p">,</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Merge failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">SubmissionMergeResponse</span><span class="p">(</span><span class="o">**</span><span class="n">merge_result</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generate_staging_diff_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.subcontractors.generate_staging_diff_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/submissions/</span><span class="si">{submission_id}</span><span class="s2">/staging-diff"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_staging_diff_endpoint</span><span class="p">(</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Generate the staging diff for a submission.</span>
+
+<span class="sd">    This endpoint ephemerally injects the subcontractor's proposed DAG</span>
+<span class="sd">    into a cloned sandbox branch, runs CPM forward/backward passes,</span>
+<span class="sd">    and calculates the resulting float impact on prime contractual</span>
+<span class="sd">    delivery dates.</span>
+
+<span class="sd">    The staging diff categorises tasks into:</span>
+
+<span class="sd">    - **Unchanged**: Tasks whose dates are not affected by the merge.</span>
+<span class="sd">    - **Shifted**: Tasks whose dates would shift as a result of the merge.</span>
+<span class="sd">    - **Newly Critical**: Tasks that would become newly critical (TF ≤ 0).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : str</span>
+<span class="sd">        UUID of the submission.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user requesting the diff.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        The staging diff containing unchanged, shifted, and newly</span>
+<span class="sd">        critical task lists, plus total float variance.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the submission is not found, 403 if clearance is</span>
+<span class="sd">        insufficient.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sub_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid submission_id: </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SubcontractorSubmission</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">sub_uuid</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Submission </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check ABAC clearance for the target node</span>
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">target_node</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[],</span>
+        <span class="n">target_node</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for this submission"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Generate the staging diff</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">staging_diff</span> <span class="o">=</span> <span class="n">generate_staging_diff</span><span class="p">(</span><span class="n">sub_uuid</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Staging diff generation failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"staging_diff"</span><span class="p">:</span> <span class="n">StagingDiff</span><span class="p">(</span><span class="o">**</span><span class="n">staging_diff</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="list_submissions">
+<a class="viewcode-back" href="../../../modules.html#app.routers.subcontractors.list_submissions">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/submissions"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_submissions</span><span class="p">(</span>
+    <span class="n">vendor_cage_code</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">status_filter</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all subcontractor submissions with optional filtering.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vendor_cage_code : str or None</span>
+<span class="sd">        Filter by vendor CAGE code.</span>
+<span class="sd">    status_filter : str or None</span>
+<span class="sd">        Filter by submission status (e.g., 'STAGED_READY', 'REJECTED_BREACH').</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SubmissionListResponse</span>
+<span class="sd">        List of submissions matching the filters.</span>
+<span class="sd">    """</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SubcontractorSubmission</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">vendor_cage_code</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">vendor_cage_code</span> <span class="o">==</span> <span class="n">vendor_cage_code</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">status_filter</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">status_filter</span>
+        <span class="p">)</span>
+
+    <span class="n">submissions</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span>
+        <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">submitted_at</span><span class="o">.</span><span class="n">desc</span><span class="p">()</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Filter by ABAC clearance</span>
+    <span class="n">accessible</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">submissions</span><span class="p">:</span>
+        <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">sub</span><span class="o">.</span><span class="n">target_wbs_root_id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">target_node</span> <span class="ow">and</span> <span class="n">is_node_visible</span><span class="p">(</span>
+            <span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span>
+            <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[],</span>
+            <span class="n">target_node</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">accessible</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_submission_to_response</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">db</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">SubmissionListResponse</span><span class="p">(</span>
+        <span class="n">submissions</span><span class="o">=</span><span class="n">accessible</span><span class="p">,</span>
+        <span class="n">total_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">accessible</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_submission">
+<a class="viewcode-back" href="../../../modules.html#app.routers.subcontractors.get_submission">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/submissions/</span><span class="si">{submission_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_submission</span><span class="p">(</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get a single submission by ID.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : str</span>
+<span class="sd">        UUID of the submission.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SubcontractorSubmissionResponse</span>
+<span class="sd">        The submission details.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the submission is not found, 403 if clearance is</span>
+<span class="sd">        insufficient.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sub_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid submission_id: </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">SubcontractorSubmission</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">SubcontractorSubmission</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">sub_uuid</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Submission </span><span class="si">{</span><span class="n">submission_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check ABAC clearance for the target node</span>
+    <span class="n">target_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">target_node</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">caveats</span> <span class="ow">or</span> <span class="p">[],</span>
+        <span class="n">target_node</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for this submission"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_submission_to_response</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">db</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Helper functions</span>
+<span class="c1"># ============================================================================</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_submission_to_response</span><span class="p">(</span>
+    <span class="n">submission</span><span class="p">:</span> <span class="n">SubcontractorSubmission</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SubcontractorSubmissionResponse</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert a SubcontractorSubmission model to a response schema.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission : SubcontractorSubmission</span>
+<span class="sd">        The submission model instance.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    SubcontractorSubmissionResponse</span>
+<span class="sd">        The response schema instance.</span>
+<span class="sd">    """</span>
+    <span class="n">report</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_report</span> <span class="ow">or</span> <span class="p">{}</span>
+
+    <span class="n">validation_report</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">report</span> <span class="ow">and</span> <span class="s2">"compliance_score"</span> <span class="ow">in</span> <span class="n">report</span><span class="p">:</span>
+        <span class="n">validation_report</span> <span class="o">=</span> <span class="n">ValidationReport</span><span class="p">(</span><span class="o">**</span><span class="n">report</span><span class="p">)</span>
+
+    <span class="n">staging_diff</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">report</span> <span class="ow">and</span> <span class="s2">"staging_diff"</span> <span class="ow">in</span> <span class="n">report</span><span class="p">:</span>
+        <span class="n">staging_diff</span> <span class="o">=</span> <span class="n">StagingDiff</span><span class="p">(</span><span class="o">**</span><span class="n">report</span><span class="p">[</span><span class="s2">"staging_diff"</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">SubcontractorSubmissionResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">vendor_cage_code</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">vendor_cage_code</span><span class="p">,</span>
+        <span class="n">subcontract_reference</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">subcontract_reference</span><span class="p">,</span>
+        <span class="n">target_wbs_root_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">target_wbs_root_id</span><span class="p">),</span>
+        <span class="n">submitted_filename</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">submitted_filename</span><span class="p">,</span>
+        <span class="nb">format</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="n">submitted_at</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">submitted_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="n">submission_report</span><span class="o">=</span><span class="n">report</span><span class="p">,</span>
+        <span class="n">validation_report</span><span class="o">=</span><span class="n">validation_report</span><span class="p">,</span>
+        <span class="n">staging_diff</span><span class="o">=</span><span class="n">staging_diff</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

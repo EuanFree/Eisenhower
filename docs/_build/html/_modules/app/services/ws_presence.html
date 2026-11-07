@@ -1,0 +1,1493 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.ws_presence &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.ws_presence</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.ws_presence</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Real-time user presence and viewport cache invalidation via WebSockets.</span>
+
+<span class="sd">This module manages the server-side WebSocket infrastructure that enables</span>
+<span class="sd">real-time collaboration features across the Eisenhower Portfolio Manager.</span>
+
+<span class="sd">Core Capabilities</span>
+<span class="sd">~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">1. **Connection Management** — Active WebSocket connections are partitioned</span>
+<span class="sd">   by ``project_id`` so that broadcast messages reach only the users</span>
+<span class="sd">   viewing the same schedule.</span>
+
+<span class="sd">2. **User Focus Tracking** — Each connected client periodically emits a</span>
+<span class="sd">   heartbeat message containing the user's current focus state:</span>
+
+<span class="sd">   - ``user_id`` — The authenticated user's primary key.</span>
+<span class="sd">   - ``user_upn`` — The user's principal name (email).</span>
+<span class="sd">   - ``node_id`` — The WBS node currently being inspected or edited.</span>
+<span class="sd">   - ``active_pane`` — The UI pane in focus (e.g., 'GANTT', 'WBS_TABLE',</span>
+<span class="sd">     'DRILL_DOWN', 'COCKPIT').</span>
+<span class="sd">   - ``last_heartbeat`` — Timestamp of the last heartbeat.</span>
+
+<span class="sd">3. **Broadcast Invalidation** — When a mutation succeeds (date shift,</span>
+<span class="sd">   progress bump, blocker creation, etc.), the API layer calls</span>
+<span class="sd">   ``broadcast_node_mutated()`` to send a lightweight message to all</span>
+<span class="sd">   connected clients in the affected project:</span>
+
+<span class="sd">   .. code-block:: json</span>
+
+<span class="sd">       {</span>
+<span class="sd">           "event": "NODE_MUTATED",</span>
+<span class="sd">           "node_id": "&lt;uuid&gt;",</span>
+<span class="sd">           "path": "prog_a.proj_1.wp_2",</span>
+<span class="sd">           "updated_fields": ["planned_start_date", "total_float"],</span>
+<span class="sd">           "new_version_id": 6,</span>
+<span class="sd">           "actor_upn": "e.evans@defence.local"</span>
+<span class="sd">       }</span>
+
+<span class="sd">4. **Presence State** — When a user's focus changes, the server broadcasts</span>
+<span class="sd">   a ``USER_FOCUS_CHANGED`` event to all other project viewers, enabling</span>
+<span class="sd">   live presence avatars in the WBS table and Gantt chart.</span>
+
+<span class="sd">Heartbeat Protocol</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">Clients send a ``HEARTBEAT`` message every 15 seconds.  If no heartbeat</span>
+<span class="sd">is received within 30 seconds, the connection is considered stale and</span>
+<span class="sd">the user's presence indicator is removed.</span>
+
+<span class="sd">Message Types</span>
+<span class="sd">~~~~~~~~~~~~~</span>
+
+<span class="sd">**Client → Server:**</span>
+
+<span class="sd">- ``HEARTBEAT`` — Updates the user's focus state.</span>
+<span class="sd">- ``SUBSCRIBE`` — Explicitly subscribe to a project channel (sent on</span>
+<span class="sd">  initial connect).</span>
+<span class="sd">- ``UNSUBSCRIBE`` — Leave a project channel.</span>
+
+<span class="sd">**Server → Client:**</span>
+
+<span class="sd">- ``USER_FOCUS_CHANGED`` — A colleague's focus position updated.</span>
+<span class="sd">- ``NODE_MUTATED`` — A node was modified; update the local cache.</span>
+<span class="sd">- ``NODE_CREATED`` — A new node was added to the tree.</span>
+<span class="sd">- ``NODE_DELETED`` — A node was removed from the tree.</span>
+<span class="sd">- ``BLOCKER_CREATED`` — A new blocker was logged.</span>
+<span class="sd">- ``BLOCKER_RESOLVED`` — A blocker was resolved.</span>
+<span class="sd">- ``WELCOME`` — Sent on initial connect with current presence state.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">Every WebSocket connection is authenticated via a JWT token passed in the</span>
+<span class="sd">query string (``?token=...``).  The token is validated using the same</span>
+<span class="sd">``get_current_user`` dependency used by HTTP endpoints.</span>
+
+<span class="sd">Unauthorized connections are immediately closed with code 1008</span>
+<span class="sd">(Policy Violation).</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Set</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">WebSocket</span><span class="p">,</span> <span class="n">WebSocketDisconnect</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Message Types</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="ClientMessageType">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.ClientMessageType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClientMessageType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Message types sent from the client to the server."""</span>
+
+    <span class="n">HEARTBEAT</span> <span class="o">=</span> <span class="s2">"HEARTBEAT"</span>
+    <span class="n">SUBSCRIBE</span> <span class="o">=</span> <span class="s2">"SUBSCRIBE"</span>
+    <span class="n">UNSUBSCRIBE</span> <span class="o">=</span> <span class="s2">"UNSUBSCRIBE"</span>
+    <span class="n">CELL_FOCUSED</span> <span class="o">=</span> <span class="s2">"CELL_FOCUSED"</span>
+    <span class="n">CELL_BLURRED</span> <span class="o">=</span> <span class="s2">"CELL_BLURRED"</span></div>
+
+
+
+<div class="viewcode-block" id="ServerMessageType">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.ServerMessageType">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ServerMessageType</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Message types sent from the server to the client."""</span>
+
+    <span class="n">WELCOME</span> <span class="o">=</span> <span class="s2">"WELCOME"</span>
+    <span class="n">USER_FOCUS_CHANGED</span> <span class="o">=</span> <span class="s2">"USER_FOCUS_CHANGED"</span>
+    <span class="n">NODE_MUTATED</span> <span class="o">=</span> <span class="s2">"NODE_MUTATED"</span>
+    <span class="n">NODE_CREATED</span> <span class="o">=</span> <span class="s2">"NODE_CREATED"</span>
+    <span class="n">NODE_DELETED</span> <span class="o">=</span> <span class="s2">"NODE_DELETED"</span>
+    <span class="n">BLOCKER_CREATED</span> <span class="o">=</span> <span class="s2">"BLOCKER_CREATED"</span>
+    <span class="n">BLOCKER_RESOLVED</span> <span class="o">=</span> <span class="s2">"BLOCKER_RESOLVED"</span>
+    <span class="n">CELL_FOCUSED</span> <span class="o">=</span> <span class="s2">"CELL_FOCUSED"</span>
+    <span class="n">CELL_BLURRED</span> <span class="o">=</span> <span class="s2">"CELL_BLURRED"</span>
+    <span class="n">SOFT_LOCK_WARNING</span> <span class="o">=</span> <span class="s2">"SOFT_LOCK_WARNING"</span>
+    <span class="n">ERROR</span> <span class="o">=</span> <span class="s2">"ERROR"</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Data Structures</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="CellFocusState">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.CellFocusState">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CellFocusState</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Tracks sub-cell focus within a WBS grid cell.</span>
+
+<span class="sd">    When a user double-clicks a cell to edit it, the client sends a</span>
+<span class="sd">    ``CELL_FOCUSED`` message.  The server broadcasts this to all other</span>
+<span class="sd">    viewers so they can render a colored focus border and a compact</span>
+<span class="sd">    avatar chip on that cell.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        The authenticated user's primary key.</span>
+<span class="sd">    user_upn : str</span>
+<span class="sd">        The user's principal name (email address).</span>
+<span class="sd">    node_id : str</span>
+<span class="sd">        The UUID of the WBS node containing the cell.</span>
+<span class="sd">    column_key : str</span>
+<span class="sd">        The column identifier (e.g., 'planned_start_date',</span>
+<span class="sd">        'percent_complete').</span>
+<span class="sd">    display_color : str</span>
+<span class="sd">        Hex color string for the focus border, derived from the user's</span>
+<span class="sd">        ID for consistency.</span>
+<span class="sd">    project_id : str or None</span>
+<span class="sd">        The project this cell focus belongs to (set by the manager).</span>
+<span class="sd">    """</span>
+
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">user_upn</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">column_key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">display_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"#38BDF8"</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="UserFocusState">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.UserFocusState">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UserFocusState</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Tracks the current focus position of a connected user.</span>
+
+<span class="sd">    This record is updated every time the client sends a ``HEARTBEAT``</span>
+<span class="sd">    message.  It is used to render live presence avatars in the WBS</span>
+<span class="sd">    table and Gantt chart, showing which colleagues are inspecting</span>
+<span class="sd">    which tasks.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        The authenticated user's primary key.</span>
+<span class="sd">    user_upn : str</span>
+<span class="sd">        The user's principal name (email address).</span>
+<span class="sd">    node_id : str or None</span>
+<span class="sd">        The UUID of the WBS node currently being inspected or edited.</span>
+<span class="sd">        ``None`` means the user is not focused on a specific node.</span>
+<span class="sd">    active_pane : str or None</span>
+<span class="sd">        The UI pane currently in focus (e.g., 'GANTT', 'WBS_TABLE',</span>
+<span class="sd">        'DRILL_DOWN', 'COCKPIT').</span>
+<span class="sd">    last_heartbeat : float</span>
+<span class="sd">        Unix timestamp of the last heartbeat received.  Used to detect</span>
+<span class="sd">        stale connections.</span>
+<span class="sd">    project_id : str</span>
+<span class="sd">        The UUID of the project this focus state belongs to.</span>
+<span class="sd">    cell_focus : CellFocusState or None</span>
+<span class="sd">        The currently focused cell, or ``None`` if the user is not</span>
+<span class="sd">        editing a specific cell.</span>
+<span class="sd">    """</span>
+
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">user_upn</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">active_pane</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last_heartbeat</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cell_focus</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CellFocusState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="WebSocketConnection">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnection">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">WebSocketConnection</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Represents an active WebSocket connection from a client.</span>
+
+<span class="sd">    Each connection is tied to an authenticated user and can subscribe</span>
+<span class="sd">    to multiple project channels.  The connection manager uses this</span>
+<span class="sd">    record to route broadcast messages and track presence.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    websocket : WebSocket</span>
+<span class="sd">        The underlying FastAPI WebSocket object.</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        The authenticated user's primary key.</span>
+<span class="sd">    user_upn : str</span>
+<span class="sd">        The user's principal name (email address).</span>
+<span class="sd">    project_ids : Set[str]</span>
+<span class="sd">        Set of project UUIDs this connection is subscribed to.</span>
+<span class="sd">    focus_state : UserFocusState or None</span>
+<span class="sd">        The current focus state of this user, or ``None`` if not set.</span>
+<span class="sd">    last_heartbeat : float</span>
+<span class="sd">        Unix timestamp of the last heartbeat received.</span>
+<span class="sd">    """</span>
+
+    <span class="n">websocket</span><span class="p">:</span> <span class="n">WebSocket</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">user_upn</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">project_ids</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">set</span><span class="p">)</span>
+    <span class="n">focus_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UserFocusState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">last_heartbeat</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Connection Manager</span>
+<span class="c1"># ============================================================================</span>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">WebSocketConnectionManager</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Manages active WebSocket connections and broadcasts messages.</span>
+
+<span class="sd">    This is the central hub for all real-time collaboration features.</span>
+<span class="sd">    It maintains two indexes:</span>
+
+<span class="sd">    1. ``connections`` — Maps ``user_id`` to the active ``WebSocketConnection``.</span>
+<span class="sd">       Only one active connection per user is allowed at a time.</span>
+
+<span class="sd">    2. ``project_subscribers`` — Maps ``project_id`` to a set of</span>
+<span class="sd">       ``user_id`` values that are subscribed to that project's channel.</span>
+
+<span class="sd">    When a mutation occurs (e.g., a node's dates are updated), the API</span>
+<span class="sd">    layer calls ``broadcast_node_mutated()`` to notify all subscribers</span>
+<span class="sd">    of the affected project.  The frontend then silently patches its</span>
+<span class="sd">    local Zustand cache with the incoming fields.</span>
+
+<span class="sd">    Heartbeat Handling</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    Clients send ``HEARTBEAT`` messages every 15 seconds.  The manager</span>
+<span class="sd">    updates the user's ``focus_state`` and broadcasts ``USER_FOCUS_CHANGED``</span>
+<span class="sd">    to all other project viewers.  If no heartbeat is received within</span>
+<span class="sd">    30 seconds, the connection is considered stale during the next</span>
+<span class="sd">    cleanup pass.</span>
+
+<span class="sd">    Usage</span>
+<span class="sd">    ~~~~~</span>
+
+<span class="sd">        manager = WebSocketConnectionManager()</span>
+
+<span class="sd">        # In the WebSocket endpoint:</span>
+<span class="sd">        await manager.connect(websocket, user_id, user_upn)</span>
+<span class="sd">        await manager.subscribe(connection, project_id)</span>
+
+<span class="sd">        try:</span>
+<span class="sd">            while True:</span>
+<span class="sd">                data = await websocket.receive_text()</span>
+<span class="sd">                message = json.loads(data)</span>
+<span class="sd">                await manager.handle_message(connection, message)</span>
+<span class="sd">        except WebSocketDisconnect:</span>
+<span class="sd">            await manager.disconnect(connection)</span>
+
+<span class="sd">        # In an API mutation endpoint:</span>
+<span class="sd">        await manager.broadcast_node_mutated(</span>
+<span class="sd">            project_id=project_id,</span>
+<span class="sd">            node_id=node.id,</span>
+<span class="sd">            path=node.path,</span>
+<span class="sd">            updated_fields=["planned_start_date"],</span>
+<span class="sd">            new_version_id=node.version_id,</span>
+<span class="sd">            actor_upn=current_user.email,</span>
+<span class="sd">        )</span>
+<span class="sd">    """</span>
+
+    <span class="c1"># Deterministic color palette for cell focus borders — matches frontend</span>
+    <span class="n">CELL_FOCUS_COLORS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"#38BDF8"</span><span class="p">,</span>  <span class="c1"># sky-400</span>
+        <span class="s2">"#34D399"</span><span class="p">,</span>  <span class="c1"># emerald-400</span>
+        <span class="s2">"#FBBF24"</span><span class="p">,</span>  <span class="c1"># amber-400</span>
+        <span class="s2">"#F87171"</span><span class="p">,</span>  <span class="c1"># red-400</span>
+        <span class="s2">"#C084FC"</span><span class="p">,</span>  <span class="c1"># purple-400</span>
+        <span class="s2">"#FB923C"</span><span class="p">,</span>  <span class="c1"># orange-400</span>
+        <span class="s2">"#2DD4BF"</span><span class="p">,</span>  <span class="c1"># teal-400</span>
+        <span class="s2">"#F472B6"</span><span class="p">,</span>  <span class="c1"># pink-400</span>
+        <span class="s2">"#818CF8"</span><span class="p">,</span>  <span class="c1"># indigo-400</span>
+        <span class="s2">"#A78BFA"</span><span class="p">,</span>  <span class="c1"># violet-400</span>
+    <span class="p">]</span>
+
+<div class="viewcode-block" id="WebSocketConnectionManager.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialize the WebSocket presence manager.</span>
+
+<span class="sd">        Sets up the in-memory data structures that track active WebSocket</span>
+<span class="sd">        connections and project channel subscriptions. A background cleanup</span>
+<span class="sd">        task is lazily started on the first connection to periodically</span>
+<span class="sd">        disconnect stale clients that have not sent a heartbeat within</span>
+<span class="sd">        the timeout window.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        _connections : Dict[int, WebSocketConnection]</span>
+<span class="sd">            Maps user IDs to their active WebSocket connection records.</span>
+<span class="sd">        _project_subscribers : Dict[str, Set[int]]</span>
+<span class="sd">            Maps project IDs to the set of user IDs subscribed to that</span>
+<span class="sd">            project's channel.</span>
+<span class="sd">        _cell_focus_map : Dict[str, Dict[str, CellFocusState]]</span>
+<span class="sd">            Maps ``project_id`` → ``(node_id:column_key)`` → CellFocusState.</span>
+<span class="sd">            Used for soft-lock collision detection: if User B attempts to</span>
+<span class="sd">            edit a cell already focused by User A, a SOFT_LOCK_WARNING is</span>
+<span class="sd">            sent instead.</span>
+<span class="sd">        _cleanup_task : Optional[asyncio.Task]</span>
+<span class="sd">            Background asyncio task that periodically scans for and</span>
+<span class="sd">            removes stale connections.</span>
+<span class="sd">        _heartbeat_timeout : float</span>
+<span class="sd">            Seconds of inactivity before a connection is considered stale</span>
+<span class="sd">            (default ``30.0``).</span>
+<span class="sd">        _cleanup_interval : float</span>
+<span class="sd">            Seconds between each stale-connection scan (default ``10.0``).</span>
+<span class="sd">        """</span>
+        <span class="c1"># user_id → WebSocketConnection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">WebSocketConnection</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># project_id → set of user_ids</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># project_id → (node_id:column_key) → CellFocusState</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CellFocusState</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Background task for stale connection cleanup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_task</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">asyncio</span><span class="o">.</span><span class="n">Task</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Heartbeat interval (seconds) — connections without a heartbeat</span>
+        <span class="c1"># beyond this threshold are considered stale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span>
+        <span class="c1"># Cleanup interval (seconds) — how often to scan for stale connections</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span></div>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_user_color</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a deterministic display color for a user.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        user_id : int</span>
+<span class="sd">            The authenticated user's primary key.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Hex color string for the focus border.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">WebSocketConnectionManager</span><span class="o">.</span><span class="n">CELL_FOCUS_COLORS</span><span class="p">[</span>
+            <span class="n">user_id</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">WebSocketConnectionManager</span><span class="o">.</span><span class="n">CELL_FOCUS_COLORS</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_cell_key</span><span class="p">(</span><span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">column_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Build a composite key for a cell.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node_id : str</span>
+<span class="sd">            The UUID of the WBS node.</span>
+<span class="sd">        column_key : str</span>
+<span class="sd">            The column identifier.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Composite key ``node_id:column_key``.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">column_key</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">connection_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the number of active WebSocket connections."""</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">project_channel_count</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the number of active project channels."""</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WebSocketConnectionManager.connect">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.connect">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">connect</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">websocket</span><span class="p">:</span> <span class="n">WebSocket</span><span class="p">,</span>
+        <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">user_upn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebSocketConnection</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Accept a new WebSocket connection and register the user.</span>
+
+<span class="sd">        When a client connects, this method creates a new</span>
+<span class="sd">        ``WebSocketConnection`` record and stores it in the connections</span>
+<span class="sd">        dictionary.  If the user already has an active connection, the</span>
+<span class="sd">        old one is silently replaced (e.g., page refresh scenario).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        websocket : WebSocket</span>
+<span class="sd">            The accepted FastAPI WebSocket object.</span>
+<span class="sd">        user_id : int</span>
+<span class="sd">            The authenticated user's primary key.</span>
+<span class="sd">        user_upn : str</span>
+<span class="sd">            The user's principal name (email address).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        WebSocketConnection</span>
+<span class="sd">            The newly created connection record.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If the user already has an active connection, it is disconnected</span>
+<span class="sd">        and removed before the new connection is registered.</span>
+<span class="sd">        """</span>
+        <span class="c1"># Replace any existing connection for this user</span>
+        <span class="k">if</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">:</span>
+            <span class="n">old_connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_connection</span><span class="p">(</span><span class="n">old_connection</span><span class="p">,</span> <span class="n">notify</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">connection</span> <span class="o">=</span> <span class="n">WebSocketConnection</span><span class="p">(</span>
+            <span class="n">websocket</span><span class="o">=</span><span class="n">websocket</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="n">user_upn</span><span class="o">=</span><span class="n">user_upn</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="p">[</span><span class="n">user_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">connection</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"WebSocket connected: user_id=</span><span class="si">%s</span><span class="s2">, upn=</span><span class="si">%s</span><span class="s2">, total=</span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="p">,</span> <span class="n">user_upn</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection_count</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Start cleanup task if not already running</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_task</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_task</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_loop</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">connection</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.subscribe">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.subscribe">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">subscribe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Subscribe a connection to a project channel.</span>
+
+<span class="sd">        When a user opens a project's schedule view, they subscribe to</span>
+<span class="sd">        that project's channel.  All broadcast messages for that project</span>
+<span class="sd">        (node mutations, blocker events, etc.) will be sent to this</span>
+<span class="sd">        connection.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The active WebSocket connection.</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project to subscribe to.</span>
+<span class="sd">        """</span>
+        <span class="n">connection</span><span class="o">.</span><span class="n">project_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">project_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Subscribed user_id=</span><span class="si">%s</span><span class="s2"> to project=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Send welcome message with current presence state</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_welcome</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.unsubscribe">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.unsubscribe">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">unsubscribe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Unsubscribe a connection from a project channel.</span>
+
+<span class="sd">        When a user navigates away from a project's schedule view, they</span>
+<span class="sd">        unsubscribe to stop receiving broadcast messages for that project.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The active WebSocket connection.</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project to unsubscribe from.</span>
+<span class="sd">        """</span>
+        <span class="n">connection</span><span class="o">.</span><span class="n">project_ids</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+            <span class="c1"># Remove empty channels</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">[</span><span class="n">project_id</span><span class="p">]:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Unsubscribed user_id=</span><span class="si">%s</span><span class="s2"> from project=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">project_id</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.disconnect">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.disconnect">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">disconnect</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Handle WebSocket disconnection and clean up state.</span>
+
+<span class="sd">        When a client disconnects (browser close, navigation away, or</span>
+<span class="sd">        network failure), this method removes the connection from all</span>
+<span class="sd">        project channels and notifies other users that the presence</span>
+<span class="sd">        indicator should be removed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The disconnected WebSocket connection.</span>
+<span class="sd">        """</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_connection</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">notify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.handle_message">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.handle_message">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_message</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">message</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Route an incoming client message to the appropriate handler.</span>
+
+<span class="sd">        The client sends JSON messages with a ``type`` field indicating</span>
+<span class="sd">        the message type.  This method dispatches to the correct handler</span>
+<span class="sd">        based on the type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The active WebSocket connection.</span>
+<span class="sd">        message : dict</span>
+<span class="sd">            Parsed JSON message from the client.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the message type is unrecognized.</span>
+<span class="sd">        """</span>
+        <span class="n">msg_type</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">ClientMessageType</span><span class="o">.</span><span class="n">HEARTBEAT</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_heartbeat</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">ClientMessageType</span><span class="o">.</span><span class="n">SUBSCRIBE</span><span class="p">:</span>
+            <span class="n">project_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_id"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">project_id</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">subscribe</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">ClientMessageType</span><span class="o">.</span><span class="n">UNSUBSCRIBE</span><span class="p">:</span>
+            <span class="n">project_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_id"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">project_id</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">unsubscribe</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">ClientMessageType</span><span class="o">.</span><span class="n">CELL_FOCUSED</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_cell_focused</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">msg_type</span> <span class="o">==</span> <span class="n">ClientMessageType</span><span class="o">.</span><span class="n">CELL_BLURRED</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle_cell_blurred</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"Unknown message type: </span><span class="si">%s</span><span class="s2"> from user_id=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">msg_type</span><span class="p">,</span> <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+    <span class="c1"># -----------------------------------------------------------------------</span>
+    <span class="c1"># Cell focus public API</span>
+    <span class="c1"># -----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="WebSocketConnectionManager.get_cell_focus_for_project">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.get_cell_focus_for_project">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_cell_focus_for_project</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CellFocusState</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return all active cell focus states for a project.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, CellFocusState]</span>
+<span class="sd">            Maps ``node_id:column_key`` → CellFocusState for all users</span>
+<span class="sd">            currently editing cells in this project.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="p">{})</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.check_cell_collision">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.check_cell_collision">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_cell_collision</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">column_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">requesting_user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">CellFocusState</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Check whether a cell is already focused by another user.</span>
+
+<span class="sd">        This is the soft-lock collision resolver.  If the requested cell</span>
+<span class="sd">        is already held by a different user, the holder's CellFocusState</span>
+<span class="sd">        is returned so the caller can emit a SOFT_LOCK_WARNING.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project.</span>
+<span class="sd">        node_id : str</span>
+<span class="sd">            The UUID of the WBS node.</span>
+<span class="sd">        column_key : str</span>
+<span class="sd">            The column identifier.</span>
+<span class="sd">        requesting_user_id : int</span>
+<span class="sd">            The user attempting to edit the cell.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        CellFocusState or None</span>
+<span class="sd">            The holder's focus state if the cell is locked by another</span>
+<span class="sd">            user, or ``None`` if the cell is free.</span>
+<span class="sd">        """</span>
+        <span class="n">cell_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_key</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">column_key</span><span class="p">)</span>
+        <span class="n">holder</span> <span class="o">=</span> <span class="n">cell_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">holder</span> <span class="ow">and</span> <span class="n">holder</span><span class="o">.</span><span class="n">user_id</span> <span class="o">!=</span> <span class="n">requesting_user_id</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">holder</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.broadcast_cell_focused">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.broadcast_cell_focused">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_cell_focused</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">cell_focus</span><span class="p">:</span> <span class="n">CellFocusState</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Broadcast a CELL_FOCUSED event to all project subscribers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project.</span>
+<span class="sd">        cell_focus : CellFocusState</span>
+<span class="sd">            The cell focus state to broadcast.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">CELL_FOCUSED</span><span class="p">,</span>
+            <span class="s2">"user_id"</span><span class="p">:</span> <span class="n">cell_focus</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="s2">"user_upn"</span><span class="p">:</span> <span class="n">cell_focus</span><span class="o">.</span><span class="n">user_upn</span><span class="p">,</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">cell_focus</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span>
+            <span class="s2">"column_key"</span><span class="p">:</span> <span class="n">cell_focus</span><span class="o">.</span><span class="n">column_key</span><span class="p">,</span>
+            <span class="s2">"display_color"</span><span class="p">:</span> <span class="n">cell_focus</span><span class="o">.</span><span class="n">display_color</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_to_project</span><span class="p">(</span>
+            <span class="n">project_id</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">exclude_user_id</span><span class="o">=</span><span class="n">cell_focus</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.broadcast_cell_blurred">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.broadcast_cell_blurred">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_cell_blurred</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">column_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Broadcast a CELL_BLURRED event to all project subscribers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project.</span>
+<span class="sd">        user_id : int</span>
+<span class="sd">            The user who blurred the cell.</span>
+<span class="sd">        node_id : str</span>
+<span class="sd">            The UUID of the WBS node.</span>
+<span class="sd">        column_key : str</span>
+<span class="sd">            The column identifier.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">CELL_BLURRED</span><span class="p">,</span>
+            <span class="s2">"user_id"</span><span class="p">:</span> <span class="n">user_id</span><span class="p">,</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span>
+            <span class="s2">"column_key"</span><span class="p">:</span> <span class="n">column_key</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_to_project</span><span class="p">(</span>
+            <span class="n">project_id</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">exclude_user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.send_soft_lock_warning">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.send_soft_lock_warning">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">send_soft_lock_warning</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">holder</span><span class="p">:</span> <span class="n">CellFocusState</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Send a SOFT_LOCK_WARNING to a single connection.</span>
+
+<span class="sd">        When a user attempts to edit a cell already focused by a</span>
+<span class="sd">        colleague, this warning is sent so the frontend can display</span>
+<span class="sd">        a toast: 'Cell actively edited by &lt;colleague&gt;'.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The connection to send the warning to.</span>
+<span class="sd">        holder : CellFocusState</span>
+<span class="sd">            The colleague who currently holds the cell focus.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">SOFT_LOCK_WARNING</span><span class="p">,</span>
+            <span class="s2">"holder_user_id"</span><span class="p">:</span> <span class="n">holder</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="s2">"holder_upn"</span><span class="p">:</span> <span class="n">holder</span><span class="o">.</span><span class="n">user_upn</span><span class="p">,</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">holder</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span>
+            <span class="s2">"column_key"</span><span class="p">:</span> <span class="n">holder</span><span class="o">.</span><span class="n">column_key</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_to_connection</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.broadcast_node_mutated">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.broadcast_node_mutated">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_node_mutated</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">updated_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">new_version_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">actor_upn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Broadcast a NODE_MUTATED event to all subscribers of a project.</span>
+
+<span class="sd">        This is the primary cache invalidation mechanism.  When a mutation</span>
+<span class="sd">        succeeds (date shift, progress bump, blocker creation, etc.), the</span>
+<span class="sd">        API layer calls this method to notify all connected clients in the</span>
+<span class="sd">        affected project.</span>
+
+<span class="sd">        The frontend receives this event and:</span>
+
+<span class="sd">        1. If the node is **not** currently being edited by the local user,</span>
+<span class="sd">           silently updates the local Zustand cache with the incoming fields.</span>
+<span class="sd">        2. If the local user **is** currently editing that node, displays</span>
+<span class="sd">           a non-blocking toast warning: "Colleague modified this row just</span>
+<span class="sd">           now", highlighting the conflict resolution tool.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project containing the mutated node.</span>
+<span class="sd">        node_id : str</span>
+<span class="sd">            The UUID of the mutated node.</span>
+<span class="sd">        path : str</span>
+<span class="sd">            The ltree path of the mutated node (e.g., '1.2.3').</span>
+<span class="sd">        updated_fields : List[str]</span>
+<span class="sd">            List of field names that were updated (e.g.,</span>
+<span class="sd">            ['planned_start_date', 'total_float']).</span>
+<span class="sd">        new_version_id : int</span>
+<span class="sd">            The new version_id of the node after the mutation.</span>
+<span class="sd">        actor_upn : str</span>
+<span class="sd">            The principal name of the user who performed the mutation.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">NODE_MUTATED</span><span class="p">,</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+            <span class="s2">"updated_fields"</span><span class="p">:</span> <span class="n">updated_fields</span><span class="p">,</span>
+            <span class="s2">"new_version_id"</span><span class="p">:</span> <span class="n">new_version_id</span><span class="p">,</span>
+            <span class="s2">"actor_upn"</span><span class="p">:</span> <span class="n">actor_upn</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_to_project</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.broadcast_node_created">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.broadcast_node_created">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_node_created</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">actor_upn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Broadcast a NODE_CREATED event to all subscribers of a project.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project containing the new node.</span>
+<span class="sd">        node_id : str</span>
+<span class="sd">            The UUID of the newly created node.</span>
+<span class="sd">        path : str</span>
+<span class="sd">            The ltree path of the new node.</span>
+<span class="sd">        parent_id : str or None</span>
+<span class="sd">            The UUID of the parent node, or None for root nodes.</span>
+<span class="sd">        actor_upn : str</span>
+<span class="sd">            The principal name of the user who created the node.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">NODE_CREATED</span><span class="p">,</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+            <span class="s2">"parent_id"</span><span class="p">:</span> <span class="n">parent_id</span><span class="p">,</span>
+            <span class="s2">"actor_upn"</span><span class="p">:</span> <span class="n">actor_upn</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_to_project</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.broadcast_node_deleted">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.broadcast_node_deleted">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_node_deleted</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">actor_upn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Broadcast a NODE_DELETED event to all subscribers of a project.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project from which the node was deleted.</span>
+<span class="sd">        node_id : str</span>
+<span class="sd">            The UUID of the deleted node.</span>
+<span class="sd">        path : str</span>
+<span class="sd">            The ltree path of the deleted node.</span>
+<span class="sd">        actor_upn : str</span>
+<span class="sd">            The principal name of the user who deleted the node.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">NODE_DELETED</span><span class="p">,</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span>
+            <span class="s2">"actor_upn"</span><span class="p">:</span> <span class="n">actor_upn</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_to_project</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.broadcast_blocker_created">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.broadcast_blocker_created">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_blocker_created</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">blocker_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">severity</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">actor_upn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Broadcast a BLOCKER_CREATED event to all subscribers of a project.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project containing the affected node.</span>
+<span class="sd">        node_id : str</span>
+<span class="sd">            The UUID of the node that now has a blocker.</span>
+<span class="sd">        blocker_id : str</span>
+<span class="sd">            The UUID of the newly created blocker.</span>
+<span class="sd">        category : str</span>
+<span class="sd">            The blocker category (e.g., 'DEPENDENCY_OVERDUE').</span>
+<span class="sd">        severity : str</span>
+<span class="sd">            The blocker severity (e.g., 'CRITICAL').</span>
+<span class="sd">        actor_upn : str</span>
+<span class="sd">            The principal name of the user who created the blocker.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">BLOCKER_CREATED</span><span class="p">,</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span>
+            <span class="s2">"blocker_id"</span><span class="p">:</span> <span class="n">blocker_id</span><span class="p">,</span>
+            <span class="s2">"category"</span><span class="p">:</span> <span class="n">category</span><span class="p">,</span>
+            <span class="s2">"severity"</span><span class="p">:</span> <span class="n">severity</span><span class="p">,</span>
+            <span class="s2">"actor_upn"</span><span class="p">:</span> <span class="n">actor_upn</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_to_project</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.broadcast_blocker_resolved">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.broadcast_blocker_resolved">[docs]</a>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">broadcast_blocker_resolved</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">blocker_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">actor_upn</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Broadcast a BLOCKER_RESOLVED event to all subscribers of a project.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project containing the affected node.</span>
+<span class="sd">        node_id : str</span>
+<span class="sd">            The UUID of the node whose blocker was resolved.</span>
+<span class="sd">        blocker_id : str</span>
+<span class="sd">            The UUID of the resolved blocker.</span>
+<span class="sd">        actor_upn : str</span>
+<span class="sd">            The principal name of the user who resolved the blocker.</span>
+<span class="sd">        """</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">BLOCKER_RESOLVED</span><span class="p">,</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span>
+            <span class="s2">"blocker_id"</span><span class="p">:</span> <span class="n">blocker_id</span><span class="p">,</span>
+            <span class="s2">"actor_upn"</span><span class="p">:</span> <span class="n">actor_upn</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_to_project</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WebSocketConnectionManager.get_project_presence">
+<a class="viewcode-back" href="../../../modules.html#app.services.ws_presence.WebSocketConnectionManager.get_project_presence">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_project_presence</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Return the current presence state for all users in a project.</span>
+
+<span class="sd">        This method is used when a new client connects to send them the</span>
+<span class="sd">        current presence state so they can immediately render colleague</span>
+<span class="sd">        avatars without waiting for the next heartbeat.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[dict]</span>
+<span class="sd">            List of presence records, each containing:</span>
+
+<span class="sd">            - ``user_id`` — The user's primary key.</span>
+<span class="sd">            - ``user_upn`` — The user's principal name.</span>
+<span class="sd">            - ``node_id`` — The node currently being inspected.</span>
+<span class="sd">            - ``active_pane`` — The UI pane in focus.</span>
+<span class="sd">            - ``last_heartbeat`` — Timestamp of the last heartbeat.</span>
+<span class="sd">        """</span>
+        <span class="n">subscriber_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+        <span class="n">presence</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">subscriber_ids</span><span class="p">:</span>
+            <span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">connection</span> <span class="ow">and</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="p">:</span>
+                <span class="n">fs</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span>
+                <span class="n">presence</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">"user_id"</span><span class="p">:</span> <span class="n">fs</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                    <span class="s2">"user_upn"</span><span class="p">:</span> <span class="n">fs</span><span class="o">.</span><span class="n">user_upn</span><span class="p">,</span>
+                    <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">fs</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span>
+                    <span class="s2">"active_pane"</span><span class="p">:</span> <span class="n">fs</span><span class="o">.</span><span class="n">active_pane</span><span class="p">,</span>
+                    <span class="s2">"last_heartbeat"</span><span class="p">:</span> <span class="n">fs</span><span class="o">.</span><span class="n">last_heartbeat</span><span class="p">,</span>
+                <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">presence</span></div>
+
+
+    <span class="c1"># -----------------------------------------------------------------------</span>
+    <span class="c1"># Internal methods</span>
+    <span class="c1"># -----------------------------------------------------------------------</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_handle_heartbeat</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">message</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Process a HEARTBEAT message and update the user's focus state.</span>
+
+<span class="sd">        When a heartbeat arrives, the user's focus state is updated and</span>
+<span class="sd">        a ``USER_FOCUS_CHANGED`` event is broadcast to all other project</span>
+<span class="sd">        viewers.  This enables live presence avatars that move as</span>
+<span class="sd">        colleagues navigate the schedule.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The active WebSocket connection.</span>
+<span class="sd">        message : dict</span>
+<span class="sd">            The heartbeat message containing focus state data.</span>
+<span class="sd">        """</span>
+        <span class="n">connection</span><span class="o">.</span><span class="n">last_heartbeat</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+        <span class="c1"># Update focus state</span>
+        <span class="n">old_node_id</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="o">.</span><span class="n">node_id</span>
+            <span class="k">if</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+        <span class="n">focus_state</span> <span class="o">=</span> <span class="n">UserFocusState</span><span class="p">(</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="n">user_upn</span><span class="o">=</span><span class="n">connection</span><span class="o">.</span><span class="n">user_upn</span><span class="p">,</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"node_id"</span><span class="p">),</span>
+            <span class="n">active_pane</span><span class="o">=</span><span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"active_pane"</span><span class="p">),</span>
+            <span class="n">last_heartbeat</span><span class="o">=</span><span class="n">connection</span><span class="o">.</span><span class="n">last_heartbeat</span><span class="p">,</span>
+            <span class="n">cell_focus</span><span class="o">=</span><span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="o">.</span><span class="n">cell_focus</span>
+            <span class="k">if</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span>
+            <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span> <span class="o">=</span> <span class="n">focus_state</span>
+
+        <span class="c1"># Broadcast focus change to all projects this user is subscribed to</span>
+        <span class="k">for</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="n">connection</span><span class="o">.</span><span class="n">project_ids</span><span class="p">:</span>
+            <span class="c1"># Only broadcast if the node actually changed</span>
+            <span class="k">if</span> <span class="n">old_node_id</span> <span class="o">!=</span> <span class="n">focus_state</span><span class="o">.</span><span class="n">node_id</span><span class="p">:</span>
+                <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">USER_FOCUS_CHANGED</span><span class="p">,</span>
+                    <span class="s2">"user_id"</span><span class="p">:</span> <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                    <span class="s2">"user_upn"</span><span class="p">:</span> <span class="n">connection</span><span class="o">.</span><span class="n">user_upn</span><span class="p">,</span>
+                    <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">focus_state</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span>
+                    <span class="s2">"active_pane"</span><span class="p">:</span> <span class="n">focus_state</span><span class="o">.</span><span class="n">active_pane</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_to_project</span><span class="p">(</span>
+                    <span class="n">project_id</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">exclude_user_id</span><span class="o">=</span><span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                <span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_handle_cell_focused</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">message</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Process a CELL_FOCUSED message.</span>
+
+<span class="sd">        When a user double-clicks a cell to edit it, the client sends</span>
+<span class="sd">        this message.  The server checks for a soft-lock collision: if</span>
+<span class="sd">        another user already holds this cell, a SOFT_LOCK_WARNING is</span>
+<span class="sd">        sent back.  Otherwise, the cell focus is recorded and broadcast</span>
+<span class="sd">        to all other project viewers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The active WebSocket connection.</span>
+<span class="sd">        message : dict</span>
+<span class="sd">            The CELL_FOCUSED message containing project_id, node_id,</span>
+<span class="sd">            column_key, and optional display_color.</span>
+<span class="sd">        """</span>
+        <span class="n">project_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_id"</span><span class="p">)</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"node_id"</span><span class="p">)</span>
+        <span class="n">column_key</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"column_key"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">project_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">column_key</span><span class="p">]):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"Incomplete CELL_FOCUSED from user_id=</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Check for soft-lock collision</span>
+        <span class="n">holder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_cell_collision</span><span class="p">(</span>
+            <span class="n">project_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">column_key</span><span class="p">,</span> <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">holder</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">send_soft_lock_warning</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">holder</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Record cell focus</span>
+        <span class="n">display_color</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"display_color"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_get_user_color</span><span class="p">(</span><span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">cell_focus</span> <span class="o">=</span> <span class="n">CellFocusState</span><span class="p">(</span>
+            <span class="n">user_id</span><span class="o">=</span><span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="n">user_upn</span><span class="o">=</span><span class="n">connection</span><span class="o">.</span><span class="n">user_upn</span><span class="p">,</span>
+            <span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+            <span class="n">column_key</span><span class="o">=</span><span class="n">column_key</span><span class="p">,</span>
+            <span class="n">display_color</span><span class="o">=</span><span class="n">display_color</span><span class="p">,</span>
+            <span class="n">project_id</span><span class="o">=</span><span class="n">project_id</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Store in cell focus map</span>
+        <span class="k">if</span> <span class="n">project_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_key</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">column_key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">[</span><span class="n">project_id</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_focus</span>
+
+        <span class="c1"># Update connection focus state</span>
+        <span class="k">if</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="p">:</span>
+            <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="o">.</span><span class="n">cell_focus</span> <span class="o">=</span> <span class="n">cell_focus</span>
+
+        <span class="c1"># Publish via Redis pub/sub channel (simulated — in production,</span>
+        <span class="c1"># this would use redis.publish(f"presence:{project_id}", payload))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Redis pub/sub presence:</span><span class="si">%s</span><span class="s2"> — CELL_FOCUSED user_id=</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">project_id</span><span class="p">,</span> <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Broadcast to other viewers</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_cell_focused</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="n">cell_focus</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_handle_cell_blurred</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">message</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Process a CELL_BLURRED message.</span>
+
+<span class="sd">        When a user finishes editing a cell (commit, revert, or escape),</span>
+<span class="sd">        the client sends this message.  The server removes the cell focus</span>
+<span class="sd">        record and broadcasts the blur to all other project viewers.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The active WebSocket connection.</span>
+<span class="sd">        message : dict</span>
+<span class="sd">            The CELL_BLURRED message containing project_id, node_id,</span>
+<span class="sd">            and column_key.</span>
+<span class="sd">        """</span>
+        <span class="n">project_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"project_id"</span><span class="p">)</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"node_id"</span><span class="p">)</span>
+        <span class="n">column_key</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"column_key"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">project_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">column_key</span><span class="p">]):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"Incomplete CELL_BLURRED from user_id=</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Remove from cell focus map</span>
+        <span class="k">if</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_key</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">column_key</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="c1"># Clean up empty project entries</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">[</span><span class="n">project_id</span><span class="p">]:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span>
+
+        <span class="c1"># Clear cell focus on connection</span>
+        <span class="k">if</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="p">:</span>
+            <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="o">.</span><span class="n">cell_focus</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Broadcast blur to other viewers</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_cell_blurred</span><span class="p">(</span>
+            <span class="n">project_id</span><span class="p">,</span> <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">column_key</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_welcome</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Send a WELCOME message with current presence state on subscribe.</span>
+
+<span class="sd">        When a user subscribes to a project channel, they receive a</span>
+<span class="sd">        ``WELCOME`` message containing the current presence state of all</span>
+<span class="sd">        other users in that project.  This allows the frontend to</span>
+<span class="sd">        immediately render colleague avatars.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The active WebSocket connection.</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The project the user subscribed to.</span>
+<span class="sd">        """</span>
+        <span class="n">presence</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_project_presence</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+
+        <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">WELCOME</span><span class="p">,</span>
+            <span class="s2">"project_id"</span><span class="p">:</span> <span class="n">project_id</span><span class="p">,</span>
+            <span class="s2">"presence"</span><span class="p">:</span> <span class="n">presence</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_to_connection</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_broadcast_to_project</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">payload</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">exclude_user_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Broadcast a message to all subscribers of a project channel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        project_id : str</span>
+<span class="sd">            The UUID of the project channel.</span>
+<span class="sd">        payload : dict</span>
+<span class="sd">            The message payload to broadcast.</span>
+<span class="sd">        exclude_user_id : int or None</span>
+<span class="sd">            If set, exclude this user from the broadcast (e.g., the user</span>
+<span class="sd">            who triggered the mutation doesn't need to receive their own</span>
+<span class="sd">            change back).</span>
+<span class="sd">        """</span>
+        <span class="n">subscriber_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">project_id</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+        <span class="n">message_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">subscriber_ids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">user_id</span> <span class="o">==</span> <span class="n">exclude_user_id</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">connection</span> <span class="ow">and</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="n">connection</span><span class="o">.</span><span class="n">project_ids</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_send_to_connection</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_send_to_connection</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">payload</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Send a JSON message to a single WebSocket connection.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The target WebSocket connection.</span>
+<span class="sd">        payload : dict</span>
+<span class="sd">            The message payload to send.</span>
+<span class="sd">        """</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">connection</span><span class="o">.</span><span class="n">websocket</span><span class="o">.</span><span class="n">send_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"Failed to send message to user_id=</span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_remove_connection</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">connection</span><span class="p">:</span> <span class="n">WebSocketConnection</span><span class="p">,</span>
+        <span class="n">notify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Remove a connection and clean up all subscriptions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        connection : WebSocketConnection</span>
+<span class="sd">            The connection to remove.</span>
+<span class="sd">        notify : bool</span>
+<span class="sd">            If True, broadcast a USER_FOCUS_CHANGED event with node_id=None</span>
+<span class="sd">            to signal that this user has left.</span>
+<span class="sd">        """</span>
+        <span class="n">user_id</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">user_id</span>
+
+        <span class="c1"># Clear any cell focus held by this user</span>
+        <span class="k">if</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span> <span class="ow">and</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="o">.</span><span class="n">cell_focus</span><span class="p">:</span>
+            <span class="n">cf</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="o">.</span><span class="n">cell_focus</span>
+            <span class="n">project_id</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">project_id</span>
+            <span class="k">if</span> <span class="n">project_id</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">broadcast_cell_blurred</span><span class="p">(</span>
+                    <span class="n">project_id</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">cf</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span> <span class="n">cf</span><span class="o">.</span><span class="n">column_key</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">:</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_key</span><span class="p">(</span><span class="n">cf</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span> <span class="n">cf</span><span class="o">.</span><span class="n">column_key</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">[</span><span class="n">project_id</span><span class="p">]:</span>
+                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cell_focus_map</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span>
+
+        <span class="c1"># Notify other users about the departure</span>
+        <span class="k">if</span> <span class="n">notify</span> <span class="ow">and</span> <span class="n">connection</span><span class="o">.</span><span class="n">focus_state</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="n">connection</span><span class="o">.</span><span class="n">project_ids</span><span class="p">:</span>
+                <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">"event"</span><span class="p">:</span> <span class="n">ServerMessageType</span><span class="o">.</span><span class="n">USER_FOCUS_CHANGED</span><span class="p">,</span>
+                    <span class="s2">"user_id"</span><span class="p">:</span> <span class="n">user_id</span><span class="p">,</span>
+                    <span class="s2">"user_upn"</span><span class="p">:</span> <span class="n">connection</span><span class="o">.</span><span class="n">user_upn</span><span class="p">,</span>
+                    <span class="s2">"node_id"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">"active_pane"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_broadcast_to_project</span><span class="p">(</span>
+                    <span class="n">project_id</span><span class="p">,</span> <span class="n">payload</span><span class="p">,</span> <span class="n">exclude_user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Remove from all project channels</span>
+        <span class="k">for</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="n">connection</span><span class="o">.</span><span class="n">project_ids</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">project_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">[</span><span class="n">project_id</span><span class="p">]:</span>
+                    <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_project_subscribers</span><span class="p">[</span><span class="n">project_id</span><span class="p">]</span>
+
+        <span class="c1"># Remove from connections dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"WebSocket disconnected: user_id=</span><span class="si">%s</span><span class="s2">, total=</span><span class="si">%d</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">user_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">connection_count</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_cleanup_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Background task that periodically removes stale connections.</span>
+
+<span class="sd">        Runs every ``_cleanup_interval`` seconds.  Any connection without</span>
+<span class="sd">        a heartbeat within ``_heartbeat_timeout`` seconds is considered</span>
+<span class="sd">        stale and is disconnected.</span>
+
+<span class="sd">        This prevents zombie connections from lingering after a browser</span>
+<span class="sd">        crash or network failure.</span>
+<span class="sd">        """</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cleanup_interval</span><span class="p">)</span>
+            <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+            <span class="n">stale_user_ids</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">user_id</span>
+                <span class="k">for</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">conn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">now</span> <span class="o">-</span> <span class="n">conn</span><span class="o">.</span><span class="n">last_heartbeat</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_timeout</span>
+            <span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">stale_user_ids</span><span class="p">:</span>
+                <span class="n">connection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connections</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">connection</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="s2">"Removing stale connection: user_id=</span><span class="si">%s</span><span class="s2">, "</span>
+                        <span class="s2">"last_heartbeat=</span><span class="si">%.1f</span><span class="s2">s ago"</span><span class="p">,</span>
+                        <span class="n">user_id</span><span class="p">,</span> <span class="n">now</span> <span class="o">-</span> <span class="n">connection</span><span class="o">.</span><span class="n">last_heartbeat</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remove_connection</span><span class="p">(</span><span class="n">connection</span><span class="p">,</span> <span class="n">notify</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># Global singleton — shared across all WebSocket endpoints</span>
+<span class="n">manager</span> <span class="o">=</span> <span class="n">WebSocketConnectionManager</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

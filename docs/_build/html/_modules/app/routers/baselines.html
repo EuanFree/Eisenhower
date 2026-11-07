@@ -1,0 +1,723 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.baselines &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.baselines</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.baselines</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""API router for Performance Measurement Baseline (PMB) governance.</span>
+
+<span class="sd">This router provides endpoints for freezing baselines, comparing live</span>
+<span class="sd">WBS state against frozen baselines, and managing Baseline Change Requests</span>
+<span class="sd">(BCRs).</span>
+
+<span class="sd">Endpoints</span>
+<span class="sd">---------</span>
+
+<span class="sd">POST   /api/v1/baselines/freeze          — Freeze a new baseline snapshot.</span>
+<span class="sd">GET    /api/v1/baselines/compare          — Compare live state against a baseline.</span>
+<span class="sd">GET    /api/v1/baselines/list             — List baselines for a project.</span>
+<span class="sd">POST   /api/v1/baselines/bcr              — Create a new Baseline Change Request.</span>
+<span class="sd">PUT    /api/v1/baselines/bcr/{id}         — Update BCR status (approve/reject).</span>
+<span class="sd">GET    /api/v1/baselines/bcr/{id}         — Get BCR details.</span>
+<span class="sd">GET    /api/v1/baselines/bcr              — List BCRs by status/tier.</span>
+
+<span class="sd">Sub-Tree Locking</span>
+<span class="sd">~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The ``POST /freeze`` endpoint acquires a sub-tree lock before cloning</span>
+<span class="sd">the live WBS sub-tree into baseline snapshot rows.  This prevents</span>
+<span class="sd">concurrent mutations from changing the source tree during the snapshot.</span>
+<span class="sd">If a lock is already held, HTTP 423 (Locked) is returned.</span>
+
+<span class="sd">Security</span>
+<span class="sd">~~~~~~~~</span>
+
+<span class="sd">All endpoints require JWT authentication.  The authenticated user must</span>
+<span class="sd">have sufficient clearance to access the portfolio nodes involved.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">    # Freeze a new baseline</span>
+<span class="sd">    POST /api/v1/baselines/freeze</span>
+<span class="sd">    {</span>
+<span class="sd">        "root_node_id": "&lt;uuid&gt;",</span>
+<span class="sd">        "baseline_code": "B0_CONTRACT",</span>
+<span class="sd">        "name": "Contract Baseline"</span>
+<span class="sd">    }</span>
+
+<span class="sd">    # Compare live state against a baseline</span>
+<span class="sd">    GET /api/v1/baselines/compare?root_node_id=&lt;uuid&gt;&amp;baseline_id=&lt;uuid&gt;</span>
+
+<span class="sd">    # Create a BCR</span>
+<span class="sd">    POST /api/v1/baselines/bcr</span>
+<span class="sd">    {</span>
+<span class="sd">        "bcr_number": "BCR-2024-001",</span>
+<span class="sd">        "title": "Extend delivery schedule",</span>
+<span class="sd">        "justification": "Supply chain delays...",</span>
+<span class="sd">        "tier": "TIER_2_PROJECT_CCB",</span>
+<span class="sd">        "schedule_finish_slip_days": 14</span>
+<span class="sd">    }</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">User</span><span class="p">,</span> <span class="n">PortfolioBaseline</span><span class="p">,</span> <span class="n">BaselineNodeSnapshot</span><span class="p">,</span> <span class="n">BaselineChangeRequest</span><span class="p">,</span>
+    <span class="n">BaselineChangeRequestStatus</span><span class="p">,</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span> <span class="n">LockOperationType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BaselineFreezeRequest</span><span class="p">,</span>
+    <span class="n">BaselineFreezeResponse</span><span class="p">,</span>
+    <span class="n">BaselineResponse</span><span class="p">,</span>
+    <span class="n">BaselineVarianceResponse</span><span class="p">,</span>
+    <span class="n">BaselineVarianceNodeResponse</span><span class="p">,</span>
+    <span class="n">BCRCreate</span><span class="p">,</span>
+    <span class="n">BCRUpdate</span><span class="p">,</span>
+    <span class="n">BCRResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.baseline_engine</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">freeze_baseline</span><span class="p">,</span>
+    <span class="n">compute_baseline_variance</span><span class="p">,</span>
+    <span class="n">create_bcr</span><span class="p">,</span>
+    <span class="n">update_bcr_status</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.lock_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">acquire_subtree_lock</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/v1/baselines"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="freeze_baseline_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.baselines.freeze_baseline_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/freeze"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">BaselineFreezeResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">freeze_baseline_endpoint</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">BaselineFreezeRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Freeze a new Performance Measurement Baseline.</span>
+
+<span class="sd">    Clones the entire sub-tree rooted at the specified PortfolioNode</span>
+<span class="sd">    into baseline snapshot rows.  This creates a point-in-time record</span>
+<span class="sd">    against which future variance can be measured.</span>
+
+<span class="sd">    This endpoint acquires a sub-tree lock before cloning to prevent</span>
+<span class="sd">    concurrent mutations from changing the source tree during the</span>
+<span class="sd">    snapshot.  If a lock is already held, HTTP 423 (Locked) is returned.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : BaselineFreezeRequest</span>
+<span class="sd">        The freeze request containing the root node ID, baseline code,</span>
+<span class="sd">        and name.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BaselineFreezeResponse</span>
+<span class="sd">        Confirmation of the freeze, including the baseline details and</span>
+<span class="sd">        the number of snapshots created.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the root node is not found.</span>
+<span class="sd">        400 if the baseline code already exists for this root.</span>
+<span class="sd">        423 if a sub-tree lock is already held.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Find the root node to get its ltree path</span>
+    <span class="n">root_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">root_node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root_node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Root node </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">root_node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">root_path</span> <span class="o">=</span> <span class="n">root_node</span><span class="o">.</span><span class="n">path</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Acquire sub-tree lock and freeze baseline</span>
+        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">baseline</span><span class="p">,</span> <span class="n">snapshot_count</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span>
+                <span class="n">_freeze_with_lock</span><span class="p">(</span>
+                    <span class="n">db</span><span class="p">,</span> <span class="n">root_path</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">current_user</span><span class="o">.</span><span class="n">id</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">loop</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">BaselineFreezeResponse</span><span class="p">(</span>
+        <span class="n">baseline</span><span class="o">=</span><span class="n">BaselineResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">root_portfolio_node_id</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">root_portfolio_node_id</span><span class="p">,</span>
+            <span class="n">baseline_code</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">baseline_code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">frozen_at</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">frozen_at</span><span class="p">,</span>
+            <span class="n">frozen_by_user_id</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">frozen_by_user_id</span><span class="p">,</span>
+            <span class="n">bcr_reference</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">bcr_reference</span><span class="p">,</span>
+            <span class="n">is_active_target</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">is_active_target</span><span class="p">,</span>
+            <span class="n">snapshot_count</span><span class="o">=</span><span class="n">snapshot_count</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">snapshots_created</span><span class="o">=</span><span class="n">snapshot_count</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_freeze_with_lock</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">BaselineFreezeRequest</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Freeze baseline within a sub-tree lock.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    root_path : str</span>
+<span class="sd">        Ltree path of the root node.</span>
+<span class="sd">    request : BaselineFreezeRequest</span>
+<span class="sd">        The freeze request.</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        ID of the user initiating the freeze.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        (baseline, snapshot_count) from freeze_baseline.</span>
+<span class="sd">    """</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">acquire_subtree_lock</span><span class="p">(</span>
+        <span class="n">db</span><span class="p">,</span> <span class="n">root_path</span><span class="p">,</span> <span class="n">LockOperationType</span><span class="o">.</span><span class="n">BASELINE_FREEZE</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">ttl_seconds</span><span class="o">=</span><span class="mi">60</span>
+    <span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">freeze_baseline</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">root_node_id</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">root_node_id</span><span class="p">,</span>
+            <span class="n">baseline_code</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">baseline_code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">frozen_by_user_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="n">bcr_reference</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">bcr_reference</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="compare_baseline_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.baselines.compare_baseline_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/compare"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">BaselineVarianceResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_baseline_endpoint</span><span class="p">(</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Root portfolio node ID"</span><span class="p">),</span>
+    <span class="n">baseline_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Baseline ID to compare against"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Compare live WBS state against a frozen baseline.</span>
+
+<span class="sd">    Returns a side-by-side variance report showing how the live project</span>
+<span class="sd">    has drifted from the approved baseline.  For each node, the report</span>
+<span class="sd">    includes schedule variance (days), cost variance (BAC), critical path</span>
+<span class="sd">    migration status, and scope drift classification.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        The root portfolio node whose sub-tree to compare.</span>
+<span class="sd">    baseline_id : UUID</span>
+<span class="sd">        The baseline to compare against.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BaselineVarianceResponse</span>
+<span class="sd">        Complete variance report with aggregate statistics and</span>
+<span class="sd">        per-node variance details.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the baseline is not found.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">variance</span> <span class="o">=</span> <span class="n">compute_baseline_variance</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">root_node_id</span><span class="o">=</span><span class="n">root_node_id</span><span class="p">,</span>
+            <span class="n">baseline_id</span><span class="o">=</span><span class="n">baseline_id</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="c1"># Convert node_variances dicts to response objects</span>
+    <span class="n">node_variances</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">nv</span> <span class="ow">in</span> <span class="n">variance</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"node_variances"</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="n">node_variances</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BaselineVarianceNodeResponse</span><span class="p">(</span><span class="o">**</span><span class="n">nv</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">BaselineVarianceResponse</span><span class="p">(</span>
+        <span class="n">baseline_id</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"baseline_id"</span><span class="p">],</span>
+        <span class="n">baseline_code</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"baseline_code"</span><span class="p">],</span>
+        <span class="n">root_node_id</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"root_node_id"</span><span class="p">],</span>
+        <span class="n">total_nodes_compared</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"total_nodes_compared"</span><span class="p">],</span>
+        <span class="n">nodes_with_variance</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"nodes_with_variance"</span><span class="p">],</span>
+        <span class="n">total_start_variance_days</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"total_start_variance_days"</span><span class="p">],</span>
+        <span class="n">total_finish_variance_days</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"total_finish_variance_days"</span><span class="p">],</span>
+        <span class="n">total_bac_variance</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"total_bac_variance"</span><span class="p">],</span>
+        <span class="n">nodes_added</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"nodes_added"</span><span class="p">],</span>
+        <span class="n">nodes_deleted</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"nodes_deleted"</span><span class="p">],</span>
+        <span class="n">node_variances</span><span class="o">=</span><span class="n">node_variances</span><span class="p">,</span>
+        <span class="n">compared_at</span><span class="o">=</span><span class="n">variance</span><span class="p">[</span><span class="s2">"compared_at"</span><span class="p">],</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="list_baselines_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.baselines.list_baselines_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/list"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="nb">list</span><span class="p">[</span><span class="n">BaselineResponse</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_baselines_endpoint</span><span class="p">(</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Root portfolio node ID"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List all baselines for a given portfolio project.</span>
+
+<span class="sd">    Returns baselines ordered by freeze date (newest first).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        The root portfolio node whose baselines to list.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of BaselineResponse</span>
+<span class="sd">        All baselines for the specified root node.</span>
+<span class="sd">    """</span>
+    <span class="n">baselines</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">root_portfolio_node_id</span> <span class="o">==</span> <span class="n">root_node_id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">frozen_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">bl</span> <span class="ow">in</span> <span class="n">baselines</span><span class="p">:</span>
+        <span class="n">snapshot_count</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">BaselineNodeSnapshot</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">BaselineNodeSnapshot</span><span class="o">.</span><span class="n">baseline_id</span> <span class="o">==</span> <span class="n">bl</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">count</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BaselineResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">bl</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">root_portfolio_node_id</span><span class="o">=</span><span class="n">bl</span><span class="o">.</span><span class="n">root_portfolio_node_id</span><span class="p">,</span>
+            <span class="n">baseline_code</span><span class="o">=</span><span class="n">bl</span><span class="o">.</span><span class="n">baseline_code</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">bl</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">frozen_at</span><span class="o">=</span><span class="n">bl</span><span class="o">.</span><span class="n">frozen_at</span><span class="p">,</span>
+            <span class="n">frozen_by_user_id</span><span class="o">=</span><span class="n">bl</span><span class="o">.</span><span class="n">frozen_by_user_id</span><span class="p">,</span>
+            <span class="n">bcr_reference</span><span class="o">=</span><span class="n">bl</span><span class="o">.</span><span class="n">bcr_reference</span><span class="p">,</span>
+            <span class="n">is_active_target</span><span class="o">=</span><span class="n">bl</span><span class="o">.</span><span class="n">is_active_target</span><span class="p">,</span>
+            <span class="n">snapshot_count</span><span class="o">=</span><span class="n">snapshot_count</span><span class="p">,</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+
+<div class="viewcode-block" id="create_bcr_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.baselines.create_bcr_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/bcr"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">BCRResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_bcr_endpoint</span><span class="p">(</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">BCRCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new Baseline Change Request.</span>
+
+<span class="sd">    A BCR is a formal request to change an approved baseline.  It must</span>
+<span class="sd">    include a justification, governance tier, and impact assessment.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    request : BCRCreate</span>
+<span class="sd">        The BCR creation request.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BCRResponse</span>
+<span class="sd">        The newly created BCR.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        409 if the BCR number already exists.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check for duplicate BCR number</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="o">.</span><span class="n">bcr_number</span> <span class="o">==</span> <span class="n">request</span><span class="o">.</span><span class="n">bcr_number</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">409</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"BCR number '</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">bcr_number</span><span class="si">}</span><span class="s2">' already exists"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">bcr</span> <span class="o">=</span> <span class="n">create_bcr</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">bcr_number</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">bcr_number</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">justification</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">justification</span><span class="p">,</span>
+            <span class="n">tier</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">tier</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">created_by_user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">cost_delta_amount</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">cost_delta_amount</span><span class="p">,</span>
+            <span class="n">schedule_finish_slip_days</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">schedule_finish_slip_days</span><span class="p">,</span>
+            <span class="n">contingency_reserve_requested</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">contingency_reserve_requested</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">BCRResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">bcr_number</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">bcr_number</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">justification</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">justification</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">cost_delta_amount</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bcr</span><span class="o">.</span><span class="n">cost_delta_amount</span><span class="p">)</span> <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">cost_delta_amount</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">schedule_finish_slip_days</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">schedule_finish_slip_days</span><span class="p">,</span>
+        <span class="n">contingency_reserve_requested</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bcr</span><span class="o">.</span><span class="n">contingency_reserve_requested</span><span class="p">)</span> <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">contingency_reserve_requested</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">created_by_user_id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">created_by_user_id</span><span class="p">,</span>
+        <span class="n">approver_user_id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">approver_user_id</span><span class="p">,</span>
+        <span class="n">rejection_reason</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">rejection_reason</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="list_bcrs_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.baselines.list_bcrs_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/bcr"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="nb">list</span><span class="p">[</span><span class="n">BCRResponse</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_bcrs_endpoint</span><span class="p">(</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by status"</span><span class="p">),</span>
+    <span class="n">tier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by tier"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List Baseline Change Requests, optionally filtered by status or tier.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    status : str or None</span>
+<span class="sd">        Filter by status (DRAFT, UNDER_REVIEW, APPROVED, REJECTED).</span>
+<span class="sd">    tier : str or None</span>
+<span class="sd">        Filter by tier (TIER_1_LOCAL_CAM, TIER_2_PROJECT_CCB, TIER_3_PROGRAMME_BOARD).</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of BCRResponse</span>
+<span class="sd">        Matching BCRs ordered by creation date (newest first).</span>
+<span class="sd">    """</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">status</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">status</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">tier</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="o">.</span><span class="n">tier</span> <span class="o">==</span> <span class="n">tier</span><span class="p">)</span>
+
+    <span class="n">bcrs</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">BCRResponse</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">bcr_number</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">bcr_number</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">justification</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">justification</span><span class="p">,</span>
+            <span class="n">tier</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">cost_delta_amount</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bcr</span><span class="o">.</span><span class="n">cost_delta_amount</span><span class="p">)</span> <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">cost_delta_amount</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">schedule_finish_slip_days</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">schedule_finish_slip_days</span><span class="p">,</span>
+            <span class="n">contingency_reserve_requested</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bcr</span><span class="o">.</span><span class="n">contingency_reserve_requested</span><span class="p">)</span> <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">contingency_reserve_requested</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">created_by_user_id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">created_by_user_id</span><span class="p">,</span>
+            <span class="n">approver_user_id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">approver_user_id</span><span class="p">,</span>
+            <span class="n">rejection_reason</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">rejection_reason</span><span class="p">,</span>
+            <span class="n">created_at</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+            <span class="n">updated_at</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">bcr</span> <span class="ow">in</span> <span class="n">bcrs</span>
+    <span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="get_bcr_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.baselines.get_bcr_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/bcr/</span><span class="si">{bcr_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">BCRResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_bcr_endpoint</span><span class="p">(</span>
+    <span class="n">bcr_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get details of a specific Baseline Change Request.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bcr_id : UUID</span>
+<span class="sd">        The BCR to retrieve.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BCRResponse</span>
+<span class="sd">        The BCR details.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the BCR is not found.</span>
+<span class="sd">    """</span>
+    <span class="n">bcr</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">bcr_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">bcr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"BCR </span><span class="si">{</span><span class="n">bcr_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">BCRResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">bcr_number</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">bcr_number</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">justification</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">justification</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">cost_delta_amount</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bcr</span><span class="o">.</span><span class="n">cost_delta_amount</span><span class="p">)</span> <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">cost_delta_amount</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">schedule_finish_slip_days</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">schedule_finish_slip_days</span><span class="p">,</span>
+        <span class="n">contingency_reserve_requested</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bcr</span><span class="o">.</span><span class="n">contingency_reserve_requested</span><span class="p">)</span> <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">contingency_reserve_requested</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">created_by_user_id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">created_by_user_id</span><span class="p">,</span>
+        <span class="n">approver_user_id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">approver_user_id</span><span class="p">,</span>
+        <span class="n">rejection_reason</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">rejection_reason</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_bcr_endpoint">
+<a class="viewcode-back" href="../../../modules.html#app.routers.baselines.update_bcr_endpoint">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/bcr/</span><span class="si">{bcr_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">response_model</span><span class="o">=</span><span class="n">BCRResponse</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_bcr_endpoint</span><span class="p">(</span>
+    <span class="n">bcr_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">request</span><span class="p">:</span> <span class="n">BCRUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update the status of a Baseline Change Request.</span>
+
+<span class="sd">    Used to approve or reject a BCR.  The approver's user ID is</span>
+<span class="sd">    automatically recorded.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bcr_id : UUID</span>
+<span class="sd">        The BCR to update.</span>
+<span class="sd">    request : BCRUpdate</span>
+<span class="sd">        The new status and optional rejection reason.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session (injected).</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user (injected).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BCRResponse</span>
+<span class="sd">        The updated BCR.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if the BCR is not found.</span>
+<span class="sd">        400 if the status transition is invalid.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Status must be provided when updating a BCR"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">bcr</span> <span class="o">=</span> <span class="n">update_bcr_status</span><span class="p">(</span>
+            <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+            <span class="n">bcr_id</span><span class="o">=</span><span class="n">bcr_id</span><span class="p">,</span>
+            <span class="n">new_status</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="n">approver_user_id</span><span class="o">=</span><span class="n">current_user</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">rejection_reason</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">rejection_reason</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">BCRResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">bcr_number</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">bcr_number</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">justification</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">justification</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">cost_delta_amount</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bcr</span><span class="o">.</span><span class="n">cost_delta_amount</span><span class="p">)</span> <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">cost_delta_amount</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">schedule_finish_slip_days</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">schedule_finish_slip_days</span><span class="p">,</span>
+        <span class="n">contingency_reserve_requested</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">bcr</span><span class="o">.</span><span class="n">contingency_reserve_requested</span><span class="p">)</span> <span class="k">if</span> <span class="n">bcr</span><span class="o">.</span><span class="n">contingency_reserve_requested</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">created_by_user_id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">created_by_user_id</span><span class="p">,</span>
+        <span class="n">approver_user_id</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">approver_user_id</span><span class="p">,</span>
+        <span class="n">rejection_reason</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">rejection_reason</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">bcr</span><span class="o">.</span><span class="n">updated_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

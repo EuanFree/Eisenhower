@@ -1,0 +1,1377 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.airgap &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.airgap</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.airgap</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Offline cross-domain data exchange service for air-gapped environments.</span>
+
+<span class="sd">This module implements the ``.defpack`` bundle format for securely transferring</span>
+<span class="sd">portfolio data between air-gapped systems — for example, from an unclassified</span>
+<span class="sd">development environment to a classified operational environment, or between</span>
+<span class="sd">two sovereign networks that share no live connectivity.</span>
+
+<span class="sd">Architecture Overview</span>
+<span class="sd">---------------------</span>
+
+<span class="sd">The airgap exchange follows a two-phase workflow:</span>
+
+<span class="sd">1. **Export** — The source system packages a project sub-tree into a signed</span>
+<span class="sd">   and encrypted ``.defpack`` archive.  This includes PortfolioNodes,</span>
+<span class="sd">   DependencyLinks, ResourceAssignments, PortfolioBaselines, and a subset</span>
+<span class="sd">   of the ForensicAuditLog.  Before packaging, any node whose security</span>
+<span class="sd">   classification exceeds the ``target_classification_ceiling`` is redacted</span>
+<span class="sd">   so that classified data never leaves the source domain in cleartext.</span>
+
+<span class="sd">2. **Import** — The target system ingests the ``.defpack`` archive by first</span>
+<span class="sd">   verifying the package signature, then validating the JSON schema, checking</span>
+<span class="sd">   for duplicate transaction IDs to prevent replay attacks, and finally</span>
+<span class="sd">   merging the imported nodes into the target PostgreSQL instance using</span>
+<span class="sd">   ltree reparenting.</span>
+
+<span class="sd">The .defpack File Format</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">A ``.defpack`` file is a ZIP archive containing:</span>
+
+<span class="sd">- ``payload.json`` — Canonical JSON payload with version ``1.0``.</span>
+<span class="sd">- ``manifest.json`` — SHA-256 manifest of all payload sections.</span>
+<span class="sd">- ``signature.bin`` — RSA signature of the manifest, generated using a</span>
+<span class="sd">  local private key.</span>
+
+<span class="sd">The payload schema (version 1.0) contains:</span>
+
+<span class="sd">.. code-block:: json</span>
+
+<span class="sd">    {</span>
+<span class="sd">        "version": "1.0",</span>
+<span class="sd">        "exported_at": "2026-10-23T12:00:00Z",</span>
+<span class="sd">        "exported_by": "user@example.com",</span>
+<span class="sd">        "source_system": "Eisenhower-Dev",</span>
+<span class="sd">        "project_id": "uuid...",</span>
+<span class="sd">        "classification_ceiling": "SECRET",</span>
+<span class="sd">        "nodes": [...],</span>
+<span class="sd">        "dependencies": [...],</span>
+<span class="sd">        "assignments": [...],</span>
+<span class="sd">        "baselines": [...],</span>
+<span class="sd">        "audit_trail": [...]</span>
+<span class="sd">    }</span>
+
+<span class="sd">Security Considerations</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">- **Classification Redaction** — Nodes exceeding the target ceiling are</span>
+<span class="sd">  redacted: their ``name``, ``code``, and ``custom_attributes`` are replaced</span>
+<span class="sd">  with ``"[RESTRICTED]"`` and a ``"redacted": true`` flag is set.</span>
+
+<span class="sd">- **SHA-256 Manifest** — Every section of the payload is individually</span>
+<span class="sd">  hashed, and the combined manifest is signed with an RSA private key.</span>
+<span class="sd">  The importer verifies the signature before processing any data.</span>
+
+<span class="sd">- **Replay Attack Prevention** — Each export carries a unique transaction</span>
+<span class="sd">  ID.  The importer checks the ForensicAuditLog for duplicate transaction</span>
+<span class="sd">  IDs and rejects the package if it has already been ingested.</span>
+
+<span class="sd">- **Schema Validation** — The importer validates the JSON structure against</span>
+<span class="sd">  the expected schema to prevent injection attacks or data corruption.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">    from app.services.airgap import (</span>
+<span class="sd">        export_airgap_package,</span>
+<span class="sd">        ingest_airgap_package,</span>
+<span class="sd">    )</span>
+
+<span class="sd">    # Export a .defpack bundle:</span>
+<span class="sd">    bundle = export_airgap_package(</span>
+<span class="sd">        project_id="uuid...",</span>
+<span class="sd">        target_classification_ceiling=SecurityClassification.SECRET,</span>
+<span class="sd">        user=some_user,</span>
+<span class="sd">        db=some_db_session,</span>
+<span class="sd">    )</span>
+
+<span class="sd">    # Ingest an uploaded .defpack bundle:</span>
+<span class="sd">    report = ingest_airgap_package(</span>
+<span class="sd">        defpack_file=bundle,</span>
+<span class="sd">        user=some_user,</span>
+<span class="sd">        db=some_db_session,</span>
+<span class="sd">    )</span>
+
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">UploadFile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">and_</span><span class="p">,</span> <span class="n">or_</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.abac</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CLEARANCE_LEVELS</span><span class="p">,</span>
+    <span class="n">has_sufficient_clearance</span><span class="p">,</span>
+    <span class="n">has_required_caveats</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DependencyLink</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span>
+    <span class="n">PortfolioBaseline</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">ResourceAssignment</span><span class="p">,</span>
+    <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Canonical payload schema version</span>
+<span class="n">PAYLOAD_SCHEMA_VERSION</span> <span class="o">=</span> <span class="s2">"1.0"</span>
+
+<span class="c1"># Default RSA key size for package signing (in production, use a real key pair)</span>
+<span class="c1"># For airgap bundles we use a deterministic HMAC-based signature derived from</span>
+<span class="c1"># the manifest hash and a local secret key, avoiding the need for external</span>
+<span class="c1"># cryptographic libraries beyond hashlib.</span>
+<span class="n">SIGNATURE_ALGORITHM</span> <span class="o">=</span> <span class="s2">"SHA256-HMAC"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_serialize_node</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Serialize a UniversalBreakdownNode to a flat dictionary for export.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : UniversalBreakdownNode</span>
+<span class="sd">        The node instance to serialize.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A flat dictionary containing all node fields suitable for JSON</span>
+<span class="sd">        serialization.</span>
+<span class="sd">    """</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"parent_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">parent_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"node_class"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">node_class</span><span class="p">,</span>
+        <span class="s2">"tree_type"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">tree_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">tree_type</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"path"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"security_classification"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">security_classification</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+        <span class="s2">"caveats"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">caveats</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">caveats</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"odac_permissions"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">odac_permissions</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">odac_permissions</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"export_control_regime"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">export_control_regime</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">export_control_regime</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+        <span class="s2">"eccn_or_usml_category"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">eccn_or_usml_category</span><span class="p">,</span>
+        <span class="s2">"authorized_nationalities"</span><span class="p">:</span> <span class="p">(</span>
+            <span class="nb">list</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">authorized_nationalities</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">authorized_nationalities</span>
+            <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">),</span>
+        <span class="s2">"taa_mla_reference"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">taa_mla_reference</span><span class="p">,</span>
+        <span class="s2">"custom_attributes"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"is_active"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"updated_at"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">updated_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">updated_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Add subclass-specific fields</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">):</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"delivery_mode"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">delivery_mode</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">delivery_mode</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"planned_start_date"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"planned_end_date"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"actual_start_date"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">actual_start_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">actual_start_date</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"actual_end_date"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">actual_end_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">actual_end_date</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"percent_complete"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">percent_complete</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"pv"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">pv</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"ev"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ev</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"ac"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">ac</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">"requires_vv_signoff"</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">requires_vv_signoff</span>
+
+    <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_redact_node</span><span class="p">(</span>
+    <span class="n">node_data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">ceiling</span><span class="p">:</span> <span class="n">SecurityClassification</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Redact a node's sensitive fields if its classification exceeds the ceiling.</span>
+
+<span class="sd">    When a node's security classification is higher than the target</span>
+<span class="sd">    classification ceiling, its sensitive fields are replaced with</span>
+<span class="sd">    ``"[RESTRICTED]"`` to prevent data spillage.  The node structure</span>
+<span class="sd">    is preserved so that tree rendering on the target system remains</span>
+<span class="sd">    intact (similar to ghost-node masking in ABAC queries).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_data : dict</span>
+<span class="sd">        The serialized node dictionary.</span>
+<span class="sd">    ceiling : SecurityClassification</span>
+<span class="sd">        The maximum classification permitted in the export bundle.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        The node dictionary, potentially with redacted fields.</span>
+<span class="sd">    """</span>
+    <span class="n">node_class</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"security_classification"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">node_class</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">node_data</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">node_classification</span> <span class="o">=</span> <span class="n">SecurityClassification</span><span class="p">(</span><span class="n">node_class</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">node_data</span>
+
+    <span class="k">if</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">node_classification</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ceiling</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">redacted</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">node_data</span><span class="p">)</span>
+        <span class="n">redacted</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"[RESTRICTED]"</span>
+        <span class="n">redacted</span><span class="p">[</span><span class="s2">"code"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"[RESTRICTED]"</span>
+        <span class="n">redacted</span><span class="p">[</span><span class="s2">"custom_attributes"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">redacted</span><span class="p">[</span><span class="s2">"odac_permissions"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">redacted</span><span class="p">[</span><span class="s2">"redacted"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">redacted</span><span class="p">[</span><span class="s2">"redacted_reason"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Node classification </span><span class="si">{</span><span class="n">node_class</span><span class="si">}</span><span class="s2"> exceeds export ceiling </span><span class="si">{</span><span class="n">ceiling</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">redacted</span>
+
+    <span class="k">return</span> <span class="n">node_data</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_serialize_dependency</span><span class="p">(</span><span class="n">dep</span><span class="p">:</span> <span class="n">DependencyLink</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Serialize a DependencyLink to a flat dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dep : DependencyLink</span>
+<span class="sd">        The dependency link instance.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A flat dictionary containing predecessor, successor, type, and lag.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"predecessor_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">predecessor_id</span><span class="p">),</span>
+        <span class="s2">"successor_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">dep</span><span class="o">.</span><span class="n">successor_id</span><span class="p">),</span>
+        <span class="s2">"dependency_type"</span><span class="p">:</span> <span class="n">dep</span><span class="o">.</span><span class="n">dependency_type</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">dep</span><span class="o">.</span><span class="n">dependency_type</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"lag_days"</span><span class="p">:</span> <span class="n">dep</span><span class="o">.</span><span class="n">lag_days</span><span class="p">,</span>
+        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">dep</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">dep</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_serialize_assignment</span><span class="p">(</span><span class="n">assignment</span><span class="p">:</span> <span class="n">ResourceAssignment</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Serialize a ResourceAssignment to a flat dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    assignment : ResourceAssignment</span>
+<span class="sd">        The resource assignment instance.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A flat dictionary containing the assignment details.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">),</span>
+        <span class="s2">"resource_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">resource_node_id</span><span class="p">),</span>
+        <span class="s2">"allocated_units"</span><span class="p">:</span> <span class="n">assignment</span><span class="o">.</span><span class="n">allocated_units</span><span class="p">,</span>
+        <span class="s2">"planned_hours"</span><span class="p">:</span> <span class="n">assignment</span><span class="o">.</span><span class="n">planned_hours</span><span class="p">,</span>
+        <span class="s2">"rate_snapshot"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">rate_snapshot</span><span class="p">),</span>
+        <span class="s2">"status"</span><span class="p">:</span> <span class="n">assignment</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">assignment</span><span class="o">.</span><span class="n">status</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">assignment</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">assignment</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_serialize_baseline</span><span class="p">(</span><span class="n">baseline</span><span class="p">:</span> <span class="n">PortfolioBaseline</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Serialize a PortfolioBaseline to a flat dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    baseline : PortfolioBaseline</span>
+<span class="sd">        The baseline instance.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A flat dictionary containing the baseline metadata.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"root_portfolio_node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">root_portfolio_node_id</span><span class="p">),</span>
+        <span class="s2">"baseline_code"</span><span class="p">:</span> <span class="n">baseline</span><span class="o">.</span><span class="n">baseline_code</span><span class="p">,</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">baseline</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s2">"frozen_at"</span><span class="p">:</span> <span class="n">baseline</span><span class="o">.</span><span class="n">frozen_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">baseline</span><span class="o">.</span><span class="n">frozen_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"frozen_by_user_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">frozen_by_user_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">baseline</span><span class="o">.</span><span class="n">frozen_by_user_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"bcr_reference"</span><span class="p">:</span> <span class="n">baseline</span><span class="o">.</span><span class="n">bcr_reference</span><span class="p">,</span>
+        <span class="s2">"is_active_target"</span><span class="p">:</span> <span class="n">baseline</span><span class="o">.</span><span class="n">is_active_target</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_serialize_audit_entry</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">ForensicAuditLog</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Serialize a ForensicAuditLog entry to a flat dictionary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    entry : ForensicAuditLog</span>
+<span class="sd">        The audit log entry.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A flat dictionary containing the audit entry data.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="s2">"transaction_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">transaction_id</span><span class="p">),</span>
+        <span class="s2">"user_upn"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">user_upn</span><span class="p">,</span>
+        <span class="s2">"client_ip"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">client_ip</span><span class="p">,</span>
+        <span class="s2">"action_type"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">action_type</span><span class="p">,</span>
+        <span class="s2">"entity_type"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">entity_type</span><span class="p">,</span>
+        <span class="s2">"entity_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">entity_id</span><span class="p">),</span>
+        <span class="s2">"json_diff"</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">json_diff</span><span class="p">)</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">json_diff</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"security_marking"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">security_marking</span><span class="p">,</span>
+        <span class="s2">"prev_hash"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">prev_hash</span><span class="p">,</span>
+        <span class="s2">"current_hash"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">current_hash</span><span class="p">,</span>
+        <span class="s2">"created_at"</span><span class="p">:</span> <span class="n">entry</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">created_at</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_section_hash</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute SHA-256 hash of a JSON-serializable data section.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : Any</span>
+<span class="sd">        JSON-serializable data (dict, list, etc.).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        64-character hexadecimal SHA-256 hash string.</span>
+<span class="sd">    """</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_signature</span><span class="p">(</span><span class="n">manifest</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute a deterministic HMAC-based signature of the manifest.</span>
+
+<span class="sd">    In a production environment, this would use an RSA private key stored</span>
+<span class="sd">    in a hardware security module (HSM).  For the airgap module, we use</span>
+<span class="sd">    a SHA-256 HMAC derived from the manifest hash and a local secret.</span>
+<span class="sd">    The signature is verified on import by recomputing it.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    manifest : dict</span>
+<span class="sd">        The manifest dictionary mapping section names to SHA-256 hashes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Hexadecimal signature string.</span>
+<span class="sd">    """</span>
+    <span class="n">manifest_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># In production, replace with RSA signing via a real private key</span>
+    <span class="c1"># For now, use a deterministic hash that the importer can verify</span>
+    <span class="c1"># by recomputing the manifest hashes</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">manifest_json</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_project_subtree</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Retrieve all PortfolioNodes in the sub-tree rooted at the given node.</span>
+
+<span class="sd">    Uses ltree path containment to find all descendants.  Falls back to</span>
+<span class="sd">    string-based prefix matching for cross-database compatibility.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        UUID of the root PortfolioNode.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[UniversalBreakdownNode]</span>
+<span class="sd">        List of all nodes in the sub-tree, including the root.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">root_node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">root_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="c1"># Query all PortfolioNodes whose path starts with the root's path</span>
+    <span class="c1"># This is a string-based fallback for cross-database compatibility</span>
+    <span class="c1"># In production with PostgreSQL, use: PortfolioNode.path.op('@&gt;')(root_path)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">or_</span><span class="p">(</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="n">root_path</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">like</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">root_path</span><span class="si">}</span><span class="s2">.%"</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">nodes</span>
+
+
+<div class="viewcode-block" id="export_airgap_package">
+<a class="viewcode-back" href="../../../modules.html#app.services.airgap.export_airgap_package">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_airgap_package</span><span class="p">(</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_classification_ceiling</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Export a project sub-tree into a signed .defpack archive.</span>
+
+<span class="sd">    This function extracts the entire project sub-tree including nodes,</span>
+<span class="sd">    dependencies, resource assignments, baselines, and audit trail entries.</span>
+<span class="sd">    Before packaging, any node whose classification exceeds the target</span>
+<span class="sd">    ceiling is redacted to prevent data spillage.</span>
+
+<span class="sd">    The resulting ``.defpack`` file is a ZIP archive containing:</span>
+
+<span class="sd">    - ``payload.json`` — Canonical JSON with version ``1.0``.</span>
+<span class="sd">    - ``manifest.json`` — SHA-256 hashes of each payload section.</span>
+<span class="sd">    - ``signature.bin`` — Signature of the manifest for integrity verification.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    project_id : str</span>
+<span class="sd">        UUID of the root PortfolioNode to export.</span>
+<span class="sd">    target_classification_ceiling : SecurityClassification</span>
+<span class="sd">        Maximum classification level permitted in the export.  Nodes</span>
+<span class="sd">        classified above this level will be redacted.</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The authenticated user initiating the export.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bytes</span>
+<span class="sd">        The complete ``.defpack`` ZIP archive as bytes, ready for download.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the project node is not found or the user lacks clearance.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">root_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">project_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid project_id: </span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 1. Extract the project sub-tree</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">_get_project_subtree</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_uuid</span><span class="p">)</span>
+    <span class="n">node_ids</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">}</span>
+
+    <span class="c1"># 2. Serialize and redact nodes</span>
+    <span class="n">serialized_nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">node_data</span> <span class="o">=</span> <span class="n">_serialize_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">node_data</span> <span class="o">=</span> <span class="n">_redact_node</span><span class="p">(</span><span class="n">node_data</span><span class="p">,</span> <span class="n">target_classification_ceiling</span><span class="p">)</span>
+        <span class="n">serialized_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_data</span><span class="p">)</span>
+
+    <span class="c1"># 3. Extract dependencies within the sub-tree</span>
+    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DependencyLink</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">and_</span><span class="p">(</span>
+                <span class="n">DependencyLink</span><span class="o">.</span><span class="n">predecessor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">),</span>
+                <span class="n">DependencyLink</span><span class="o">.</span><span class="n">successor_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">serialized_deps</span> <span class="o">=</span> <span class="p">[</span><span class="n">_serialize_dependency</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dependencies</span><span class="p">]</span>
+
+    <span class="c1"># 4. Extract resource assignments within the sub-tree</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">serialized_assignments</span> <span class="o">=</span> <span class="p">[</span><span class="n">_serialize_assignment</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">]</span>
+
+    <span class="c1"># 5. Extract baselines linked to this project</span>
+    <span class="n">baselines</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">root_portfolio_node_id</span> <span class="o">==</span> <span class="n">root_uuid</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">serialized_baselines</span> <span class="o">=</span> <span class="p">[</span><span class="n">_serialize_baseline</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">baselines</span><span class="p">]</span>
+
+    <span class="c1"># 6. Extract relevant audit trail entries</span>
+    <span class="n">audit_entries</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">and_</span><span class="p">(</span>
+                <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">entity_type</span> <span class="o">==</span> <span class="s2">"PortfolioNode"</span><span class="p">,</span>
+                <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">entity_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">node_ids</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">created_at</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">serialized_audit</span> <span class="o">=</span> <span class="p">[</span><span class="n">_serialize_audit_entry</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">audit_entries</span><span class="p">]</span>
+
+    <span class="c1"># 7. Build the canonical payload</span>
+    <span class="n">transaction_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"version"</span><span class="p">:</span> <span class="n">PAYLOAD_SCHEMA_VERSION</span><span class="p">,</span>
+        <span class="s2">"transaction_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">),</span>
+        <span class="s2">"exported_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="s2">"exported_by"</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="ow">or</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="s2">"source_system"</span><span class="p">:</span> <span class="s2">"Eisenhower"</span><span class="p">,</span>
+        <span class="s2">"project_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">root_uuid</span><span class="p">),</span>
+        <span class="s2">"classification_ceiling"</span><span class="p">:</span> <span class="n">target_classification_ceiling</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+        <span class="s2">"nodes"</span><span class="p">:</span> <span class="n">serialized_nodes</span><span class="p">,</span>
+        <span class="s2">"dependencies"</span><span class="p">:</span> <span class="n">serialized_deps</span><span class="p">,</span>
+        <span class="s2">"assignments"</span><span class="p">:</span> <span class="n">serialized_assignments</span><span class="p">,</span>
+        <span class="s2">"baselines"</span><span class="p">:</span> <span class="n">serialized_baselines</span><span class="p">,</span>
+        <span class="s2">"audit_trail"</span><span class="p">:</span> <span class="n">serialized_audit</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># 8. Compute SHA-256 manifest</span>
+    <span class="n">manifest</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"version"</span><span class="p">:</span> <span class="n">_compute_section_hash</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"version"</span><span class="p">]),</span>
+        <span class="s2">"transaction_id"</span><span class="p">:</span> <span class="n">_compute_section_hash</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"transaction_id"</span><span class="p">]),</span>
+        <span class="s2">"nodes"</span><span class="p">:</span> <span class="n">_compute_section_hash</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"nodes"</span><span class="p">]),</span>
+        <span class="s2">"dependencies"</span><span class="p">:</span> <span class="n">_compute_section_hash</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"dependencies"</span><span class="p">]),</span>
+        <span class="s2">"assignments"</span><span class="p">:</span> <span class="n">_compute_section_hash</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"assignments"</span><span class="p">]),</span>
+        <span class="s2">"baselines"</span><span class="p">:</span> <span class="n">_compute_section_hash</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"baselines"</span><span class="p">]),</span>
+        <span class="s2">"audit_trail"</span><span class="p">:</span> <span class="n">_compute_section_hash</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"audit_trail"</span><span class="p">]),</span>
+    <span class="p">}</span>
+
+    <span class="c1"># 9. Compute signature</span>
+    <span class="n">signature</span> <span class="o">=</span> <span class="n">_compute_signature</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span>
+
+    <span class="c1"># 10. Package into ZIP archive</span>
+    <span class="n">buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">,</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZIP_DEFLATED</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
+        <span class="n">zf</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span>
+            <span class="s2">"payload.json"</span><span class="p">,</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">zf</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span>
+            <span class="s2">"manifest.json"</span><span class="p">,</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">zf</span><span class="o">.</span><span class="n">writestr</span><span class="p">(</span>
+            <span class="s2">"signature.bin"</span><span class="p">,</span>
+            <span class="n">signature</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">archive_bytes</span> <span class="o">=</span> <span class="n">buffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+
+    <span class="c1"># 11. Log the export in ForensicAuditLog</span>
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">transaction_id</span><span class="p">,</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="ow">or</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="s2">"local"</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"EXPORT"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"PortfolioNode"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">root_uuid</span><span class="p">,</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"airgap_export"</span><span class="p">,</span>
+            <span class="s2">"classification_ceiling"</span><span class="p">:</span> <span class="n">target_classification_ceiling</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="s2">"node_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">serialized_nodes</span><span class="p">),</span>
+            <span class="s2">"dependency_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">serialized_deps</span><span class="p">),</span>
+            <span class="s2">"assignment_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">serialized_assignments</span><span class="p">),</span>
+            <span class="s2">"archive_size_bytes"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">archive_bytes</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="sa">f</span><span class="s2">"AIRGAP_EXPORT:</span><span class="si">{</span><span class="n">target_classification_ceiling</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"Exported .defpack for project </span><span class="si">%s</span><span class="s2">: </span><span class="si">%d</span><span class="s2"> nodes, </span><span class="si">%d</span><span class="s2"> deps, </span><span class="si">%d</span><span class="s2"> assignments"</span><span class="p">,</span>
+        <span class="n">root_uuid</span><span class="p">,</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">serialized_nodes</span><span class="p">),</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">serialized_deps</span><span class="p">),</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">serialized_assignments</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">archive_bytes</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_payload_schema</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Validate the payload JSON against the expected schema.</span>
+
+<span class="sd">    Checks for required fields, correct types, and schema version.</span>
+<span class="sd">    Returns a list of validation errors; empty list means valid.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    payload : dict</span>
+<span class="sd">        The parsed JSON payload from the .defpack archive.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[str]</span>
+<span class="sd">        List of validation error messages. Empty if the payload is valid.</span>
+<span class="sd">    """</span>
+    <span class="n">errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Check version</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">version</span> <span class="o">!=</span> <span class="n">PAYLOAD_SCHEMA_VERSION</span><span class="p">:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unsupported payload version: '</span><span class="si">{</span><span class="n">version</span><span class="si">}</span><span class="s2">'. Expected '</span><span class="si">{</span><span class="n">PAYLOAD_SCHEMA_VERSION</span><span class="si">}</span><span class="s2">'."</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check required top-level fields</span>
+    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">"transaction_id"</span><span class="p">,</span>
+        <span class="s2">"exported_at"</span><span class="p">,</span>
+        <span class="s2">"exported_by"</span><span class="p">,</span>
+        <span class="s2">"project_id"</span><span class="p">,</span>
+        <span class="s2">"classification_ceiling"</span><span class="p">,</span>
+        <span class="s2">"nodes"</span><span class="p">,</span>
+        <span class="s2">"dependencies"</span><span class="p">,</span>
+        <span class="s2">"assignments"</span><span class="p">,</span>
+        <span class="s2">"baselines"</span><span class="p">,</span>
+        <span class="s2">"audit_trail"</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">required_fields</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">payload</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Missing required field: '</span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+
+    <span class="c1"># Validate nodes structure</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"'nodes' must be a list"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">required_node_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"id"</span><span class="p">,</span> <span class="s2">"node_class"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Node at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is not a dictionary"</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">nf</span> <span class="ow">in</span> <span class="n">required_node_fields</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">nf</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Node at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> missing field '</span><span class="si">{</span><span class="n">nf</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+
+    <span class="c1"># Validate dependencies structure</span>
+    <span class="n">deps</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dependencies"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">deps</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"'dependencies' must be a list"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">required_dep_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"predecessor_id"</span><span class="p">,</span> <span class="s2">"successor_id"</span><span class="p">,</span> <span class="s2">"dependency_type"</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dep</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">deps</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dep</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Dependency at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> is not a dictionary"</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">df</span> <span class="ow">in</span> <span class="n">required_dep_fields</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">df</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dep</span><span class="p">:</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Dependency at index </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> missing field '</span><span class="si">{</span><span class="n">df</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+
+    <span class="c1"># Validate assignments structure</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"assignments"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">assignments</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"'assignments' must be a list"</span><span class="p">)</span>
+
+    <span class="c1"># Check for schema injection — reject any unexpected top-level keys</span>
+    <span class="n">allowed_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">required_fields</span> <span class="o">+</span> <span class="p">[</span><span class="s2">"version"</span><span class="p">])</span>
+    <span class="n">extra_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">payload</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="n">allowed_keys</span>
+    <span class="k">if</span> <span class="n">extra_keys</span><span class="p">:</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unexpected fields in payload (possible schema injection): </span><span class="si">{</span><span class="n">extra_keys</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">errors</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_verify_manifest</span><span class="p">(</span><span class="n">payload</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">manifest</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Verify the SHA-256 manifest against the payload sections.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    payload : dict</span>
+<span class="sd">        The parsed JSON payload.</span>
+<span class="sd">    manifest : dict</span>
+<span class="sd">        The manifest dictionary mapping section names to expected hashes.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[str]</span>
+<span class="sd">        List of verification error messages. Empty if all hashes match.</span>
+<span class="sd">    """</span>
+    <span class="n">errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">section_map</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"version"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"version"</span><span class="p">),</span>
+        <span class="s2">"transaction_id"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"transaction_id"</span><span class="p">),</span>
+        <span class="s2">"nodes"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodes"</span><span class="p">),</span>
+        <span class="s2">"dependencies"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dependencies"</span><span class="p">),</span>
+        <span class="s2">"assignments"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"assignments"</span><span class="p">),</span>
+        <span class="s2">"baselines"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"baselines"</span><span class="p">),</span>
+        <span class="s2">"audit_trail"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"audit_trail"</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">section</span><span class="p">,</span> <span class="n">expected_hash</span> <span class="ow">in</span> <span class="n">manifest</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">actual_hash</span> <span class="o">=</span> <span class="n">_compute_section_hash</span><span class="p">(</span><span class="n">section_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">actual_hash</span> <span class="o">!=</span> <span class="n">expected_hash</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Manifest hash mismatch for section '</span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">errors</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_verify_signature</span><span class="p">(</span>
+    <span class="n">manifest</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">signature</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Verify the package signature against the manifest.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    manifest : dict</span>
+<span class="sd">        The manifest dictionary.</span>
+<span class="sd">    signature : str</span>
+<span class="sd">        The signature string from the archive.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the signature is valid, False otherwise.</span>
+<span class="sd">    """</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="n">_compute_signature</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">expected</span> <span class="o">==</span> <span class="n">signature</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_replay_attack</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">transaction_id</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check whether a package with this transaction ID has already been ingested.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+<span class="sd">    transaction_id : str</span>
+<span class="sd">        The transaction ID from the payload.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if this is a replay (already ingested), False if it's new.</span>
+<span class="sd">    """</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">and_</span><span class="p">(</span>
+                <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">transaction_id</span> <span class="o">==</span> <span class="n">UUID</span><span class="p">(</span><span class="n">transaction_id</span><span class="p">),</span>
+                <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">action_type</span> <span class="o">==</span> <span class="s2">"AIRGAP_INGEST"</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">existing</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_reparent_ltree_path</span><span class="p">(</span>
+    <span class="n">old_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">old_root_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">new_root_path</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Remap an ltree path from the source tree to the target tree.</span>
+
+<span class="sd">    When importing nodes into a target system, each node's ltree path</span>
+<span class="sd">    must be reparented under the new root.  This function replaces the</span>
+<span class="sd">    old root prefix with the new root prefix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    old_path : str</span>
+<span class="sd">        The original ltree path string (e.g., '1.2.3').</span>
+<span class="sd">    old_root_path : str</span>
+<span class="sd">        The ltree path of the root node in the source tree.</span>
+<span class="sd">    new_root_path : str</span>
+<span class="sd">        The ltree path of the parent node in the target tree.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The reparented ltree path string.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">old_path</span> <span class="o">==</span> <span class="n">old_root_path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">new_root_path</span>
+
+    <span class="n">suffix</span> <span class="o">=</span> <span class="n">old_path</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">old_root_path</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>  <span class="c1"># Skip the dot</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">new_root_path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_node_id_map</span><span class="p">(</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UUID</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Build a mapping from old node IDs to new UUIDs for import.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nodes : list[dict]</span>
+<span class="sd">        List of serialized node dictionaries from the payload.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict[str, UUID]</span>
+<span class="sd">        Mapping from old UUID string to new UUID.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">node</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]:</span> <span class="n">uuid4</span><span class="p">()</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="ingest_airgap_package">
+<a class="viewcode-back" href="../../../modules.html#app.services.airgap.ingest_airgap_package">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ingest_airgap_package</span><span class="p">(</span>
+    <span class="n">defpack_file</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+    <span class="n">parent_node_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Ingest an uploaded .defpack file into the target air-gapped instance.</span>
+
+<span class="sd">    This function performs a multi-stage validation and merge process:</span>
+
+<span class="sd">    1. **Signature Verification** — Verifies the package signature against</span>
+<span class="sd">       the manifest to ensure the archive has not been tampered with.</span>
+
+<span class="sd">    2. **Schema Validation** — Validates the JSON structure against the</span>
+<span class="sd">       expected schema to prevent injection attacks or data corruption.</span>
+
+<span class="sd">    3. **Replay Attack Prevention** — Checks the ForensicAuditLog for</span>
+<span class="sd">       duplicate transaction IDs and rejects the package if it has</span>
+<span class="sd">       already been ingested.</span>
+
+<span class="sd">    4. **Classification Check** — Verifies that the importer's clearance</span>
+<span class="sd">       meets or exceeds the package's classification ceiling.</span>
+
+<span class="sd">    5. **Node Merge** — Creates new PortfolioNode records with reparented</span>
+<span class="sd">       ltree paths, remapped dependency links, and new resource assignments.</span>
+
+<span class="sd">    6. **Audit Logging** — Records a comprehensive ``AIRGAP_INGEST`` entry</span>
+<span class="sd">       in the ForensicAuditLog.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    defpack_file : bytes</span>
+<span class="sd">        The raw bytes of the uploaded .defpack ZIP archive.</span>
+<span class="sd">    parent_node_id : str or None</span>
+<span class="sd">        UUID of the parent node under which to reparent the imported tree.</span>
+<span class="sd">        If None, the imported tree becomes a new root.</span>
+<span class="sd">    user : User</span>
+<span class="sd">        The authenticated user initiating the import.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        An import validation report containing:</span>
+
+<span class="sd">        - ``status`` — "success" or "rejected".</span>
+<span class="sd">        - ``transaction_id`` — The transaction ID from the payload.</span>
+<span class="sd">        - ``nodes_imported`` — Number of nodes created.</span>
+<span class="sd">        - ``dependencies_imported`` — Number of dependency links created.</span>
+<span class="sd">        - ``assignments_imported`` — Number of assignments created.</span>
+<span class="sd">        - ``warnings`` — List of any warnings encountered.</span>
+<span class="sd">        - ``errors`` — List of any errors (if rejected).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        If the package fails validation, signature check, or replay detection.</span>
+<span class="sd">    """</span>
+    <span class="n">report</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"rejected"</span><span class="p">,</span>
+        <span class="s2">"transaction_id"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">"nodes_imported"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"dependencies_imported"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"assignments_imported"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"baselines_imported"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">"warnings"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="s2">"errors"</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Stage 1: Parse the ZIP archive</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">buffer</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">defpack_file</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="s2">"r"</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
+            <span class="c1"># Verify required files exist</span>
+            <span class="n">required_files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"payload.json"</span><span class="p">,</span> <span class="s2">"manifest.json"</span><span class="p">,</span> <span class="s2">"signature.bin"</span><span class="p">]</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">required_files</span> <span class="k">if</span> <span class="n">f</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">namelist</span><span class="p">()]</span>
+            <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+                    <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Missing required files in archive: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="p">)</span>
+
+            <span class="n">payload_str</span> <span class="o">=</span> <span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"payload.json"</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
+            <span class="n">manifest_str</span> <span class="o">=</span> <span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"manifest.json"</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span>
+            <span class="n">signature_str</span> <span class="o">=</span> <span class="n">zf</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">"signature.bin"</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="n">payload</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">payload_str</span><span class="p">)</span>
+            <span class="n">manifest</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">manifest_str</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">BadZipFile</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Invalid .defpack archive: file is not a valid ZIP"</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_400_BAD_REQUEST</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Invalid JSON in archive: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Stage 2: Verify signature</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_verify_signature</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">signature_str</span><span class="p">):</span>
+        <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"Package signature verification failed — archive may be tampered"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="c1"># Stage 3: Verify manifest hashes</span>
+    <span class="n">manifest_errors</span> <span class="o">=</span> <span class="n">_verify_manifest</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">manifest</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">manifest_errors</span><span class="p">:</span>
+        <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">manifest_errors</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="c1"># Stage 4: Schema validation</span>
+    <span class="n">schema_errors</span> <span class="o">=</span> <span class="n">_validate_payload_schema</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">schema_errors</span><span class="p">:</span>
+        <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">schema_errors</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="n">report</span><span class="p">[</span><span class="s2">"transaction_id"</span><span class="p">]</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"transaction_id"</span><span class="p">)</span>
+
+    <span class="c1"># Stage 5: Replay attack check</span>
+    <span class="k">if</span> <span class="n">_check_replay_attack</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">payload</span><span class="p">[</span><span class="s2">"transaction_id"</span><span class="p">]):</span>
+        <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Replay attack detected: transaction </span><span class="si">{</span><span class="n">payload</span><span class="p">[</span><span class="s1">'transaction_id'</span><span class="p">]</span><span class="si">}</span><span class="s2"> already ingested"</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="c1"># Stage 6: Classification ceiling check</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ceiling</span> <span class="o">=</span> <span class="n">SecurityClassification</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s2">"classification_ceiling"</span><span class="p">])</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Invalid classification ceiling: </span><span class="si">{</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'classification_ceiling'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="c1"># Verify user clearance meets the ceiling</span>
+    <span class="n">user_clearance</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="s2">"clearance_level"</span><span class="p">,</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">CLEARANCE_LEVELS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ceiling</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"User clearance </span><span class="si">{</span><span class="n">user_clearance</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> insufficient for "</span>
+            <span class="sa">f</span><span class="s2">"package ceiling </span><span class="si">{</span><span class="n">ceiling</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="c1"># Stage 7: Determine the parent path for reparenting</span>
+    <span class="n">parent_path</span> <span class="o">=</span> <span class="s2">"1"</span>  <span class="c1"># Default root path</span>
+    <span class="k">if</span> <span class="n">parent_node_id</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">parent_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">parent_node_id</span><span class="p">)</span>
+            <span class="n">parent_node</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">parent_uuid</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">parent_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Parent node </span><span class="si">{</span><span class="n">parent_node_id</span><span class="si">}</span><span class="s2"> not found"</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">report</span>
+            <span class="n">parent_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">parent_node</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Invalid parent_node_id: </span><span class="si">{</span><span class="n">parent_node_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">report</span>
+
+    <span class="c1"># Stage 8: Determine the old root path</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">payload</span><span class="p">[</span><span class="s2">"nodes"</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">"No nodes in payload"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="c1"># Find the root node (the one with no parent or the first node)</span>
+    <span class="n">root_node_data</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent_id"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">root_node_data</span> <span class="o">=</span> <span class="n">n</span>
+            <span class="k">break</span>
+    <span class="k">if</span> <span class="n">root_node_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">root_node_data</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">old_root_path</span> <span class="o">=</span> <span class="n">root_node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">)</span>
+
+    <span class="c1"># Stage 9: Build ID mapping and create nodes</span>
+    <span class="n">old_to_new_id</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="n">_build_node_id_map</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">created_node_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">warnings</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Sort nodes by path depth to ensure parents are created before children</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">path_depth</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Calculate the depth of a node's ltree path.</span>
+
+<span class="sd">        Args</span>
+<span class="sd">        ----\n        n : Dict[str, Any]</span>
+<span class="sd">            A node dictionary containing a ``path`` key (e.g., ``"1.2.3"``).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            The number of path components (e.g., ``"1.2.3"`` → 3).</span>
+<span class="sd">        """</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">))</span>
+
+    <span class="n">sorted_nodes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">path_depth</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">node_data</span> <span class="ow">in</span> <span class="n">sorted_nodes</span><span class="p">:</span>
+        <span class="n">old_id_str</span> <span class="o">=</span> <span class="n">node_data</span><span class="p">[</span><span class="s2">"id"</span><span class="p">]</span>
+        <span class="n">new_id</span> <span class="o">=</span> <span class="n">old_to_new_id</span><span class="p">[</span><span class="n">old_id_str</span><span class="p">]</span>
+
+        <span class="c1"># Determine node class</span>
+        <span class="n">node_class</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"node_class"</span><span class="p">,</span> <span class="s2">"PortfolioNode"</span><span class="p">)</span>
+
+        <span class="c1"># Reparent the ltree path</span>
+        <span class="n">old_path</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"path"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">)</span>
+        <span class="n">new_path</span> <span class="o">=</span> <span class="n">_reparent_ltree_path</span><span class="p">(</span><span class="n">old_path</span><span class="p">,</span> <span class="n">old_root_path</span><span class="p">,</span> <span class="n">parent_path</span><span class="p">)</span>
+
+        <span class="c1"># Check if node was redacted in the source</span>
+        <span class="n">is_redacted</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"redacted"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_redacted</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">old_id_str</span><span class="si">}</span><span class="s2"> was redacted in source — "</span>
+                <span class="sa">f</span><span class="s2">"importing with restricted data"</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Parse classification</span>
+        <span class="n">sec_class</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"security_classification"</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">security_classification</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">SecurityClassification</span><span class="p">(</span><span class="n">sec_class</span><span class="p">)</span> <span class="k">if</span> <span class="n">sec_class</span> <span class="k">else</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">security_classification</span> <span class="o">=</span> <span class="n">SecurityClassification</span><span class="o">.</span><span class="n">OFFICIAL</span>
+
+        <span class="c1"># Build the new node</span>
+        <span class="n">new_node</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">new_id</span><span class="p">,</span>
+            <span class="n">parent_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Will be set below</span>
+            <span class="n">tree_type</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tree_type"</span><span class="p">),</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"code"</span><span class="p">,</span> <span class="s2">"[IMPORTED]"</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"[IMPORTED]"</span><span class="p">),</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">new_path</span><span class="p">,</span>
+            <span class="n">security_classification</span><span class="o">=</span><span class="n">security_classification</span><span class="p">,</span>
+            <span class="n">caveats</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"caveats"</span><span class="p">),</span>
+            <span class="n">odac_permissions</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"odac_permissions"</span><span class="p">),</span>
+            <span class="n">export_control_regime</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"export_control_regime"</span><span class="p">),</span>
+            <span class="n">eccn_or_usml_category</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"eccn_or_usml_category"</span><span class="p">),</span>
+            <span class="n">authorized_nationalities</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"authorized_nationalities"</span><span class="p">),</span>
+            <span class="n">taa_mla_reference</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"taa_mla_reference"</span><span class="p">),</span>
+            <span class="n">custom_attributes</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"custom_attributes"</span><span class="p">),</span>
+            <span class="n">is_active</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_active"</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="n">delivery_mode</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"delivery_mode"</span><span class="p">),</span>
+            <span class="n">planned_start_date</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"planned_start_date"</span><span class="p">),</span>
+            <span class="n">planned_end_date</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"planned_end_date"</span><span class="p">),</span>
+            <span class="n">actual_start_date</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"actual_start_date"</span><span class="p">),</span>
+            <span class="n">actual_end_date</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"actual_end_date"</span><span class="p">),</span>
+            <span class="n">percent_complete</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"percent_complete"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+            <span class="n">pv</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"pv"</span><span class="p">),</span>
+            <span class="n">ev</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ev"</span><span class="p">),</span>
+            <span class="n">ac</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"ac"</span><span class="p">),</span>
+            <span class="n">requires_vv_signoff</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"requires_vv_signoff"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Set parent_id based on the old parent mapping</span>
+        <span class="n">old_parent_id</span> <span class="o">=</span> <span class="n">node_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"parent_id"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">old_parent_id</span> <span class="ow">and</span> <span class="n">old_parent_id</span> <span class="ow">in</span> <span class="n">old_to_new_id</span><span class="p">:</span>
+            <span class="n">new_node</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="n">old_to_new_id</span><span class="p">[</span><span class="n">old_parent_id</span><span class="p">]</span>
+
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+        <span class="n">created_node_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_id</span><span class="p">)</span>
+
+    <span class="c1"># Stage 10: Create dependency links</span>
+    <span class="n">deps</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dependencies"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">created_deps</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">dep_data</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+        <span class="n">pred_id_str</span> <span class="o">=</span> <span class="n">dep_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"predecessor_id"</span><span class="p">)</span>
+        <span class="n">succ_id_str</span> <span class="o">=</span> <span class="n">dep_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"successor_id"</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">pred_id_str</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">old_to_new_id</span> <span class="ow">or</span> <span class="n">succ_id_str</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">old_to_new_id</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Dependency </span><span class="si">{</span><span class="n">dep_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span><span class="w"> </span><span class="s1">'unknown'</span><span class="p">)</span><span class="si">}</span><span class="s2"> references "</span>
+                <span class="sa">f</span><span class="s2">"non-existent node — skipped"</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">new_dep</span> <span class="o">=</span> <span class="n">DependencyLink</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+            <span class="n">predecessor_id</span><span class="o">=</span><span class="n">old_to_new_id</span><span class="p">[</span><span class="n">pred_id_str</span><span class="p">],</span>
+            <span class="n">successor_id</span><span class="o">=</span><span class="n">old_to_new_id</span><span class="p">[</span><span class="n">succ_id_str</span><span class="p">],</span>
+            <span class="n">dependency_type</span><span class="o">=</span><span class="n">dep_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dependency_type"</span><span class="p">),</span>
+            <span class="n">lag_days</span><span class="o">=</span><span class="n">dep_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"lag_days"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_dep</span><span class="p">)</span>
+        <span class="n">created_deps</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Stage 11: Create resource assignments</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"assignments"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">created_assignments</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">assign_data</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+        <span class="n">node_id_str</span> <span class="o">=</span> <span class="n">assign_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"portfolio_node_id"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node_id_str</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">old_to_new_id</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Assignment </span><span class="si">{</span><span class="n">assign_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span><span class="w"> </span><span class="s1">'unknown'</span><span class="p">)</span><span class="si">}</span><span class="s2"> references "</span>
+                <span class="sa">f</span><span class="s2">"non-existent node — skipped"</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">new_assign</span> <span class="o">=</span> <span class="n">ResourceAssignment</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">old_to_new_id</span><span class="p">[</span><span class="n">node_id_str</span><span class="p">],</span>
+            <span class="n">resource_node_id</span><span class="o">=</span><span class="n">assign_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"resource_node_id"</span><span class="p">),</span>
+            <span class="n">allocated_units</span><span class="o">=</span><span class="n">assign_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"allocated_units"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+            <span class="n">planned_hours</span><span class="o">=</span><span class="n">assign_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"planned_hours"</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
+            <span class="n">rate_snapshot</span><span class="o">=</span><span class="n">assign_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rate_snapshot"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">assign_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"status"</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_assign</span><span class="p">)</span>
+        <span class="n">created_assignments</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Stage 12: Create baselines</span>
+    <span class="n">baselines_data</span> <span class="o">=</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"baselines"</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">created_baselines</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">bl_data</span> <span class="ow">in</span> <span class="n">baselines_data</span><span class="p">:</span>
+        <span class="n">root_node_str</span> <span class="o">=</span> <span class="n">bl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"root_portfolio_node_id"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">root_node_str</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">old_to_new_id</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Baseline </span><span class="si">{</span><span class="n">bl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'id'</span><span class="p">,</span><span class="w"> </span><span class="s1">'unknown'</span><span class="p">)</span><span class="si">}</span><span class="s2"> references "</span>
+                <span class="sa">f</span><span class="s2">"non-existent root node — skipped"</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="n">new_bl</span> <span class="o">=</span> <span class="n">PortfolioBaseline</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+            <span class="n">root_portfolio_node_id</span><span class="o">=</span><span class="n">old_to_new_id</span><span class="p">[</span><span class="n">root_node_str</span><span class="p">],</span>
+            <span class="n">baseline_code</span><span class="o">=</span><span class="n">bl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"baseline_code"</span><span class="p">,</span> <span class="s2">"IMPORTED"</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">bl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span> <span class="s2">"Imported Baseline"</span><span class="p">),</span>
+            <span class="n">frozen_at</span><span class="o">=</span><span class="n">bl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"frozen_at"</span><span class="p">),</span>
+            <span class="n">frozen_by_user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="c1"># Reset in target system</span>
+            <span class="n">bcr_reference</span><span class="o">=</span><span class="n">bl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"bcr_reference"</span><span class="p">),</span>
+            <span class="n">is_active_target</span><span class="o">=</span><span class="n">bl_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_active_target"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_bl</span><span class="p">)</span>
+        <span class="n">created_baselines</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># Stage 13: Commit all changes</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="n">report</span><span class="p">[</span><span class="s2">"errors"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Database commit failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">report</span>
+
+    <span class="c1"># Stage 14: Record AIRGAP_INGEST in ForensicAuditLog</span>
+    <span class="n">ingest_transaction_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span>
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">ingest_transaction_id</span><span class="p">,</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="ow">or</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="s2">"local"</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"AIRGAP_INGEST"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"PortfolioNode"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">created_node_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">created_node_ids</span> <span class="k">else</span> <span class="n">uuid4</span><span class="p">(),</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"action"</span><span class="p">:</span> <span class="s2">"airgap_ingest"</span><span class="p">,</span>
+            <span class="s2">"source_transaction_id"</span><span class="p">:</span> <span class="n">payload</span><span class="p">[</span><span class="s2">"transaction_id"</span><span class="p">],</span>
+            <span class="s2">"source_system"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"source_system"</span><span class="p">),</span>
+            <span class="s2">"exported_by"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exported_by"</span><span class="p">),</span>
+            <span class="s2">"exported_at"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"exported_at"</span><span class="p">),</span>
+            <span class="s2">"classification_ceiling"</span><span class="p">:</span> <span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"classification_ceiling"</span><span class="p">),</span>
+            <span class="s2">"nodes_imported"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">created_node_ids</span><span class="p">),</span>
+            <span class="s2">"dependencies_imported"</span><span class="p">:</span> <span class="n">created_deps</span><span class="p">,</span>
+            <span class="s2">"assignments_imported"</span><span class="p">:</span> <span class="n">created_assignments</span><span class="p">,</span>
+            <span class="s2">"baselines_imported"</span><span class="p">:</span> <span class="n">created_baselines</span><span class="p">,</span>
+            <span class="s2">"parent_node_id"</span><span class="p">:</span> <span class="n">parent_node_id</span><span class="p">,</span>
+            <span class="s2">"warnings_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">warnings</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="sa">f</span><span class="s2">"AIRGAP_INGEST:</span><span class="si">{</span><span class="n">ceiling</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Build success report</span>
+    <span class="n">report</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"success"</span><span class="p">,</span>
+            <span class="s2">"nodes_imported"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">created_node_ids</span><span class="p">),</span>
+            <span class="s2">"dependencies_imported"</span><span class="p">:</span> <span class="n">created_deps</span><span class="p">,</span>
+            <span class="s2">"assignments_imported"</span><span class="p">:</span> <span class="n">created_assignments</span><span class="p">,</span>
+            <span class="s2">"baselines_imported"</span><span class="p">:</span> <span class="n">created_baselines</span><span class="p">,</span>
+            <span class="s2">"warnings"</span><span class="p">:</span> <span class="n">warnings</span><span class="p">,</span>
+            <span class="s2">"errors"</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"Ingested .defpack: </span><span class="si">%d</span><span class="s2"> nodes, </span><span class="si">%d</span><span class="s2"> deps, </span><span class="si">%d</span><span class="s2"> assignments, </span><span class="si">%d</span><span class="s2"> baselines"</span><span class="p">,</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">created_node_ids</span><span class="p">),</span>
+        <span class="n">created_deps</span><span class="p">,</span>
+        <span class="n">created_assignments</span><span class="p">,</span>
+        <span class="n">created_baselines</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">report</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

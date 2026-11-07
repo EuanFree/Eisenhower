@@ -1,0 +1,339 @@
+# ============================================================
+# Eisenhower Portfolio Manager — Docker Compose Orchestration
+# ============================================================
+#
+# Local air-gap deployment manifest for the complete system.
+#
+# SERVICES:
+#   postgres      — PostgreSQL 16 with ltree extension, GiST tuning
+#   minio         — S3-compatible sovereign artifact vault
+#   redis         — High-speed message bus for WebSocket presence
+#   fastapi-backend — Application API (Gunicorn + Uvicorn workers)
+#   frontend-gateway — Nginx reverse proxy serving static assets
+#
+# VOLUMES:
+#   postgres-data     — Persistent database storage
+#   postgres-wal      — Continuous WAL archiving for point-in-time recovery
+#   minio-data        — Sovereign object store data
+#   minio-config      — MinIO configuration and encryption keys
+#
+# NETWORKS:
+#   eisenhower-net    — Isolated internal network (no external access)
+#
+# USAGE:
+#   # Start all services
+#   docker compose -f deploy/docker-compose.yml up -d
+#
+#   # View logs
+#   docker compose -f deploy/docker-compose.yml logs -f
+#
+#   # Stop all services
+#   docker compose -f deploy/docker-compose.yml down
+#
+#   # Stop and remove volumes (destructive)
+#   docker compose -f deploy/docker-compose.yml down -v
+#
+# SECURITY NOTES:
+# - All services communicate over an isolated Docker network
+# - No ports are exposed to the host except the frontend gateway (8080)
+# - Database credentials are injected via environment variables
+# - MinIO uses SSE-S3 server-side encryption by default
+# - In production, replace default passwords with strong secrets
+# ============================================================
+
+services:
+  # -----------------------------------------------------------
+  # PostgreSQL 16 — Primary database with ltree extension
+  # -----------------------------------------------------------
+  postgres:
+    image: postgres:16
+    container_name: eisenhower-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: eisenhower
+      POSTGRES_USER: eisenhower
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eisenhower_secure_change_me}
+      # GiST index tuning for ltree containment queries
+      POSTGRES_SHARED_BUFFERS: 512MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 1536MB
+      POSTGRES_MAINTENANCE_WORK_MEM: 128MB
+      POSTGRES_WORK_MEM: 16MB
+      POSTGRES_RANDOM_PAGE_COST: 1.1
+      POSTGRES_EFFECTIVE_IO_CONCURRENCY: 200
+      POSTGRES_HUGE_PAGES: "try"
+      POSTGRES_MAX_WAL_SIZE: 2GB
+      POSTGRES_MIN_WAL_SIZE: 512MB
+      POSTGRES_CHECKPOINT_TIMEOUT: 10min
+      POSTGRES_CHECKPOINT_COMPLETION_TARGET: "0.9"
+      POSTGRES_WAL_LEVEL: replica
+      POSTGRES_WAL_KEEP_SIZE: 1GB
+      POSTGRES_MAX_WAL_SENDERS: 3
+      POSTGRES_WAL_COMPRESSION: lz4
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    volumes:
+      # Persistent database data
+      - postgres-data:/var/lib/postgresql/data
+      # Continuous WAL archiving for point-in-time recovery
+      - postgres-wal:/var/lib/postgresql/wal_archive
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eisenhower -d eisenhower"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    networks:
+      - eisenhower-net
+
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+
+  # -----------------------------------------------------------
+  # MinIO — S3-compatible sovereign artifact vault
+  # -----------------------------------------------------------
+  minio:
+    image: ghcr.io/coollabsio/minio:latest
+    container_name: eisenhower-minio
+    restart: unless-stopped
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BROWSER_LOGIN_ANIMATION: "off"
+
+    command: server /data --console-address ":9001"
+
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+
+    volumes:
+      - minio-data:/data
+      - minio-config:/root/.minio
+
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+    networks:
+      - eisenhower-net
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # -----------------------------------------------------------
+  # Redis — WebSocket presence & background task distribution
+  # -----------------------------------------------------------
+  redis:
+    image: redis:7
+    container_name: eisenhower-redis
+    restart: unless-stopped
+
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
+      --save ""
+
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+    volumes:
+      - redis-data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    networks:
+      - eisenhower-net
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # -----------------------------------------------------------
+  # FastAPI Backend — Gunicorn + Uvicorn workers
+  # -----------------------------------------------------------
+  fastapi-backend:
+    build:
+      context: ..
+      dockerfile: deploy/docker/backend.Dockerfile
+    container_name: eisenhower-backend
+    restart: unless-stopped
+
+    environment:
+      ENVIRONMENT: development
+      APP_ENVIRONMENT: production
+      SECRET_KEY: ${SECRET_KEY:-CHANGE_ME_IN_PRODUCTION}
+      DATABASE_URL: postgresql+psycopg2://eisenhower:${POSTGRES_PASSWORD:-eisenhower_secure_change_me}@postgres:5432/eisenhower
+      DATABASE_SSL_MODE: disable
+      REDIS_URL: redis://redis:6379/0
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET_NAME: eisenhower-artifacts
+      S3_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      S3_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRATION_MINUTES: 480
+      TLS_ENABLED: "false"
+      PYTHONUNBUFFERED: "1"
+
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+
+    volumes:
+      # Application logs
+      - backend-logs:/app/logs
+      # Temporary files for large exports
+      - backend-tmp:/app/tmp
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+    networks:
+      - eisenhower-net
+
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 2G
+
+  # -----------------------------------------------------------
+  # Frontend Gateway — Nginx reverse proxy
+  # -----------------------------------------------------------
+  frontend-gateway:
+    build:
+      context: ..
+      dockerfile: deploy/docker/frontend.Dockerfile
+    container_name: eisenhower-frontend
+    restart: unless-stopped
+
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+      - "${FRONTEND_HTTP_PORT:-80}:80"
+
+    depends_on:
+      - fastapi-backend
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - eisenhower-net
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+# -----------------------------------------------------------
+# Named volumes
+# -----------------------------------------------------------
+volumes:
+  postgres-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${POSTGRES_DATA_DIR:-./volumes/postgres/data}
+  postgres-wal:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${POSTGRES_WAL_DIR:-./volumes/postgres/wal}
+  minio-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${MINIO_DATA_DIR:-./volumes/minio/data}
+  minio-config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${MINIO_CONFIG_DIR:-./volumes/minio/config}
+  redis-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${REDIS_DATA_DIR:-./volumes/redis/data}
+  backend-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${BACKEND_LOGS_DIR:-./volumes/backend/logs}
+  backend-tmp:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${BACKEND_TMP_DIR:-./volumes/backend/tmp}
+
+# -----------------------------------------------------------
+# Network — Isolated internal network
+# -----------------------------------------------------------
+networks:
+  eisenhower-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

@@ -1,0 +1,1068 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.routers.wbs &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.routers.wbs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.routers.wbs</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""WBS (Work Breakdown Structure) router with ABAC filtering.</span>
+
+<span class="sd">Provides endpoints for querying and managing the portfolio/project tree</span>
+<span class="sd">using ltree hierarchical queries. All tree retrieval queries apply</span>
+<span class="sd">Attribute-Based Access Control (ABAC) filtering with ghost-node masking</span>
+<span class="sd">to preserve tree structure when users lack clearance for certain nodes.</span>
+
+<span class="sd">Batch Rollback / Undo</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The ``POST /batch-rollback`` endpoint supports client-side Undo/Redo by</span>
+<span class="sd">atomically reverting a set of field-level mutations in a single database</span>
+<span class="sd">transaction.  Each revert operation is checked against the node's</span>
+<span class="sd">``version_id`` for optimistic concurrency.  A ForensicAuditLog entry is</span>
+<span class="sd">written with SHA-256 chained hashing, linking the rollback to the original</span>
+<span class="sd">mutation's transaction ID.  If a project ID is provided, CPM recalculation</span>
+<span class="sd">is triggered after the rollback completes.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIRouter</span><span class="p">,</span> <span class="n">Depends</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">Query</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">sa_text</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.database</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_db</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">User</span><span class="p">,</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">TreeType</span><span class="p">,</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">UBNCreate</span><span class="p">,</span> <span class="n">UBNUpdate</span><span class="p">,</span> <span class="n">PortfolioNodeCreate</span><span class="p">,</span> <span class="n">PortfolioNodeUpdate</span><span class="p">,</span>
+    <span class="n">BatchRollbackRequest</span><span class="p">,</span> <span class="n">BatchRollbackResponse</span><span class="p">,</span> <span class="n">RevertOperationResult</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.schemas.authoring</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">WorkItemCreate</span><span class="p">,</span>
+    <span class="n">WorkItemCreatedResponse</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.permissions</span><span class="w"> </span><span class="kn">import</span> <span class="n">verify_node_creation_authority</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.utils.auth</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_current_user</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.abac</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">apply_abac_filtering</span><span class="p">,</span>
+    <span class="n">is_node_visible</span><span class="p">,</span>
+    <span class="n">node_to_dict</span><span class="p">,</span>
+    <span class="n">create_ghost_node</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConflictException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.lock_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_path_lock</span>
+
+<span class="n">router</span> <span class="o">=</span> <span class="n">APIRouter</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"/v1/wbs"</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="s2">"WBS - Work Breakdown Structure"</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_user_clearance_info</span><span class="p">(</span><span class="n">user</span><span class="p">:</span> <span class="n">User</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Extract clearance level and caveats from user."""</span>
+    <span class="k">return</span> <span class="n">user</span><span class="o">.</span><span class="n">clearance_level</span><span class="p">,</span> <span class="n">user</span><span class="o">.</span><span class="n">caveats</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_query_subtree</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Query all nodes in a subtree using ltree path containment.</span>
+<span class="sd">    </span>
+<span class="sd">    Uses the ltree &lt;@ operator to find all descendants of a root node.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        db: Database session</span>
+<span class="sd">        root_id: UUID of the root node</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        List of all nodes in the subtree</span>
+<span class="sd">    """</span>
+    <span class="c1"># First get the root node's path</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">root_id</span><span class="si">}</span><span class="s2"> not found"</span>
+        <span class="p">)</span>
+    
+    <span class="c1"># Query all descendants using ltree path containment</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">sa_text</span><span class="p">(</span>
+            <span class="s2">"SELECT ubn.*, pn.delivery_mode, pn.planned_start_date, "</span>
+            <span class="s2">"pn.planned_end_date, pn.actual_start_date, pn.actual_end_date, "</span>
+            <span class="s2">"pn.percent_complete, pn.pv, pn.ev, pn.ac "</span>
+            <span class="s2">"FROM universal_breakdown_nodes ubn "</span>
+            <span class="s2">"LEFT JOIN portfolio_nodes pn ON ubn.id = pn.id "</span>
+            <span class="s2">"WHERE ubn.path &lt;@ :root_path "</span>
+            <span class="s2">"ORDER BY ubn.path"</span>
+        <span class="p">),</span>
+        <span class="p">{</span><span class="s2">"root_path"</span><span class="p">:</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">},</span>
+    <span class="p">)</span>
+    
+    <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+    
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">row_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">row</span><span class="p">))</span>
+        <span class="c1"># Determine node class and create appropriate object</span>
+        <span class="n">node_class</span> <span class="o">=</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"node_class"</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">node_class</span> <span class="o">==</span> <span class="s2">"PortfolioNode"</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">UniversalBreakdownNode</span><span class="p">()</span>
+        
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        
+        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">nodes</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_children_map</span><span class="p">(</span><span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Build a map of parent_id to children nodes.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        nodes: List of nodes</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Dictionary mapping parent_id string to list of child nodes</span>
+<span class="sd">    """</span>
+    <span class="n">children_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">parent_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">parent_id</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">parent_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">children_map</span><span class="p">:</span>
+            <span class="n">children_map</span><span class="p">[</span><span class="n">parent_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">children_map</span><span class="p">[</span><span class="n">parent_key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">children_map</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_visible_descendants</span><span class="p">(</span>
+    <span class="n">node</span><span class="p">:</span> <span class="n">UniversalBreakdownNode</span><span class="p">,</span>
+    <span class="n">children_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]],</span>
+    <span class="n">user_clearance</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">user_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if a node has any visible descendants.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        node: The node to check</span>
+<span class="sd">        children_map: Map of parent_id to children</span>
+<span class="sd">        user_clearance: User's clearance level</span>
+<span class="sd">        user_caveats: User's caveats</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        True if any descendant is visible to the user</span>
+<span class="sd">    """</span>
+    <span class="n">node_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">node_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">children_map</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    
+    <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children_map</span><span class="p">[</span><span class="n">node_key</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">,</span> <span class="n">child</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">_has_visible_descendants</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">children_map</span><span class="p">,</span> <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_tree_structure</span><span class="p">(</span>
+    <span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">],</span>
+    <span class="n">user_clearance</span><span class="p">:</span> <span class="n">SecurityClassification</span><span class="p">,</span>
+    <span class="n">user_caveats</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Build a tree structure with ABAC filtering and ghost-node masking.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        nodes: List of nodes from the database</span>
+<span class="sd">        user_clearance: User's clearance level</span>
+<span class="sd">        user_caveats: User's caveats</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        List of node dictionaries representing the filtered tree</span>
+<span class="sd">    """</span>
+    <span class="n">children_map</span> <span class="o">=</span> <span class="n">_build_children_map</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+    
+    <span class="n">result</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="c1"># Full visibility - include complete node data</span>
+            <span class="n">node_dict</span> <span class="o">=</span> <span class="n">node_to_dict</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="c1"># Add children recursively</span>
+            <span class="n">node_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node_key</span> <span class="ow">in</span> <span class="n">children_map</span><span class="p">:</span>
+                <span class="n">node_dict</span><span class="p">[</span><span class="s2">"children"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_build_tree_structure</span><span class="p">(</span>
+                    <span class="n">children_map</span><span class="p">[</span><span class="n">node_key</span><span class="p">],</span>
+                    <span class="n">user_clearance</span><span class="p">,</span>
+                    <span class="n">user_caveats</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">node_dict</span><span class="p">[</span><span class="s2">"children"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node_dict</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">_has_visible_descendants</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">children_map</span><span class="p">,</span> <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">):</span>
+            <span class="c1"># Partial visibility - create ghost node with visible descendants</span>
+            <span class="n">ghost</span> <span class="o">=</span> <span class="n">create_ghost_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="n">node_key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node_key</span> <span class="ow">in</span> <span class="n">children_map</span><span class="p">:</span>
+                <span class="n">ghost</span><span class="p">[</span><span class="s2">"children"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_build_tree_structure</span><span class="p">(</span>
+                    <span class="n">children_map</span><span class="p">[</span><span class="n">node_key</span><span class="p">],</span>
+                    <span class="n">user_clearance</span><span class="p">,</span>
+                    <span class="n">user_caveats</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ghost</span><span class="p">[</span><span class="s2">"children"</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ghost</span><span class="p">)</span>
+        <span class="c1"># Else: no visibility - exclude from results entirely</span>
+    
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="get_wbs_tree">
+<a class="viewcode-back" href="../../../modules.html#app.routers.wbs.get_wbs_tree">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tree/</span><span class="si">{node_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_wbs_tree</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Retrieve the WBS tree rooted at the specified node, with ABAC filtering.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns the full subtree with proper hierarchy preservation. Nodes that</span>
+<span class="sd">    the user lacks clearance for will be masked as ghost nodes if they have</span>
+<span class="sd">    visible descendants, or completely hidden if they have no visible descendants.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        node_id: UUID of the root node of the tree to retrieve</span>
+<span class="sd">        db: Database session</span>
+<span class="sd">        current_user: Authenticated user</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        List of nodes forming the tree structure</span>
+<span class="sd">    """</span>
+    <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span> <span class="o">=</span> <span class="n">_get_user_clearance_info</span><span class="p">(</span><span class="n">current_user</span><span class="p">)</span>
+    
+    <span class="c1"># Query the full subtree</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">_query_subtree</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node_id</span><span class="p">)</span>
+    
+    <span class="c1"># Apply ABAC filtering and build tree structure</span>
+    <span class="n">filtered_tree</span> <span class="o">=</span> <span class="n">_build_tree_structure</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"root_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_id</span><span class="p">),</span>
+        <span class="s2">"tree"</span><span class="p">:</span> <span class="n">filtered_tree</span><span class="p">,</span>
+        <span class="s2">"total_nodes"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">),</span>
+        <span class="s2">"visible_nodes"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">filtered_tree</span><span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="list_wbs_nodes">
+<a class="viewcode-back" href="../../../modules.html#app.routers.wbs.list_wbs_nodes">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/nodes"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_wbs_nodes</span><span class="p">(</span>
+    <span class="n">tree_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TreeType</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by tree type"</span><span class="p">),</span>
+    <span class="n">parent_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Filter by parent node"</span><span class="p">),</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"ltree path prefix for lazy sub-tree fetch (e.g. 'prog_a.proj_1')"</span><span class="p">),</span>
+    <span class="n">depth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">ge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">le</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Maximum depth levels to return from root path (1 = immediate children only)"</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""List WBS nodes with optional filtering, applying ABAC rules.</span>
+
+<span class="sd">    Supports lazy sub-tree fetching for virtualized table expansion:</span>
+<span class="sd">    when ``root`` is an ltree path prefix and ``depth`` is set, only the</span>
+<span class="sd">    specified number of hierarchy levels beneath that path are returned,</span>
+<span class="sd">    avoiding a full recursive tree pull.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tree_type: Optional filter by tree type (WBS, RBS, LBS)</span>
+<span class="sd">        parent_id: Optional filter by parent node ID</span>
+<span class="sd">        root: Optional ltree path prefix for lazy sub-tree fetch</span>
+<span class="sd">        depth: Maximum depth levels to return from root path (1 = immediate children)</span>
+<span class="sd">        db: Database session</span>
+<span class="sd">        current_user: Authenticated user</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of visible nodes matching the filter criteria</span>
+<span class="sd">    """</span>
+    <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span> <span class="o">=</span> <span class="n">_get_user_clearance_info</span><span class="p">(</span><span class="n">current_user</span><span class="p">)</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">tree_type</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">tree_type</span> <span class="o">==</span> <span class="n">tree_type</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">parent_id</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">==</span> <span class="n">parent_id</span><span class="p">)</span>
+
+    <span class="c1"># Lazy sub-tree fetch: filter by ltree path prefix with depth limit</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Calculate the expected path depth for the root prefix</span>
+        <span class="n">root_depth</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">))</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="c1"># Filter to nodes whose path starts with the root prefix</span>
+        <span class="c1"># and respect the depth limit</span>
+        <span class="n">filtered</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UniversalBreakdownNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">node_parts</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)</span>
+            <span class="c1"># Check if this node is a descendant of the root path</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_parts</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">root_depth</span> <span class="ow">and</span> <span class="n">node_parts</span><span class="p">[:</span><span class="n">root_depth</span><span class="p">]</span> <span class="o">==</span> <span class="n">root</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">):</span>
+                <span class="c1"># Calculate depth relative to root</span>
+                <span class="n">relative_depth</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_parts</span><span class="p">)</span> <span class="o">-</span> <span class="n">root_depth</span>
+                <span class="k">if</span> <span class="n">depth</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">relative_depth</span> <span class="o">&lt;=</span> <span class="n">depth</span><span class="p">:</span>
+                    <span class="c1"># Don't return the root node itself, only its descendants</span>
+                    <span class="k">if</span> <span class="n">relative_depth</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">filtered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">filtered</span>
+
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">parent_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">tree_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Apply ABAC filtering</span>
+    <span class="n">filtered_nodes</span> <span class="o">=</span> <span class="n">apply_abac_filtering</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"nodes"</span><span class="p">:</span> <span class="n">filtered_nodes</span><span class="p">,</span> <span class="s2">"count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">filtered_nodes</span><span class="p">)}</span></div>
+
+
+
+<div class="viewcode-block" id="get_wbs_node">
+<a class="viewcode-back" href="../../../modules.html#app.routers.wbs.get_wbs_node">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/nodes/</span><span class="si">{node_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_wbs_node</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Retrieve a single WBS node, checking ABAC access.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        node_id: UUID of the node to retrieve</span>
+<span class="sd">        db: Database session</span>
+<span class="sd">        current_user: Authenticated user</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Node data if accessible, otherwise 403 Forbidden</span>
+<span class="sd">    """</span>
+    <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span> <span class="o">=</span> <span class="n">_get_user_clearance_info</span><span class="p">(</span><span class="n">current_user</span><span class="p">)</span>
+    
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span>
+        <span class="p">)</span>
+    
+    <span class="c1"># Check ABAC access</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for this resource"</span>
+        <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">node_to_dict</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="create_wbs_node">
+<a class="viewcode-back" href="../../../modules.html#app.routers.wbs.create_wbs_node">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/nodes"</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_wbs_node</span><span class="p">(</span>
+    <span class="n">node_data</span><span class="p">:</span> <span class="n">PortfolioNodeCreate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new WBS node in the tree.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        node_data: Node creation data</span>
+<span class="sd">        db: Database session</span>
+<span class="sd">        current_user: Authenticated user</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Created node data</span>
+<span class="sd">    """</span>
+    <span class="c1"># If parent_id is provided, verify it exists</span>
+    <span class="n">parent_path</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">node_data</span><span class="o">.</span><span class="n">parent_id</span><span class="p">:</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_data</span><span class="o">.</span><span class="n">parent_id</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parent</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Parent node </span><span class="si">{</span><span class="n">node_data</span><span class="o">.</span><span class="n">parent_id</span><span class="si">}</span><span class="s2"> not found"</span>
+            <span class="p">)</span>
+        
+        <span class="n">parent_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parent</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">node_data</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">node_data</span><span class="o">.</span><span class="n">path</span> <span class="k">else</span> <span class="kc">None</span>
+    
+    <span class="c1"># Create the new node</span>
+    <span class="n">new_node</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">(</span>
+        <span class="n">tree_type</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">tree_type</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+        <span class="n">parent_id</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">parent_id</span><span class="p">,</span>
+        <span class="n">security_classification</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span>
+        <span class="n">caveats</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span>
+        <span class="n">odac_permissions</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">odac_permissions</span><span class="p">,</span>
+        <span class="n">custom_attributes</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">,</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">is_active</span><span class="p">,</span>
+        <span class="n">delivery_mode</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">delivery_mode</span><span class="p">,</span>
+        <span class="n">planned_start_date</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span>
+        <span class="n">planned_end_date</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+        <span class="n">percent_complete</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">percent_complete</span><span class="p">,</span>
+        <span class="n">pv</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">pv</span><span class="p">,</span>
+        <span class="n">ev</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">ev</span><span class="p">,</span>
+        <span class="n">ac</span><span class="o">=</span><span class="n">node_data</span><span class="o">.</span><span class="n">ac</span><span class="p">,</span>
+    <span class="p">)</span>
+    
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">node_to_dict</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="update_wbs_node">
+<a class="viewcode-back" href="../../../modules.html#app.routers.wbs.update_wbs_node">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s2">"/nodes/</span><span class="si">{node_id}</span><span class="s2">"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_wbs_node</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">node_update</span><span class="p">:</span> <span class="n">PortfolioNodeUpdate</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Update an existing WBS node with optimistic concurrency control.</span>
+<span class="sd">    </span>
+<span class="sd">    This endpoint supports version-based conflict detection.  If the</span>
+<span class="sd">    client includes ``version_id`` in the request body, the server</span>
+<span class="sd">    verifies that the database row still has that version before</span>
+<span class="sd">    applying the update.  If another user has already modified the</span>
+<span class="sd">    node, SQLAlchemy raises ``StaleDataError`` which is caught by</span>
+<span class="sd">    the global exception handler and returned as HTTP 409 Conflict.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        node_id: UUID of the node to update</span>
+<span class="sd">        node_update: Update data, optionally including version_id</span>
+<span class="sd">        db: Database session</span>
+<span class="sd">        current_user: Authenticated user</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Updated node data including the new version_id</span>
+<span class="sd">        </span>
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: 404 if node not found, 403 if clearance</span>
+<span class="sd">            insufficient, 409 if concurrent modification detected</span>
+<span class="sd">    """</span>
+    <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span> <span class="o">=</span> <span class="n">_get_user_clearance_info</span><span class="p">(</span><span class="n">current_user</span><span class="p">)</span>
+    
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span>
+        <span class="p">)</span>
+    
+    <span class="c1"># Check ABAC access</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for this resource"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check if this node is under an active sub-tree lock</span>
+    <span class="n">check_path_lock</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="c1"># Extract version_id from update data for explicit conflict check</span>
+    <span class="n">expected_version</span> <span class="o">=</span> <span class="n">node_update</span><span class="o">.</span><span class="n">version_id</span>
+    <span class="k">if</span> <span class="n">expected_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">expected_version</span> <span class="o">!=</span> <span class="n">node</span><span class="o">.</span><span class="n">version_id</span><span class="p">:</span>
+        <span class="c1"># Fetch current state for the conflict payload</span>
+        <span class="n">current_state</span> <span class="o">=</span> <span class="n">node_to_dict</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ConflictException</span><span class="p">(</span>
+            <span class="n">entity_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">node_id</span><span class="p">),</span>
+            <span class="n">expected_version</span><span class="o">=</span><span class="n">expected_version</span><span class="p">,</span>
+            <span class="n">current_database_version</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">version_id</span><span class="p">,</span>
+            <span class="n">conflicting_user_upn</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="s1">'email'</span><span class="p">,</span> <span class="s1">'unknown'</span><span class="p">),</span>
+            <span class="n">current_state</span><span class="o">=</span><span class="n">current_state</span><span class="p">,</span>
+        <span class="p">)</span>
+    
+    <span class="c1"># Apply updates (exclude version_id — SQLAlchemy manages it)</span>
+    <span class="n">update_data</span> <span class="o">=</span> <span class="n">node_update</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">{</span><span class="s2">"version_id"</span><span class="p">})</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">update_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">node_to_dict</span><span class="p">(</span><span class="n">node</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="delete_wbs_node">
+<a class="viewcode-back" href="../../../modules.html#app.routers.wbs.delete_wbs_node">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="s2">"/nodes/</span><span class="si">{node_id}</span><span class="s2">"</span><span class="p">,</span> <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">delete_wbs_node</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete a WBS node and all its descendants.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        node_id: UUID of the node to delete</span>
+<span class="sd">        db: Database session</span>
+<span class="sd">        current_user: Authenticated user</span>
+<span class="sd">        </span>
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: If node not found or insufficient clearance</span>
+<span class="sd">    """</span>
+    <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span> <span class="o">=</span> <span class="n">_get_user_clearance_info</span><span class="p">(</span><span class="n">current_user</span><span class="p">)</span>
+    
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_id</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">node_id</span><span class="si">}</span><span class="s2"> not found"</span>
+        <span class="p">)</span>
+    
+    <span class="c1"># Check ABAC access</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="s2">"Insufficient security clearance for this resource"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check if this node is under an active sub-tree lock</span>
+    <span class="n">check_path_lock</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="c1"># Delete the node (cascade will handle children)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="get_descendants">
+<a class="viewcode-back" href="../../../modules.html#app.routers.wbs.get_descendants">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/nodes/</span><span class="si">{node_id}</span><span class="s2">/descendants"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_descendants</span><span class="p">(</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Get all descendants of a node with ABAC filtering.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        node_id: UUID of the ancestor node</span>
+<span class="sd">        db: Database session</span>
+<span class="sd">        current_user: Authenticated user</span>
+<span class="sd">        </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        List of visible descendants</span>
+<span class="sd">    """</span>
+    <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span> <span class="o">=</span> <span class="n">_get_user_clearance_info</span><span class="p">(</span><span class="n">current_user</span><span class="p">)</span>
+    
+    <span class="c1"># Query all descendants</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">_query_subtree</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">node_id</span><span class="p">)</span>
+    
+    <span class="c1"># Remove the root node itself</span>
+    <span class="n">descendants</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">id</span> <span class="o">!=</span> <span class="n">node_id</span><span class="p">]</span>
+    
+    <span class="c1"># Apply ABAC filtering</span>
+    <span class="n">filtered</span> <span class="o">=</span> <span class="n">apply_abac_filtering</span><span class="p">(</span><span class="n">descendants</span><span class="p">,</span> <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">filtered</span></div>
+
+
+
+<div class="viewcode-block" id="batch_rollback">
+<a class="viewcode-back" href="../../../modules.html#app.routers.wbs.batch_rollback">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/batch-rollback"</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">batch_rollback</span><span class="p">(</span>
+    <span class="n">rollback_request</span><span class="p">:</span> <span class="n">BatchRollbackRequest</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Atomically revert a batch of field-level mutations (Undo operation).</span>
+
+<span class="sd">    This endpoint supports the client-side Undo/Redo stack by reverting</span>
+<span class="sd">    multiple field changes in a single atomic database transaction.  Each</span>
+<span class="sd">    revert operation is validated against the node's ``version_id`` for</span>
+<span class="sd">    optimistic concurrency control.</span>
+
+<span class="sd">    The rollback is recorded in the ForensicAuditLog with action type</span>
+<span class="sd">    ``UNDO_REVERT``.  The SHA-256 hash chain is maintained by linking</span>
+<span class="sd">    the new entry's ``prev_hash`` to the latest audit entry's</span>
+<span class="sd">    ``current_hash``.  The ``json_diff`` field records both the reverted</span>
+<span class="sd">    state and a pointer to the original ``transaction_id``.</span>
+
+<span class="sd">    If a ``project_id`` is provided in the request, a CPM recalculation</span>
+<span class="sd">    is triggered after the rollback completes so that float and critical</span>
+<span class="sd">    path flags immediately reflect the restored state.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    rollback_request : BatchRollbackRequest</span>
+<span class="sd">        The undo batch payload containing revert operations.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Database session.</span>
+<span class="sd">    current_user : User</span>
+<span class="sd">        Authenticated user requesting the rollback.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BatchRollbackResponse</span>
+<span class="sd">        Per-operation results, audit log ID, and optional CPM results.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    HTTPException</span>
+<span class="sd">        404 if a node is not found, 403 if clearance is insufficient,</span>
+<span class="sd">        409 if a version conflict is detected.</span>
+<span class="sd">    """</span>
+    <span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span> <span class="o">=</span> <span class="n">_get_user_clearance_info</span><span class="p">(</span><span class="n">current_user</span><span class="p">)</span>
+
+    <span class="c1"># Collect unique node IDs from all revert operations</span>
+    <span class="n">node_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">({</span><span class="n">op</span><span class="o">.</span><span class="n">node_id</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">rollback_request</span><span class="o">.</span><span class="n">revert_operations</span><span class="p">})</span>
+
+    <span class="c1"># Load all nodes in a single query</span>
+    <span class="n">nodes_by_id</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UniversalBreakdownNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">node_ids</span><span class="p">:</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UniversalBreakdownNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">UniversalBreakdownNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">nid</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_404_NOT_FOUND</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">nid</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check ABAC access — the user must be able to see the node</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_node_visible</span><span class="p">(</span><span class="n">user_clearance</span><span class="p">,</span> <span class="n">user_caveats</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+                <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_403_FORBIDDEN</span><span class="p">,</span>
+                <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Insufficient security clearance for node </span><span class="si">{</span><span class="n">nid</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">nodes_by_id</span><span class="p">[</span><span class="n">nid</span><span class="p">]</span> <span class="o">=</span> <span class="n">node</span>
+
+    <span class="c1"># Group revert operations by node for efficient processing</span>
+    <span class="n">ops_by_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">rollback_request</span><span class="o">.</span><span class="n">revert_operations</span><span class="p">:</span>
+        <span class="n">ops_by_node</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">node_id</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+    <span class="c1"># Track per-operation results</span>
+    <span class="n">results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">RevertOperationResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_diffs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># For the audit log json_diff</span>
+
+    <span class="c1"># Begin atomic transaction — all reverts succeed or none do</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">ops</span> <span class="ow">in</span> <span class="n">ops_by_node</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">nodes_by_id</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+
+            <span class="n">node_diff</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node_id</span><span class="p">,</span>
+                <span class="s2">"reverts"</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="p">}</span>
+
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
+                <span class="c1"># Optimistic concurrency check</span>
+                <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">expected_version</span> <span class="o">!=</span> <span class="n">node</span><span class="o">.</span><span class="n">version_id</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">ConflictException</span><span class="p">(</span>
+                        <span class="n">entity_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+                        <span class="n">expected_version</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">expected_version</span><span class="p">,</span>
+                        <span class="n">current_database_version</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">version_id</span><span class="p">,</span>
+                        <span class="n">conflicting_user_upn</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="s2">"email"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">),</span>
+                        <span class="n">current_state</span><span class="o">=</span><span class="n">node_to_dict</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Read the current value before reverting</span>
+                <span class="n">old_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+                <span class="c1"># Apply the revert</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">field</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">revert_to</span><span class="p">)</span>
+
+                <span class="c1"># SQLAlchemy's version_id_col automatically increments</span>
+                <span class="c1"># version_id on commit, so we don't manually touch it.</span>
+
+                <span class="n">node_diff</span><span class="p">[</span><span class="s2">"reverts"</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">"field"</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">field</span><span class="p">,</span>
+                    <span class="s2">"old_value"</span><span class="p">:</span> <span class="n">old_value</span><span class="p">,</span>
+                    <span class="s2">"reverted_to"</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">revert_to</span><span class="p">,</span>
+                <span class="p">})</span>
+
+            <span class="n">all_diffs</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_diff</span>
+
+        <span class="c1"># Commit all revert operations atomically</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="c1"># Build per-operation results after successful commit</span>
+        <span class="k">for</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">ops</span> <span class="ow">in</span> <span class="n">ops_by_node</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">nodes_by_id</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span>
+            <span class="c1"># Refresh to get the updated version_id</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
+                <span class="n">old_value</span> <span class="o">=</span> <span class="n">all_diffs</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"reverts"</span><span class="p">][</span>
+                    <span class="nb">next</span><span class="p">(</span>
+                        <span class="n">i</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_diffs</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"reverts"</span><span class="p">])</span>
+                        <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"field"</span><span class="p">]</span> <span class="o">==</span> <span class="n">op</span><span class="o">.</span><span class="n">field</span>
+                    <span class="p">)</span>
+                <span class="p">][</span><span class="s2">"old_value"</span><span class="p">]</span>
+
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">RevertOperationResult</span><span class="p">(</span>
+                        <span class="n">node_id</span><span class="o">=</span><span class="n">node_id</span><span class="p">,</span>
+                        <span class="n">field</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">field</span><span class="p">,</span>
+                        <span class="n">old_value</span><span class="o">=</span><span class="n">old_value</span><span class="p">,</span>
+                        <span class="n">new_value</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">revert_to</span><span class="p">,</span>
+                        <span class="n">version_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">version_id</span><span class="p">,</span>
+                        <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">error</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="n">ConflictException</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">):</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_500_INTERNAL_SERVER_ERROR</span><span class="p">,</span>
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Batch rollback failed: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Write ForensicAuditLog entry with SHA-256 chained hash</span>
+    <span class="n">rollback_transaction_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span>
+
+    <span class="c1"># Fetch the latest audit entry's current_hash for chain linkage</span>
+    <span class="n">latest_audit</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">prev_hash</span> <span class="o">=</span> <span class="n">latest_audit</span><span class="o">.</span><span class="n">current_hash</span> <span class="k">if</span> <span class="n">latest_audit</span> <span class="k">else</span> <span class="s2">""</span>
+
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">rollback_transaction_id</span><span class="p">,</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="s2">"email"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">),</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="s2">"unknown"</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"UNDO_REVERT"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"UniversalBreakdownNode"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>  <span class="c1"># synthetic ID for the batch operation</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"original_transaction_id"</span><span class="p">:</span> <span class="n">rollback_request</span><span class="o">.</span><span class="n">transaction_id</span><span class="p">,</span>
+            <span class="s2">"reverted_nodes"</span><span class="p">:</span> <span class="n">all_diffs</span><span class="p">,</span>
+            <span class="s2">"operations_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">rollback_request</span><span class="o">.</span><span class="n">revert_operations</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="sa">f</span><span class="s2">"UNDO_REVERT by </span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span><span class="w"> </span><span class="s1">'email'</span><span class="p">,</span><span class="w"> </span><span class="s1">'unknown'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">prev_hash</span><span class="o">=</span><span class="n">prev_hash</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="c1"># Build response</span>
+    <span class="n">succeeded</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
+    <span class="n">failed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">success</span><span class="p">)</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">BatchRollbackResponse</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">rollback_request</span><span class="o">.</span><span class="n">transaction_id</span><span class="p">,</span>
+        <span class="n">rollback_audit_id</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">audit_entry</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="n">operations_count</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rollback_request</span><span class="o">.</span><span class="n">revert_operations</span><span class="p">),</span>
+        <span class="n">operations_succeeded</span><span class="o">=</span><span class="n">succeeded</span><span class="p">,</span>
+        <span class="n">operations_failed</span><span class="o">=</span><span class="n">failed</span><span class="p">,</span>
+        <span class="n">results</span><span class="o">=</span><span class="n">results</span><span class="p">,</span>
+        <span class="n">cpm_recalculated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">cpm_result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Trigger CPM recalculation if project_id is provided</span>
+    <span class="k">if</span> <span class="n">rollback_request</span><span class="o">.</span><span class="n">project_id</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">app.services.cpm_engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">calculate_cpm</span>
+
+            <span class="n">project_uuid</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">rollback_request</span><span class="o">.</span><span class="n">project_id</span><span class="p">)</span>
+            <span class="n">cpm_result</span> <span class="o">=</span> <span class="n">calculate_cpm</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_uuid</span><span class="p">)</span>
+
+            <span class="n">response</span><span class="o">.</span><span class="n">cpm_recalculated</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">cpm_result</span> <span class="o">=</span> <span class="n">cpm_result</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># CPM failure doesn't undo the rollback — just report it</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">cpm_result</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"error"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)}</span>
+
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+
+<div class="viewcode-block" id="create_work_item">
+<a class="viewcode-back" href="../../../modules.html#app.routers.wbs.create_work_item">[docs]</a>
+<span class="nd">@router</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="s2">"/"</span><span class="p">,</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">WorkItemCreatedResponse</span><span class="p">,</span>
+    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
+    <span class="n">summary</span><span class="o">=</span><span class="s2">"Create a new Work Item"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Create a new WBS node (Programme, Project, Control Account, "</span>
+        <span class="s2">"Work Package, Task, or Milestone) with permission-governed "</span>
+        <span class="s2">"authorization.</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"The endpoint performs three authorization gates before creating "</span>
+        <span class="s2">"the node:</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"1. **Baseline Lock Gate** — Blocks if the parent or any ancestor "</span>
+        <span class="s2">"is locked under an active baseline freeze (HTTP 423).</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"2. **Role Hierarchy Gate** — Blocks if the user's role does not "</span>
+        <span class="s2">"authorise the target tier (HTTP 403).</span><span class="se">\n</span><span class="s2">"</span>
+        <span class="s2">"3. **Clearance Ceiling Gate** — Blocks if the target classification "</span>
+        <span class="s2">"exceeds the user's clearance (HTTP 403).</span><span class="se">\n\n</span><span class="s2">"</span>
+        <span class="s2">"On success, the new node's ltree path is generated as "</span>
+        <span class="s2">"``parent.path + '.' + sanitized_code``, and a ForensicAuditLog "</span>
+        <span class="s2">"entry is written with action_type='ENTITY_CREATED'."</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_work_item</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">WorkItemCreate</span><span class="p">,</span>
+    <span class="n">current_user</span><span class="p">:</span> <span class="n">User</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_current_user</span><span class="p">),</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">Depends</span><span class="p">(</span><span class="n">get_db</span><span class="p">),</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Create a new Work Item with permission-governed authorization.</span>
+
+<span class="sd">    Validates creation permissions, generates the ltree path, writes the</span>
+<span class="sd">    node atomically, and records a ForensicAuditLog entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        data: The validated WorkItemCreate payload.</span>
+<span class="sd">        current_user: The authenticated user.</span>
+<span class="sd">        db: Database session.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        WorkItemCreatedResponse with the new node's id, code, name, path,</span>
+<span class="sd">        tier, classification, and creation timestamp.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        HTTPException: 403 if authorization fails, 404 if parent not found,</span>
+<span class="sd">            423 if baseline-locked.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Step 1: Verify creation authority (three gates)</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">verify_node_creation_authority</span><span class="p">(</span>
+        <span class="n">parent_id</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">parent_id</span><span class="p">,</span>
+        <span class="n">target_tier</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">user</span><span class="o">=</span><span class="n">current_user</span><span class="p">,</span>
+        <span class="n">db</span><span class="o">=</span><span class="n">db</span><span class="p">,</span>
+        <span class="n">target_classification</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 2: Generate ltree path</span>
+    <span class="k">if</span> <span class="n">parent</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Root-level Programme — path is a new UUID-based segment</span>
+        <span class="n">new_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())[:</span><span class="mi">8</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Sanitize code for ltree: replace dots with underscores</span>
+        <span class="n">sanitized_code</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">code</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"."</span><span class="p">,</span> <span class="s2">"_"</span><span class="p">)</span>
+        <span class="n">new_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parent</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">sanitized_code</span><span class="si">}</span><span class="s2">"</span>
+
+    <span class="c1"># Step 3: Create the PortfolioNode (WBS node)</span>
+    <span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+    <span class="n">new_node_id</span> <span class="o">=</span> <span class="n">uuid4</span><span class="p">()</span>
+
+    <span class="n">new_node</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">new_node_id</span><span class="p">,</span>
+        <span class="n">parent_id</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">parent_id</span><span class="p">,</span>
+        <span class="n">tree_type</span><span class="o">=</span><span class="n">TreeType</span><span class="o">.</span><span class="n">WBS</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">new_path</span><span class="p">,</span>
+        <span class="n">security_classification</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span>
+        <span class="n">caveats</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">caveats</span><span class="p">,</span>
+        <span class="n">custom_attributes</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{},</span>
+        <span class="n">is_active</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">delivery_mode</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">delivery_mode</span><span class="p">,</span>
+        <span class="n">percent_complete</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">dal_sil_level</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">dal_sil_level</span><span class="p">,</span>
+        <span class="n">engineering_baseline_tier</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">engineering_baseline_tier</span><span class="p">,</span>
+        <span class="n">export_control_regime</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">export_control_regime</span><span class="p">,</span>
+        <span class="n">eccn_or_usml_category</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">eccn_or_usml_category</span><span class="p">,</span>
+        <span class="n">authorized_nationalities</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">authorized_nationalities</span><span class="p">,</span>
+        <span class="n">taa_mla_reference</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">taa_mla_reference</span><span class="p">,</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">now</span><span class="p">,</span>
+        <span class="n">updated_at</span><span class="o">=</span><span class="n">now</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Step 4: Write ForensicAuditLog entry</span>
+    <span class="n">latest_audit</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="n">prev_hash</span> <span class="o">=</span> <span class="n">latest_audit</span><span class="o">.</span><span class="n">current_hash</span> <span class="k">if</span> <span class="n">latest_audit</span> <span class="k">else</span> <span class="s2">""</span>
+
+    <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+        <span class="n">transaction_id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+        <span class="n">user_upn</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span> <span class="s2">"email"</span><span class="p">,</span> <span class="s2">"unknown"</span><span class="p">),</span>
+        <span class="n">client_ip</span><span class="o">=</span><span class="s2">"unknown"</span><span class="p">,</span>
+        <span class="n">action_type</span><span class="o">=</span><span class="s2">"ENTITY_CREATED"</span><span class="p">,</span>
+        <span class="n">entity_type</span><span class="o">=</span><span class="s2">"PortfolioNode"</span><span class="p">,</span>
+        <span class="n">entity_id</span><span class="o">=</span><span class="n">new_node_id</span><span class="p">,</span>
+        <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">"code"</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"tier"</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+            <span class="s2">"path"</span><span class="p">:</span> <span class="n">new_path</span><span class="p">,</span>
+            <span class="s2">"parent_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">parent_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">parent_id</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"security_classification"</span><span class="p">:</span> <span class="n">data</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">)</span>
+            <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">security_classification</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">security_marking</span><span class="o">=</span><span class="sa">f</span><span class="s2">"ENTITY_CREATED by </span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="n">current_user</span><span class="p">,</span><span class="w"> </span><span class="s1">'email'</span><span class="p">,</span><span class="w"> </span><span class="s1">'unknown'</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+        <span class="n">prev_hash</span><span class="o">=</span><span class="n">prev_hash</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">refresh</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">WorkItemCreatedResponse</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">new_node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="n">code</span><span class="o">=</span><span class="n">new_node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">new_node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">=</span><span class="n">new_node</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">security_classification</span><span class="o">=</span><span class="n">new_node</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">new_node</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">)</span>
+        <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_node</span><span class="o">.</span><span class="n">security_classification</span><span class="p">),</span>
+        <span class="n">created_at</span><span class="o">=</span><span class="n">new_node</span><span class="o">.</span><span class="n">created_at</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

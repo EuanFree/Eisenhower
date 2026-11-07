@@ -1,0 +1,182 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Working Calendars &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Working Calendars</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/calendar.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="working-calendars">
+<h1>Working Calendars<a class="headerlink" href="#working-calendars" title="Link to this heading"></a></h1>
+<p>Define working calendars that control which days are considered working days for schedule calculations.</p>
+<section id="calendars">
+<h2>calendars<a class="headerlink" href="#calendars" title="Link to this heading"></a></h2>
+<p>Project and resource calendar management API router.</p>
+<p>This module provides the REST API endpoints for managing working calendars
+and calendar exceptions.  Calendars define the standard working pattern
+(working days, hours per day, jurisdiction) for projects and resources.
+Calendar exceptions override the standard pattern for specific dates
+(statutory holidays, planned maintenance, overtime surge periods).</p>
+</section>
+<section id="endpoints">
+<h2>Endpoints<a class="headerlink" href="#endpoints" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>GET /</strong> — List all working calendars.</p></li>
+<li><p><strong>POST /</strong> — Create a new working calendar.</p></li>
+<li><p><strong>GET /{id}</strong> — Get a single calendar.</p></li>
+<li><p><strong>PUT /{id}</strong> — Update a calendar.</p></li>
+<li><p><strong>DELETE /{id}</strong> — Delete a calendar.</p></li>
+<li><p><strong>GET /{id}/exceptions</strong> — List exceptions for a calendar.</p></li>
+<li><p><strong>POST /{id}/exceptions</strong> — Create a new exception.</p></li>
+<li><p><strong>PUT /{id}/exceptions/{exc_id}</strong> — Update an exception.</p></li>
+<li><p><strong>DELETE /{id}/exceptions/{exc_id}</strong> — Delete an exception.</p></li>
+<li><p><strong>GET /{id}/working-days</strong> — Calculate working hours across a date range.</p></li>
+</ul>
+</section>
+<section id="security">
+<h2>Security<a class="headerlink" href="#security" title="Link to this heading"></a></h2>
+<p>All endpoints require JWT authentication via the <code class="docutils literal notranslate"><span class="pre">get_current_user</span></code>
+dependency.</p>
+</section>
+<section id="usage-examples">
+<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading"></a></h2>
+<p>Create a UK standard calendar:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">calendars</span><span class="o">/</span>
+<span class="p">{</span>
+<span class="s2">"code"</span><span class="p">:</span> <span class="s2">"CAL_UK_STANDARD"</span><span class="p">,</span>
+<span class="s2">"name"</span><span class="p">:</span> <span class="s2">"UK Standard Working Calendar"</span><span class="p">,</span>
+<span class="s2">"jurisdiction"</span><span class="p">:</span> <span class="s2">"UK"</span><span class="p">,</span>
+<span class="s2">"standard_hours_per_day"</span><span class="p">:</span> <span class="mf">7.50</span><span class="p">,</span>
+<span class="s2">"working_days_mask"</span><span class="p">:</span> <span class="mi">31</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Add a statutory holiday:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">calendars</span><span class="o">/</span><span class="p">{</span><span class="n">calendar_id</span><span class="p">}</span><span class="o">/</span><span class="n">exceptions</span>
+<span class="p">{</span>
+<span class="s2">"exception_date"</span><span class="p">:</span> <span class="s2">"2026-05-04"</span><span class="p">,</span>
+<span class="s2">"exception_type"</span><span class="p">:</span> <span class="s2">"STATUTORY_HOLIDAY"</span><span class="p">,</span>
+<span class="s2">"working_hours_override"</span><span class="p">:</span> <span class="mf">0.00</span><span class="p">,</span>
+<span class="s2">"description"</span><span class="p">:</span> <span class="s2">"UK Spring Bank Holiday"</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Query working hours for a date range:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>GET /api/v1/calendars/{calendar_id}/working-days?start_date=2026-01-01&amp;end_date=2026-01-31
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

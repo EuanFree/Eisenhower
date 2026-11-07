@@ -1,0 +1,691 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.currency &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Application Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#application-entry-point">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.currency</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.currency</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Currency exchange rate service for international defence supply chains.</span>
+
+<span class="sd">This module provides the core currency conversion and variance analysis</span>
+<span class="sd">engine for the Eisenhower Portfolio Manager.  It handles:</span>
+
+<span class="sd">- **Exchange Rate Resolution** — Finding the applicable exchange rate</span>
+<span class="sd">  for a given currency pair and valuation date, respecting effective</span>
+<span class="sd">  date ranges and rate type preferences.</span>
+
+<span class="sd">- **Currency Conversion** — Converting amounts between currencies using</span>
+<span class="sd">  the resolved exchange rate, with support for direct and inverse</span>
+<span class="sd">  conversion paths.</span>
+
+<span class="sd">- **FX Variance Analysis** — Separating standard Cost Variance (CV) from</span>
+<span class="sd">  currency fluctuation impact (FX Variance), allowing programme managers</span>
+<span class="sd">  to distinguish between genuine cost overruns and currency-driven variances.</span>
+
+<span class="sd">Why Currency Management?</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">International defence programmes frequently involve multi-currency</span>
+<span class="sd">procurement.  A UK-based programme may source avionics from the US</span>
+<span class="sd">(priced in USD), radar components from France (priced in EUR), and</span>
+<span class="sd">software from Canada (priced in CAD).  Without proper currency management:</span>
+
+<span class="sd">- Financial rollups mix currencies, producing meaningless totals.</span>
+<span class="sd">- Budget variances conflate genuine cost overruns with currency movements.</span>
+<span class="sd">- Contractual fixed rates are not respected, leading to incorrect reporting.</span>
+
+<span class="sd">The CurrencyExchangeRate table stores exchange rates with effective date</span>
+<span class="sd">ranges, allowing the system to always know which rate applied at any</span>
+<span class="sd">point in time.  For contractual fixed rates, the rate is locked at</span>
+<span class="sd">contract signing and never changes.</span>
+
+<span class="sd">Rate Resolution Algorithm</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">When converting an amount, the system resolves the applicable rate as follows:</span>
+
+<span class="sd">1. **Same Currency** — If from_currency == to_currency, return the amount</span>
+<span class="sd">   unchanged with a rate of 1.0.</span>
+
+<span class="sd">2. **Direct Rate** — Look for a CurrencyExchangeRate record where:</span>
+<span class="sd">   - base_currency == from_currency</span>
+<span class="sd">   - target_currency == to_currency</span>
+<span class="sd">   - effective_start_date &lt;= valuation_date</span>
+<span class="sd">   - effective_end_date &gt;= valuation_date (or NULL)</span>
+
+<span class="sd">3. **Inverse Rate** — If no direct rate exists, look for the reverse pair:</span>
+<span class="sd">   - base_currency == to_currency</span>
+<span class="sd">   - target_currency == from_currency</span>
+<span class="sd">   - Then invert the rate: 1 / exchange_rate</span>
+
+<span class="sd">4. **Rate Type Preference** — If multiple rates match, prefer in order:</span>
+<span class="sd">   CONTRACTUAL_FIXED &gt; FORWARD_HEDGE &gt; FLOATING_SPOT</span>
+
+<span class="sd">5. **No Rate Found** — Raise ValueError if no applicable rate exists.</span>
+
+<span class="sd">FX Variance Calculation</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The system separates standard Cost Variance from currency fluctuation impact:</span>
+
+<span class="sd">- **CV (Cost Variance)** = EV - AC  (standard EVM cost performance)</span>
+<span class="sd">- **FX Variance** = (Rate_actual - Rate_baseline) × Direct</span>
+
+<span class="sd">For example, if a task is priced at $100,000 USD:</span>
+
+<span class="sd">- Baseline rate: 1 GBP = 1.27 USD (task costs £78,740 at baseline)</span>
+<span class="sd">- Actual rate: 1 GBP = 1.25 USD (task now costs £80,000 at actual)</span>
+<span class="sd">- FX Variance = (1.25 - 1.27) × £78,740 = -£1,575 (adverse currency impact)</span>
+
+<span class="sd">This allows programme managers to see that the task itself is on budget,</span>
+<span class="sd">but currency movements have increased the cost in base currency terms.</span>
+
+<span class="sd">Integration with CBS Rollup</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">The CBS (Cost Breakdown Structure) rollup in costing.py uses this module</span>
+<span class="sd">to convert foreign-currency items into the project's base currency before</span>
+<span class="sd">aggregating costs.  This ensures the financial rollup is expressed in a</span>
+<span class="sd">single currency.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span><span class="p">,</span> <span class="n">ROUND_HALF_UP</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">select</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CurrencyExchangeRate</span><span class="p">,</span>
+    <span class="n">ExchangeRateType</span><span class="p">,</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span>
+    <span class="n">TaskCostLedger</span><span class="p">,</span>
+    <span class="n">CostElement</span><span class="p">,</span>
+    <span class="n">ResourceAssignment</span><span class="p">,</span>
+    <span class="n">ResourceNode</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># Priority order for rate type preference (lower = higher priority)</span>
+<span class="n">_RATE_TYPE_PRIORITY</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">ExchangeRateType</span><span class="o">.</span><span class="n">CONTRACTUAL_FIXED</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">ExchangeRateType</span><span class="o">.</span><span class="n">FORWARD_HEDGE</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">ExchangeRateType</span><span class="o">.</span><span class="n">FLOATING_SPOT</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="resolve_exchange_rate">
+<a class="viewcode-back" href="../../../modules.html#app.services.currency.resolve_exchange_rate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_exchange_rate</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">from_currency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">to_currency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">valuation_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">rate_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ExchangeRateType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Decimal</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Resolve the applicable exchange rate for a currency pair on a given date.</span>
+
+<span class="sd">    This function finds the best-matching CurrencyExchangeRate record for</span>
+<span class="sd">    converting from one currency to another on a specific valuation date.</span>
+
+<span class="sd">    Resolution Algorithm</span>
+<span class="sd">    ~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    1. **Same Currency** — If from_currency == to_currency, return rate 1.0.</span>
+
+<span class="sd">    2. **Direct Rate** — Look for a record where:</span>
+<span class="sd">       - base_currency == from_currency</span>
+<span class="sd">       - target_currency == to_currency</span>
+<span class="sd">       - effective_start_date &lt;= valuation_date</span>
+<span class="sd">       - effective_end_date &gt;= valuation_date (or NULL)</span>
+
+<span class="sd">    3. **Inverse Rate** — If no direct rate, look for the reverse pair</span>
+<span class="sd">       and invert the rate.</span>
+
+<span class="sd">    4. **Rate Type Preference** — If multiple rates match, prefer:</span>
+<span class="sd">       CONTRACTUAL_FIXED &gt; FORWARD_HEDGE &gt; FLOATING_SPOT</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+<span class="sd">    from_currency : str</span>
+<span class="sd">        Source currency code (3-letter ISO).</span>
+<span class="sd">    to_currency : str</span>
+<span class="sd">        Target currency code (3-letter ISO).</span>
+<span class="sd">    valuation_date : date</span>
+<span class="sd">        The date for which to resolve the rate.</span>
+<span class="sd">    rate_type : ExchangeRateType or None</span>
+<span class="sd">        Optional filter for a specific rate type.  If not specified,</span>
+<span class="sd">        the system uses its preference order.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[Decimal, str, Optional[str]]</span>
+<span class="sd">        A tuple containing:</span>
+
+<span class="sd">        - ``exchange_rate`` (Decimal): The exchange rate to apply.</span>
+<span class="sd">        - ``rate_type`` (str): The type of rate used.</span>
+<span class="sd">        - ``rate_id`` (str or None): UUID of the rate record used, if any.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If no applicable exchange rate is found for the given pair and date.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Same currency — no conversion needed</span>
+    <span class="k">if</span> <span class="n">from_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">to_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"1.0"</span><span class="p">),</span> <span class="s2">"SAME_CURRENCY"</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="n">from_cur</span> <span class="o">=</span> <span class="n">from_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="n">to_cur</span> <span class="o">=</span> <span class="n">to_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+    <span class="c1"># Build query for direct rate: from_currency -&gt; to_currency</span>
+    <span class="n">direct_query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">base_currency</span> <span class="o">==</span> <span class="n">from_cur</span><span class="p">,</span>
+            <span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">target_currency</span> <span class="o">==</span> <span class="n">to_cur</span><span class="p">,</span>
+            <span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">effective_start_date</span> <span class="o">&lt;=</span> <span class="n">valuation_date</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Add rate type filter if specified</span>
+    <span class="k">if</span> <span class="n">rate_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">direct_query</span> <span class="o">=</span> <span class="n">direct_query</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">rate_type</span> <span class="o">==</span> <span class="n">rate_type</span>
+        <span class="p">)</span>
+
+    <span class="n">direct_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">direct_query</span><span class="p">)</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="c1"># Filter by effective_end_date</span>
+    <span class="n">direct_rates</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">direct_result</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="o">&gt;=</span> <span class="n">valuation_date</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Sort by rate type preference</span>
+    <span class="n">direct_rates</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">_RATE_TYPE_PRIORITY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">rate_type</span><span class="p">,</span> <span class="mi">99</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">direct_rates</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">direct_rates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">exchange_rate</span><span class="p">)),</span>
+            <span class="n">rate</span><span class="o">.</span><span class="n">rate_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Try inverse rate: to_currency -&gt; from_currency</span>
+    <span class="n">inverse_query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">select</span><span class="p">(</span><span class="n">CurrencyExchangeRate</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">base_currency</span> <span class="o">==</span> <span class="n">to_cur</span><span class="p">,</span>
+            <span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">target_currency</span> <span class="o">==</span> <span class="n">from_cur</span><span class="p">,</span>
+            <span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">effective_start_date</span> <span class="o">&lt;=</span> <span class="n">valuation_date</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">rate_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">inverse_query</span> <span class="o">=</span> <span class="n">inverse_query</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">CurrencyExchangeRate</span><span class="o">.</span><span class="n">rate_type</span> <span class="o">==</span> <span class="n">rate_type</span>
+        <span class="p">)</span>
+
+    <span class="n">inverse_result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">inverse_query</span><span class="p">)</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">inverse_rates</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">inverse_result</span>
+        <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">r</span><span class="o">.</span><span class="n">effective_end_date</span> <span class="o">&gt;=</span> <span class="n">valuation_date</span>
+    <span class="p">]</span>
+
+    <span class="n">inverse_rates</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">_RATE_TYPE_PRIORITY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">rate_type</span><span class="p">,</span> <span class="mi">99</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">inverse_rates</span><span class="p">:</span>
+        <span class="n">rate</span> <span class="o">=</span> <span class="n">inverse_rates</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Invert the rate</span>
+        <span class="n">inverted_rate</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"1"</span><span class="p">)</span> <span class="o">/</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">exchange_rate</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">inverted_rate</span><span class="p">,</span>
+            <span class="n">rate</span><span class="o">.</span><span class="n">rate_type</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">rate</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"No exchange rate found for </span><span class="si">{</span><span class="n">from_cur</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">to_cur</span><span class="si">}</span><span class="s2"> on </span><span class="si">{</span><span class="n">valuation_date</span><span class="si">}</span><span class="s2">. "</span>
+        <span class="sa">f</span><span class="s2">"Please add a CurrencyExchangeRate record for this pair."</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="convert_currency">
+<a class="viewcode-back" href="../../../modules.html#app.services.currency.convert_currency">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_currency</span><span class="p">(</span>
+    <span class="n">amount</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">from_currency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">to_currency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">valuation_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">rate_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Session</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert an amount from one currency to another.</span>
+
+<span class="sd">    This is the primary entry point for currency conversion.  It resolves</span>
+<span class="sd">    the applicable exchange rate and computes the converted amount.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    amount : float</span>
+<span class="sd">        The amount to convert.</span>
+<span class="sd">    from_currency : str</span>
+<span class="sd">        Source currency code (3-letter ISO).</span>
+<span class="sd">    to_currency : str</span>
+<span class="sd">        Target currency code (3-letter ISO).</span>
+<span class="sd">    valuation_date : date</span>
+<span class="sd">        The date for which to resolve the rate.</span>
+<span class="sd">    rate_type : str or None</span>
+<span class="sd">        Optional filter for rate type.  If not specified, the system</span>
+<span class="sd">        prefers CONTRACTUAL_FIXED &gt; FORWARD_HEDGE &gt; FLOATING_SPOT.</span>
+<span class="sd">    db : Session or None</span>
+<span class="sd">        Active SQLAlchemy database session.  Required for rate lookup.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing:</span>
+
+<span class="sd">        - ``original_amount`` (float): The original amount.</span>
+<span class="sd">        - ``from_currency`` (str): Source currency code.</span>
+<span class="sd">        - ``to_currency`` (str): Target currency code.</span>
+<span class="sd">        - ``converted_amount`` (float): The converted amount.</span>
+<span class="sd">        - ``exchange_rate_used`` (float): The rate applied.</span>
+<span class="sd">        - ``rate_type`` (str): The type of rate used.</span>
+<span class="sd">        - ``rate_id`` (str or None): UUID of the rate record.</span>
+<span class="sd">        - ``valuation_date`` (str): ISO date string.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If no applicable exchange rate is found or if db is None.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">db</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Database session is required for currency conversion"</span><span class="p">)</span>
+
+    <span class="c1"># Parse rate type if provided</span>
+    <span class="n">rt</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">rate_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rt</span> <span class="o">=</span> <span class="n">ExchangeRateType</span><span class="p">(</span><span class="n">rate_type</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Invalid rate type: </span><span class="si">{</span><span class="n">rate_type</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="sa">f</span><span class="s2">"Must be one of: CONTRACTUAL_FIXED, FLOATING_SPOT, FORWARD_HEDGE"</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Resolve the exchange rate</span>
+    <span class="n">exchange_rate</span><span class="p">,</span> <span class="n">resolved_type</span><span class="p">,</span> <span class="n">rate_id</span> <span class="o">=</span> <span class="n">resolve_exchange_rate</span><span class="p">(</span>
+        <span class="n">db</span><span class="p">,</span> <span class="n">from_currency</span><span class="p">,</span> <span class="n">to_currency</span><span class="p">,</span> <span class="n">valuation_date</span><span class="p">,</span> <span class="n">rt</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Compute the converted amount</span>
+    <span class="n">amount_decimal</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">amount</span><span class="p">))</span>
+    <span class="n">converted</span> <span class="o">=</span> <span class="n">amount_decimal</span> <span class="o">*</span> <span class="n">exchange_rate</span>
+
+    <span class="c1"># Round to 2 decimal places</span>
+    <span class="n">converted</span> <span class="o">=</span> <span class="n">converted</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+    <span class="n">rate_rounded</span> <span class="o">=</span> <span class="n">exchange_rate</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.000001"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"original_amount"</span><span class="p">:</span> <span class="n">amount</span><span class="p">,</span>
+        <span class="s2">"from_currency"</span><span class="p">:</span> <span class="n">from_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+        <span class="s2">"to_currency"</span><span class="p">:</span> <span class="n">to_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+        <span class="s2">"converted_amount"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">converted</span><span class="p">),</span>
+        <span class="s2">"exchange_rate_used"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">rate_rounded</span><span class="p">),</span>
+        <span class="s2">"rate_type"</span><span class="p">:</span> <span class="n">resolved_type</span><span class="p">,</span>
+        <span class="s2">"rate_id"</span><span class="p">:</span> <span class="n">rate_id</span><span class="p">,</span>
+        <span class="s2">"valuation_date"</span><span class="p">:</span> <span class="n">valuation_date</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="compute_currency_variance">
+<a class="viewcode-back" href="../../../modules.html#app.services.currency.compute_currency_variance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_currency_variance</span><span class="p">(</span>
+    <span class="n">task_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute currency variance analysis for a task.</span>
+
+<span class="sd">    This function separates standard Cost Variance (CV) from currency</span>
+<span class="sd">    fluctuation impact (FX Variance), allowing programme managers to</span>
+<span class="sd">    distinguish between genuine cost overruns and currency-driven variances.</span>
+
+<span class="sd">    The algorithm:</span>
+
+<span class="sd">    1. Look up the task's PortfolioNode to determine its currency and</span>
+<span class="sd">       linked exchange rate.</span>
+<span class="sd">    2. Find the project root's base currency by walking up the ltree path.</span>
+<span class="sd">    3. If the task's currency differs from the base currency:</span>
+<span class="sd">       a. Resolve the baseline rate (from the task's contract_exchange_rate_id).</span>
+<span class="sd">       b. Resolve the actual rate (current spot rate on today's date).</span>
+<span class="sd">       c. Compute FX Variance = (Rate_actual - Rate_baseline) × Direct.</span>
+<span class="sd">    4. Compute standard CV = EV - AC from the task's EVM fields.</span>
+<span class="sd">    5. Return both variances separately.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    task_id : UUID</span>
+<span class="sd">        The UUID of the PortfolioNode to analyse.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing:</span>
+
+<span class="sd">        - ``task_id`` (str): UUID of the task.</span>
+<span class="sd">        - ``task_name`` (str): Name of the task.</span>
+<span class="sd">        - ``task_currency`` (str): The task's currency code.</span>
+<span class="sd">        - ``base_currency`` (str): The project's base currency.</span>
+<span class="sd">        - ``baseline_rate`` (float or None): Exchange rate at baseline.</span>
+<span class="sd">        - ``actual_rate`` (float or None): Current exchange rate.</span>
+<span class="sd">        - ``direct_cost_local`` (float): Direct cost in task's currency.</span>
+<span class="sd">        - ``direct_cost_base`` (float): Direct cost in base currency.</span>
+<span class="sd">        - ``cost_variance`` (float): Standard CV (EV - AC).</span>
+<span class="sd">        - ``fx_variance`` (float): Currency fluctuation impact.</span>
+<span class="sd">        - ``total_variance`` (float): Combined variance.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the task is not found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Step 1: Look up the task</span>
+    <span class="n">task_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">task_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">task_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="n">task_currency</span> <span class="o">=</span> <span class="n">task_node</span><span class="o">.</span><span class="n">currency_code</span> <span class="ow">or</span> <span class="s2">"GBP"</span>
+    <span class="n">task_name</span> <span class="o">=</span> <span class="n">task_node</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s2">"Unknown"</span>
+
+    <span class="c1"># Step 2: Find the project root's base currency</span>
+    <span class="c1"># Walk up the ltree path to find the root node</span>
+    <span class="n">base_currency</span> <span class="o">=</span> <span class="n">task_currency</span>  <span class="c1"># Default to task's own currency</span>
+    <span class="k">if</span> <span class="n">task_node</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+        <span class="c1"># Get the root node (first segment of the path)</span>
+        <span class="n">root_segment</span> <span class="o">=</span> <span class="n">task_node</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">root_query</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="n">root_segment</span>
+        <span class="p">)</span>
+        <span class="n">root_node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">root_query</span><span class="p">)</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">root_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">base_currency</span> <span class="o">=</span> <span class="n">root_node</span><span class="o">.</span><span class="n">currency_code</span> <span class="ow">or</span> <span class="s2">"GBP"</span>
+
+    <span class="c1"># Step 3: Compute direct cost in local currency</span>
+    <span class="c1"># Sum TaskCostLedger entries for this task</span>
+    <span class="n">ledger_query</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">TaskCostLedger</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">TaskCostLedger</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">task_id</span>
+    <span class="p">)</span>
+    <span class="n">ledgers</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ledger_query</span><span class="p">)</span><span class="o">.</span><span class="n">scalars</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+    <span class="n">direct_cost_local</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ledger</span> <span class="ow">in</span> <span class="n">ledgers</span><span class="p">:</span>
+        <span class="n">direct_cost_local</span> <span class="o">+=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">direct_unburdened_amount</span><span class="p">))</span>
+
+    <span class="c1"># Step 4: Convert to base currency if needed</span>
+    <span class="n">baseline_rate</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">actual_rate</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">direct_cost_base</span> <span class="o">=</span> <span class="n">direct_cost_local</span>
+
+    <span class="k">if</span> <span class="n">task_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">!=</span> <span class="n">base_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
+        <span class="c1"># Resolve baseline rate from the task's contract exchange rate</span>
+        <span class="k">if</span> <span class="n">task_node</span><span class="o">.</span><span class="n">contract_exchange_rate_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">baseline_rate_record</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">CurrencyExchangeRate</span><span class="p">,</span> <span class="n">task_node</span><span class="o">.</span><span class="n">contract_exchange_rate_id</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">baseline_rate_record</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">baseline_rate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                    <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">baseline_rate_record</span><span class="o">.</span><span class="n">exchange_rate</span><span class="p">))</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span>
+                        <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.000001"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Resolve actual rate (current spot rate)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">actual_rate_val</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">resolve_exchange_rate</span><span class="p">(</span>
+                <span class="n">db</span><span class="p">,</span> <span class="n">task_currency</span><span class="p">,</span> <span class="n">base_currency</span><span class="p">,</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">actual_rate</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">actual_rate_val</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span>
+                    <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.000001"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="c1"># No current rate available — use baseline rate as fallback</span>
+            <span class="n">actual_rate</span> <span class="o">=</span> <span class="n">baseline_rate</span>
+
+        <span class="c1"># Convert direct cost to base currency</span>
+        <span class="k">if</span> <span class="n">actual_rate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">direct_cost_base</span> <span class="o">=</span> <span class="n">direct_cost_local</span> <span class="o">*</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">actual_rate</span><span class="p">))</span>
+            <span class="n">direct_cost_base</span> <span class="o">=</span> <span class="n">direct_cost_base</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span>
+                <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Step 5: Compute standard CV (EV - AC)</span>
+    <span class="n">earned_value</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">task_node</span><span class="o">.</span><span class="n">earned_value</span><span class="p">))</span> <span class="k">if</span> <span class="n">task_node</span><span class="o">.</span><span class="n">earned_value</span> <span class="k">else</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+    <span class="n">actual_cost</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">task_node</span><span class="o">.</span><span class="n">actual_cost</span><span class="p">))</span> <span class="k">if</span> <span class="n">task_node</span><span class="o">.</span><span class="n">actual_cost</span> <span class="k">else</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+    <span class="n">cost_variance</span> <span class="o">=</span> <span class="n">earned_value</span> <span class="o">-</span> <span class="n">actual_cost</span>
+
+    <span class="c1"># Step 6: Compute FX Variance</span>
+    <span class="c1"># FX Variance = (Rate_actual - Rate_baseline) × Direct</span>
+    <span class="n">fx_variance</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">baseline_rate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">actual_rate</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">fx_variance</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">actual_rate</span><span class="p">))</span> <span class="o">-</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">baseline_rate</span><span class="p">))</span>
+        <span class="p">)</span> <span class="o">*</span> <span class="n">direct_cost_local</span>
+        <span class="n">fx_variance</span> <span class="o">=</span> <span class="n">fx_variance</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+
+    <span class="c1"># Total variance</span>
+    <span class="n">total_variance</span> <span class="o">=</span> <span class="n">cost_variance</span> <span class="o">+</span> <span class="n">fx_variance</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"task_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">task_id</span><span class="p">),</span>
+        <span class="s2">"task_name"</span><span class="p">:</span> <span class="n">task_name</span><span class="p">,</span>
+        <span class="s2">"task_currency"</span><span class="p">:</span> <span class="n">task_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+        <span class="s2">"base_currency"</span><span class="p">:</span> <span class="n">base_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span>
+        <span class="s2">"baseline_rate"</span><span class="p">:</span> <span class="n">baseline_rate</span><span class="p">,</span>
+        <span class="s2">"actual_rate"</span><span class="p">:</span> <span class="n">actual_rate</span><span class="p">,</span>
+        <span class="s2">"direct_cost_local"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">direct_cost_local</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="s2">"direct_cost_base"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">direct_cost_base</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="s2">"cost_variance"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">cost_variance</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="s2">"fx_variance"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">fx_variance</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="s2">"total_variance"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">total_variance</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="convert_ledger_to_base_currency">
+<a class="viewcode-back" href="../../../modules.html#app.services.currency.convert_ledger_to_base_currency">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">convert_ledger_to_base_currency</span><span class="p">(</span>
+    <span class="n">ledger</span><span class="p">:</span> <span class="n">TaskCostLedger</span><span class="p">,</span>
+    <span class="n">base_currency</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">valuation_date</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Decimal</span><span class="p">,</span> <span class="n">Decimal</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Convert a TaskCostLedger entry to the project's base currency.</span>
+
+<span class="sd">    This helper function is used by the CBS rollup to convert foreign-currency</span>
+<span class="sd">    ledger entries into the project's base currency before aggregation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ledger : TaskCostLedger</span>
+<span class="sd">        The ledger entry to convert.</span>
+<span class="sd">    base_currency : str</span>
+<span class="sd">        The project's base currency code.</span>
+<span class="sd">    valuation_date : date</span>
+<span class="sd">        The date for which to resolve the exchange rate.</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active SQLAlchemy database session.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple[Decimal, Decimal]</span>
+<span class="sd">        A tuple of (direct_amount_base, burdened_amount_base) converted</span>
+<span class="sd">        to the base currency.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Get the portfolio node's currency</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ledger</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">direct_unburdened_amount</span><span class="p">)),</span>
+            <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">fully_burdened_amount</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="n">node_currency</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">currency_code</span> <span class="ow">or</span> <span class="s2">"GBP"</span>
+
+    <span class="c1"># If same currency, no conversion needed</span>
+    <span class="k">if</span> <span class="n">node_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">base_currency</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">direct_unburdened_amount</span><span class="p">)),</span>
+            <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">fully_burdened_amount</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Resolve the exchange rate</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">exchange_rate</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">resolve_exchange_rate</span><span class="p">(</span>
+            <span class="n">db</span><span class="p">,</span> <span class="n">node_currency</span><span class="p">,</span> <span class="n">base_currency</span><span class="p">,</span> <span class="n">valuation_date</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="c1"># No rate found — return original amounts</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">direct_unburdened_amount</span><span class="p">)),</span>
+            <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">fully_burdened_amount</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Convert amounts</span>
+    <span class="n">direct_base</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">direct_unburdened_amount</span><span class="p">))</span> <span class="o">*</span> <span class="n">exchange_rate</span>
+    <span class="n">burdened_base</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ledger</span><span class="o">.</span><span class="n">fully_burdened_amount</span><span class="p">))</span> <span class="o">*</span> <span class="n">exchange_rate</span>
+
+    <span class="c1"># Round to 2 decimal places</span>
+    <span class="n">direct_base</span> <span class="o">=</span> <span class="n">direct_base</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+    <span class="n">burdened_base</span> <span class="o">=</span> <span class="n">burdened_base</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">"0.01"</span><span class="p">),</span> <span class="n">rounding</span><span class="o">=</span><span class="n">ROUND_HALF_UP</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">direct_base</span><span class="p">,</span> <span class="n">burdened_base</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

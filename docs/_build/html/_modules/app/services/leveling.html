@@ -1,0 +1,910 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.leveling &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.leveling</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.leveling</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Constrained heuristic resource leveling engine.</span>
+
+<span class="sd">Implements the Burgess-Killebrew heuristic for resolving resource</span>
+<span class="sd">overallocations on top of the CPM DAG produced by :mod:`app.services.cpm_engine`.</span>
+
+<span class="sd">Algorithm Overview</span>
+<span class="sd">------------------</span>
+
+<span class="sd">The Burgess-Killebrew method is a greedy, float-based leveling algorithm</span>
+<span class="sd">that delays non-critical tasks within their available float window to</span>
+<span class="sd">eliminate resource overallocations.  The key principles are:</span>
+
+<span class="sd">1. **Critical tasks are fixed** — Tasks with zero or negative Total Float</span>
+<span class="sd">   cannot be delayed without extending the project finish date.  They</span>
+<span class="sd">   remain at their Early Start positions.</span>
+
+<span class="sd">2. **Float tasks are delayed** — Tasks with positive Free Float or Total</span>
+<span class="sd">   Float are candidates for delay.  The algorithm pushes them forward</span>
+<span class="sd">   within their float window until the resource conflict is resolved.</span>
+
+<span class="sd">3. **Proposal Mode** — The algorithm returns *proposed* date shifts without</span>
+<span class="sd">   committing them to the database.  The programme manager reviews the</span>
+<span class="sd">   proposal and signs off before dates are applied.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">    from app.services.leveling import compute_leveling_proposal</span>
+
+<span class="sd">    proposal = compute_leveling_proposal(db, project_id)</span>
+<span class="sd">    # proposal contains a list of LevelingShift with original and proposed dates</span>
+
+<span class="sd">References</span>
+<span class="sd">~~~~~~~~~~</span>
+
+<span class="sd">- Burgess, R. E. and Killebrew, J. C. (1977). "Project Network</span>
+<span class="sd">  Grading with Resource Limitations."  AIIE Transactions, 9(2), 69-81.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">sa_text</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="p">,</span> <span class="n">ResourceNode</span><span class="p">,</span> <span class="n">DependencyLink</span><span class="p">,</span> <span class="n">DependencyType</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Data structures for leveling results</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="LevelingShift">
+<a class="viewcode-back" href="../../../modules.html#app.services.leveling.LevelingShift">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LevelingShift</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A proposed date shift for a single portfolio node.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node_id : UUID</span>
+<span class="sd">        The portfolio node being shifted.</span>
+<span class="sd">    code : str</span>
+<span class="sd">        Human-readable code of the node.</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Human-readable name of the node.</span>
+<span class="sd">    original_start : datetime</span>
+<span class="sd">        The node's current planned start date.</span>
+<span class="sd">    original_finish : datetime</span>
+<span class="sd">        The node's current planned finish date.</span>
+<span class="sd">    proposed_start : datetime</span>
+<span class="sd">        The proposed new start date after leveling.</span>
+<span class="sd">    proposed_finish : datetime</span>
+<span class="sd">        The proposed new finish date after leveling.</span>
+<span class="sd">    consumed_float_days : int</span>
+<span class="sd">        How many days of the node's Total Float are consumed by this shift.</span>
+<span class="sd">    milestone_breach : bool</span>
+<span class="sd">        True if the shift would cause a milestone (zero-duration successor)</span>
+<span class="sd">        to be missed.</span>
+<span class="sd">    reason : str</span>
+<span class="sd">        Explanation of why this shift is proposed.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="LevelingShift.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.services.leveling.LevelingShift.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+        <span class="n">code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">original_start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+        <span class="n">original_finish</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+        <span class="n">proposed_start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+        <span class="n">proposed_finish</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span>
+        <span class="n">consumed_float_days</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">milestone_breach</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Initialize a proposed schedule shift for a WBS node.</span>
+
+<span class="sd">        Records the original and proposed dates for a node that the heuristic</span>
+<span class="sd">        leveling algorithm wants to move to resolve resource overallocation.</span>
+<span class="sd">        The shift includes metadata about float consumption and milestone</span>
+<span class="sd">        impact so the user can assess whether to accept it.</span>
+
+<span class="sd">        Args</span>
+<span class="sd">        ----\n        node_id : UUID</span>
+<span class="sd">            The unique identifier of the WBS node being shifted.</span>
+<span class="sd">        code : str</span>
+<span class="sd">            The WBS code of the node (e.g., ``"1.2.3"``).</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Human-readable name of the node.</span>
+<span class="sd">        original_start : datetime</span>
+<span class="sd">            The node's current planned start date before leveling.</span>
+<span class="sd">        original_finish : datetime</span>
+<span class="sd">            The node's current planned finish date before leveling.</span>
+<span class="sd">        proposed_start : datetime</span>
+<span class="sd">            The proposed new start date after leveling.</span>
+<span class="sd">        proposed_finish : datetime</span>
+<span class="sd">            The proposed new finish date after leveling.</span>
+<span class="sd">        consumed_float_days : int</span>
+<span class="sd">            How many days of the node's Total Float are consumed by this shift.</span>
+<span class="sd">        milestone_breach : bool</span>
+<span class="sd">            Whether the shift would cause a downstream milestone to be missed.</span>
+<span class="sd">        reason : str</span>
+<span class="sd">            Human-readable explanation of why this shift is proposed.</span>
+<span class="sd">        """</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">node_id</span> <span class="o">=</span> <span class="n">node_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_start</span> <span class="o">=</span> <span class="n">original_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_finish</span> <span class="o">=</span> <span class="n">original_finish</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_start</span> <span class="o">=</span> <span class="n">proposed_start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_finish</span> <span class="o">=</span> <span class="n">proposed_finish</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">consumed_float_days</span> <span class="o">=</span> <span class="n">consumed_float_days</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">milestone_breach</span> <span class="o">=</span> <span class="n">milestone_breach</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="n">reason</span></div>
+
+
+<div class="viewcode-block" id="LevelingShift.to_dict">
+<a class="viewcode-back" href="../../../modules.html#app.services.leveling.LevelingShift.to_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Serialize to a dictionary for API responses."""</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">node_id</span><span class="p">),</span>
+            <span class="s2">"code"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="s2">"original_start"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"original_finish"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_finish</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"proposed_start"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposed_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"proposed_finish"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposed_finish</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"consumed_float_days"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">consumed_float_days</span><span class="p">,</span>
+            <span class="s2">"milestone_breach"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">milestone_breach</span><span class="p">,</span>
+            <span class="s2">"reason"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+        <span class="p">}</span></div>
+</div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Working calendar helpers (mirrored from cpm_engine for independence)</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_workday</span><span class="p">(</span><span class="n">dt</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return True if *dt* falls on a weekday (Mon–Fri)."""</span>
+    <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">5</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_workdays</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">days</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Add *days* working days to *start*, skipping weekends."""</span>
+    <span class="k">if</span> <span class="n">days</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">start</span>
+    <span class="k">if</span> <span class="n">days</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_subtract_workdays</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">days</span><span class="p">))</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="n">remaining</span> <span class="o">=</span> <span class="n">days</span>
+    <span class="k">while</span> <span class="n">remaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_workday</span><span class="p">(</span><span class="n">current</span><span class="p">):</span>
+            <span class="n">remaining</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">current</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_subtract_workdays</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">days</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Subtract *days* working days from *start*, skipping weekends."""</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="n">remaining</span> <span class="o">=</span> <span class="n">days</span>
+    <span class="k">while</span> <span class="n">remaining</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">-=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_workday</span><span class="p">(</span><span class="n">current</span><span class="p">):</span>
+            <span class="n">remaining</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">current</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_workday_diff</span><span class="p">(</span><span class="n">start</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Count working days between *start* and *end*."""</span>
+    <span class="k">if</span> <span class="n">end</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">_workday_diff</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="k">while</span> <span class="n">current</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_workday</span><span class="p">(</span><span class="n">current</span><span class="p">):</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">count</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Resource capacity analysis</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_resource_daily_load</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">resource_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Calculate daily allocated units for a resource over a date range.</span>
+
+<span class="sd">    Returns a dict mapping each date to the total allocated units.</span>
+<span class="sd">    Values &gt; 1.0 indicate overallocation.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Fetch all active assignments for this resource overlapping the window</span>
+    <span class="n">assignments</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">resource_id</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">daily_load</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">date</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="k">while</span> <span class="n">current</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">:</span>
+        <span class="n">daily_load</span><span class="p">[</span><span class="n">current</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">current</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">assignments</span><span class="p">:</span>
+        <span class="n">pn</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node</span>
+        <span class="k">if</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Overlap window</span>
+        <span class="n">overlap_start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+        <span class="n">overlap_end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">overlap_start</span>
+        <span class="k">while</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">overlap_end</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">weekday</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># Only count workdays</span>
+                <span class="n">daily_load</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">daily_load</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">assignment</span><span class="o">.</span><span class="n">allocated_units</span>
+            <span class="n">d</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">daily_load</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_overallocation_windows</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">start</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+    <span class="n">end</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Find all (resource, window_start, window_end, peak_load) overallocation windows.</span>
+
+<span class="sd">    Returns a list of tuples where peak_load &gt; 1.0 indicates the resource</span>
+<span class="sd">    is overallocated during that window.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Get all resources with active assignments in the window</span>
+    <span class="n">resources</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">ResourceNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">&gt;=</span> <span class="n">start</span><span class="p">,</span>
+            <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">distinct</span><span class="p">()</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">windows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">resource_id</span><span class="p">,)</span> <span class="ow">in</span> <span class="n">resources</span><span class="p">:</span>
+        <span class="n">daily_load</span> <span class="o">=</span> <span class="n">_get_resource_daily_load</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>
+
+        <span class="c1"># Find contiguous overallocation windows</span>
+        <span class="n">in_window</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">window_start</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">peak_load</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="k">while</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">end</span><span class="p">:</span>
+            <span class="n">load</span> <span class="o">=</span> <span class="n">daily_load</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">load</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">in_window</span><span class="p">:</span>
+                    <span class="n">window_start</span> <span class="o">=</span> <span class="n">d</span>
+                    <span class="n">in_window</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">peak_load</span> <span class="o">=</span> <span class="n">load</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">peak_load</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">peak_load</span><span class="p">,</span> <span class="n">load</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">in_window</span><span class="p">:</span>
+                    <span class="n">windows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">resource_id</span><span class="p">,</span> <span class="n">window_start</span><span class="p">,</span> <span class="n">d</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">peak_load</span><span class="p">))</span>
+                    <span class="n">in_window</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">d</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Close any open window at the end</span>
+        <span class="k">if</span> <span class="n">in_window</span> <span class="ow">and</span> <span class="n">window_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">windows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">resource_id</span><span class="p">,</span> <span class="n">window_start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">peak_load</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">windows</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Node schedule data extraction</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_node_schedule_data</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract schedule metrics from a node's custom_attributes.</span>
+
+<span class="sd">    Returns a dict with early_start, early_finish, late_start, late_finish,</span>
+<span class="sd">    total_float, free_float, is_critical, or None if no schedule data.</span>
+<span class="sd">    """</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">schedule</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schedule"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">schedule</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"node"</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span>
+        <span class="s2">"early_start"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">schedule</span><span class="p">[</span><span class="s2">"early_start"</span><span class="p">]),</span>
+        <span class="s2">"early_finish"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">schedule</span><span class="p">[</span><span class="s2">"early_finish"</span><span class="p">]),</span>
+        <span class="s2">"late_start"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">schedule</span><span class="p">[</span><span class="s2">"late_start"</span><span class="p">]),</span>
+        <span class="s2">"late_finish"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">schedule</span><span class="p">[</span><span class="s2">"late_finish"</span><span class="p">]),</span>
+        <span class="s2">"total_float"</span><span class="p">:</span> <span class="n">schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"total_float"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="s2">"free_float"</span><span class="p">:</span> <span class="n">schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"free_float"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="s2">"is_critical"</span><span class="p">:</span> <span class="n">schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_critical"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_all_node_schedule_data</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Get schedule data for all active PortfolioNodes under a root.</span>
+
+<span class="sd">    Uses ltree path containment to find all descendants.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">sa_text</span><span class="p">(</span>
+            <span class="s2">"SELECT * FROM portfolio_nodes pn "</span>
+            <span class="s2">"JOIN universal_breakdown_nodes ubn ON pn.id = ubn.id "</span>
+            <span class="s2">"WHERE ubn.path &lt;@ :root_path AND ubn.is_active = true"</span>
+        <span class="p">),</span>
+        <span class="p">{</span><span class="s2">"root_path"</span><span class="p">:</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">},</span>
+    <span class="p">)</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+    <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">row_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">row</span><span class="p">))</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">PortfolioNode</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="n">schedule</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">and</span> <span class="s2">"schedule"</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">:</span>
+            <span class="n">sched</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">]</span>
+            <span class="n">schedule</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"early_start"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">sched</span><span class="p">[</span><span class="s2">"early_start"</span><span class="p">]),</span>
+                <span class="s2">"early_finish"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">sched</span><span class="p">[</span><span class="s2">"early_finish"</span><span class="p">]),</span>
+                <span class="s2">"late_start"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">sched</span><span class="p">[</span><span class="s2">"late_start"</span><span class="p">]),</span>
+                <span class="s2">"late_finish"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">sched</span><span class="p">[</span><span class="s2">"late_finish"</span><span class="p">]),</span>
+                <span class="s2">"total_float"</span><span class="p">:</span> <span class="n">sched</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"total_float"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="s2">"free_float"</span><span class="p">:</span> <span class="n">sched</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"free_float"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="s2">"is_critical"</span><span class="p">:</span> <span class="n">sched</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_critical"</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="p">}</span>
+
+        <span class="n">data</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"node"</span><span class="p">:</span> <span class="n">node</span><span class="p">,</span>
+            <span class="s2">"schedule"</span><span class="p">:</span> <span class="n">schedule</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">data</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Burgess-Killebrew Leveling Algorithm</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="compute_leveling_proposal">
+<a class="viewcode-back" href="../../../modules.html#app.services.leveling.compute_leveling_proposal">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_leveling_proposal</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute a resource leveling proposal using the Burgess-Killebrew heuristic.</span>
+
+<span class="sd">    This operates in **Proposal Mode**: it returns proposed date shifts</span>
+<span class="sd">    without committing them to the database.  The programme manager</span>
+<span class="sd">    reviews the proposal and calls ``POST /apply-leveling`` to commit.</span>
+
+<span class="sd">    Algorithm Steps</span>
+<span class="sd">    ~~~~~~~~~~~~~~~</span>
+
+<span class="sd">    1. Gather all PortfolioNodes and their CPM schedule data under the</span>
+<span class="sd">       project root.</span>
+<span class="sd">    2. Determine the project date range from planned dates.</span>
+<span class="sd">    3. Find all resource overallocation windows (&gt; 100% capacity).</span>
+<span class="sd">    4. For each overallocation window, identify the competing tasks.</span>
+<span class="sd">    5. Sort competing tasks by priority:</span>
+<span class="sd">       - Critical path tasks (TF &lt;= 0) are **fixed** — they cannot move.</span>
+<span class="sd">       - Non-critical tasks are sorted by Total Float ascending (least</span>
+<span class="sd">         float moved first to minimise schedule impact).</span>
+<span class="sd">    6. Delay non-critical tasks within their float window until the</span>
+<span class="sd">       overallocation is resolved.</span>
+<span class="sd">    7. Check for milestone breaches (delayed task pushes a milestone).</span>
+<span class="sd">    8. Return the list of proposed shifts.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    project_id : UUID</span>
+<span class="sd">        The root PortfolioNode of the project to level.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        {</span>
+<span class="sd">            "project_id": str,</span>
+<span class="sd">            "total_shifts": int,</span>
+<span class="sd">            "shifts": [LevelingShift.to_dict(), ...],</span>
+<span class="sd">            "overallocation_windows": int,</span>
+<span class="sd">            "milestone_breaches": int,</span>
+<span class="sd">            "computed_at": str,</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the project root is not found or has no schedule data.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Step 1: Gather all nodes with schedule data</span>
+    <span class="n">all_data</span> <span class="o">=</span> <span class="n">_get_all_node_schedule_data</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_id</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">all_data</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No active PortfolioNodes found under project </span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="c1"># Check that CPM has been calculated</span>
+    <span class="n">nodes_without_schedule</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">v</span><span class="p">[</span><span class="s2">"node"</span><span class="p">]</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_data</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+    <span class="p">]</span>
+    <span class="k">if</span> <span class="n">nodes_without_schedule</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"CPM schedule not calculated for nodes: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">nodes_without_schedule</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"Run POST /schedule/</span><span class="se">{{</span><span class="s2">project_id</span><span class="se">}}</span><span class="s2">/recalculate-cpm first."</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 2: Determine project date range</span>
+    <span class="n">all_starts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_ends</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">all_data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s2">"node"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">:</span>
+            <span class="n">all_starts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+            <span class="n">all_ends</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">all_starts</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">all_ends</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Project nodes have no planned dates set."</span><span class="p">)</span>
+
+    <span class="n">project_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">all_starts</span><span class="p">)</span>
+    <span class="n">project_end</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">all_ends</span><span class="p">)</span>
+
+    <span class="c1"># Step 3: Find overallocation windows</span>
+    <span class="n">overallocation_windows</span> <span class="o">=</span> <span class="n">_find_overallocation_windows</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_start</span><span class="p">,</span> <span class="n">project_end</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">overallocation_windows</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"project_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
+            <span class="s2">"total_shifts"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"shifts"</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">"overallocation_windows"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"milestone_breaches"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">"computed_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"message"</span><span class="p">:</span> <span class="s2">"No resource overallocations detected — schedule is level."</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="c1"># Step 4-6: For each overallocation window, propose delays</span>
+    <span class="n">shifts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">LevelingShift</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">shift_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># node_id -&gt; proposed new start</span>
+
+    <span class="k">for</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">win_start</span><span class="p">,</span> <span class="n">win_end</span><span class="p">,</span> <span class="n">peak_load</span> <span class="ow">in</span> <span class="n">overallocation_windows</span><span class="p">:</span>
+        <span class="c1"># Find tasks assigned to this resource overlapping the window</span>
+        <span class="n">competing_assignments</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ResourceAssignment</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="o">==</span> <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">ResourceAssignment</span><span class="o">.</span><span class="n">resource_node_id</span> <span class="o">==</span> <span class="n">resource_id</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">&lt;=</span> <span class="n">win_end</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">&gt;=</span> <span class="n">win_start</span><span class="p">,</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Build competing task list with schedule data</span>
+        <span class="n">competing_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">competing_assignments</span><span class="p">:</span>
+            <span class="n">node_id</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">portfolio_node_id</span>
+            <span class="k">if</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">all_data</span><span class="p">:</span>
+                <span class="n">sched</span> <span class="o">=</span> <span class="n">all_data</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"schedule"</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">sched</span><span class="p">:</span>
+                    <span class="n">competing_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                        <span class="s2">"assignment"</span><span class="p">:</span> <span class="n">assignment</span><span class="p">,</span>
+                        <span class="s2">"node"</span><span class="p">:</span> <span class="n">all_data</span><span class="p">[</span><span class="n">node_id</span><span class="p">][</span><span class="s2">"node"</span><span class="p">],</span>
+                        <span class="s2">"schedule"</span><span class="p">:</span> <span class="n">sched</span><span class="p">,</span>
+                    <span class="p">})</span>
+
+        <span class="c1"># Sort by priority: critical tasks first (fixed), then by total_float ascending</span>
+        <span class="n">competing_tasks</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="p">(</span>
+            <span class="n">t</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">][</span><span class="s2">"is_critical"</span><span class="p">],</span>  <span class="c1"># False (non-critical) first — they can move</span>
+            <span class="n">t</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">][</span><span class="s2">"total_float"</span><span class="p">],</span>  <span class="c1"># Least float first</span>
+        <span class="p">))</span>
+
+        <span class="c1"># Separate fixed (critical) from movable (non-critical)</span>
+        <span class="n">fixed_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">competing_tasks</span> <span class="k">if</span> <span class="n">t</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">][</span><span class="s2">"is_critical"</span><span class="p">]]</span>
+        <span class="n">movable_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">competing_tasks</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">][</span><span class="s2">"is_critical"</span><span class="p">]]</span>
+
+        <span class="c1"># Calculate how much capacity the fixed tasks consume</span>
+        <span class="n">fixed_capacity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="s2">"assignment"</span><span class="p">]</span><span class="o">.</span><span class="n">allocated_units</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">fixed_tasks</span><span class="p">)</span>
+        <span class="n">remaining_capacity</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">fixed_capacity</span>
+
+        <span class="k">if</span> <span class="n">remaining_capacity</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># All capacity consumed by critical tasks — cannot level without</span>
+            <span class="c1"># extending the project.  Flag as milestone breach.</span>
+            <span class="k">for</span> <span class="n">task_info</span> <span class="ow">in</span> <span class="n">movable_tasks</span><span class="p">:</span>
+                <span class="n">node</span> <span class="o">=</span> <span class="n">task_info</span><span class="p">[</span><span class="s2">"node"</span><span class="p">]</span>
+                <span class="n">sched</span> <span class="o">=</span> <span class="n">task_info</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">]</span>
+                <span class="n">shifts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LevelingShift</span><span class="p">(</span>
+                    <span class="n">node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">code</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">original_start</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">or</span> <span class="n">project_start</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">time</span><span class="p">()),</span>
+                    <span class="n">original_finish</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">or</span> <span class="n">project_end</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">time</span><span class="p">()),</span>
+                    <span class="n">proposed_start</span><span class="o">=</span><span class="n">sched</span><span class="p">[</span><span class="s2">"early_start"</span><span class="p">],</span>  <span class="c1"># Cannot shift — already at ES</span>
+                    <span class="n">proposed_finish</span><span class="o">=</span><span class="n">sched</span><span class="p">[</span><span class="s2">"early_finish"</span><span class="p">],</span>
+                    <span class="n">consumed_float_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">milestone_breach</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"Critical tasks consume </span><span class="si">{</span><span class="n">fixed_capacity</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2"> of resource capacity. "</span>
+                        <span class="sa">f</span><span class="s2">"Cannot level without extending project finish. "</span>
+                        <span class="sa">f</span><span class="s2">"Resource: </span><span class="si">{</span><span class="n">resource_id</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="p">),</span>
+                <span class="p">))</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Delay movable tasks one by one until overallocation is resolved</span>
+        <span class="n">current_movable_capacity</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">t</span><span class="p">[</span><span class="s2">"assignment"</span><span class="p">]</span><span class="o">.</span><span class="n">allocated_units</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">movable_tasks</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">task_info</span> <span class="ow">in</span> <span class="n">movable_tasks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">current_movable_capacity</span> <span class="o">&lt;=</span> <span class="n">remaining_capacity</span><span class="p">:</span>
+                <span class="c1"># No more overallocation — remaining tasks can stay</span>
+                <span class="k">break</span>
+
+            <span class="n">node</span> <span class="o">=</span> <span class="n">task_info</span><span class="p">[</span><span class="s2">"node"</span><span class="p">]</span>
+            <span class="n">sched</span> <span class="o">=</span> <span class="n">task_info</span><span class="p">[</span><span class="s2">"schedule"</span><span class="p">]</span>
+            <span class="n">assignment</span> <span class="o">=</span> <span class="n">task_info</span><span class="p">[</span><span class="s2">"assignment"</span><span class="p">]</span>
+
+            <span class="c1"># Calculate how many days to delay</span>
+            <span class="c1"># Push to the end of the float window</span>
+            <span class="n">float_days</span> <span class="o">=</span> <span class="n">sched</span><span class="p">[</span><span class="s2">"total_float"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">float_days</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># No float available — milestone breach</span>
+                <span class="n">orig_start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">or</span> <span class="n">project_start</span><span class="p">,</span>
+                    <span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="n">orig_finish</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span>
+                    <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">or</span> <span class="n">project_end</span><span class="p">,</span>
+                    <span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="p">)</span>
+                <span class="n">shifts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LevelingShift</span><span class="p">(</span>
+                    <span class="n">node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">code</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">original_start</span><span class="o">=</span><span class="n">orig_start</span><span class="p">,</span>
+                    <span class="n">original_finish</span><span class="o">=</span><span class="n">orig_finish</span><span class="p">,</span>
+                    <span class="n">proposed_start</span><span class="o">=</span><span class="n">orig_start</span><span class="p">,</span>
+                    <span class="n">proposed_finish</span><span class="o">=</span><span class="n">orig_finish</span><span class="p">,</span>
+                    <span class="n">consumed_float_days</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">milestone_breach</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"No float available for '</span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">'. "</span>
+                        <span class="sa">f</span><span class="s2">"Delaying would extend project finish. "</span>
+                        <span class="sa">f</span><span class="s2">"Resource: </span><span class="si">{</span><span class="n">resource_id</span><span class="si">}</span><span class="s2">"</span>
+                    <span class="p">),</span>
+                <span class="p">))</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Propose delay by consumed float</span>
+            <span class="n">original_start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">or</span> <span class="n">project_start</span><span class="p">,</span>
+                <span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">original_finish</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span>
+                <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">or</span> <span class="n">project_end</span><span class="p">,</span>
+                <span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Delay to after the overallocation window</span>
+            <span class="n">delay_until</span> <span class="o">=</span> <span class="n">win_end</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Ensure it's a workday</span>
+            <span class="n">dt_delay</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">combine</span><span class="p">(</span><span class="n">delay_until</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">min</span><span class="o">.</span><span class="n">time</span><span class="p">())</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="n">_is_workday</span><span class="p">(</span><span class="n">dt_delay</span><span class="p">):</span>
+                <span class="n">dt_delay</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">proposed_start</span> <span class="o">=</span> <span class="n">dt_delay</span>
+            <span class="n">duration</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">original_start</span><span class="p">,</span> <span class="n">original_finish</span><span class="p">)</span>
+            <span class="n">proposed_finish</span> <span class="o">=</span> <span class="n">_add_workdays</span><span class="p">(</span><span class="n">proposed_start</span><span class="p">,</span> <span class="n">duration</span><span class="p">)</span>
+
+            <span class="n">consumed</span> <span class="o">=</span> <span class="n">_workday_diff</span><span class="p">(</span><span class="n">original_start</span><span class="p">,</span> <span class="n">proposed_start</span><span class="p">)</span>
+            <span class="n">consumed</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">consumed</span><span class="p">,</span> <span class="n">float_days</span><span class="p">)</span>  <span class="c1"># Don't exceed float</span>
+
+            <span class="c1"># Check if this delay breaches a milestone</span>
+            <span class="n">milestone_breach</span> <span class="o">=</span> <span class="n">consumed</span> <span class="o">&gt;=</span> <span class="n">float_days</span>
+
+            <span class="n">shifts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">LevelingShift</span><span class="p">(</span>
+                <span class="n">node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">code</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">original_start</span><span class="o">=</span><span class="n">original_start</span><span class="p">,</span>
+                <span class="n">original_finish</span><span class="o">=</span><span class="n">original_finish</span><span class="p">,</span>
+                <span class="n">proposed_start</span><span class="o">=</span><span class="n">proposed_start</span><span class="p">,</span>
+                <span class="n">proposed_finish</span><span class="o">=</span><span class="n">proposed_finish</span><span class="p">,</span>
+                <span class="n">consumed_float_days</span><span class="o">=</span><span class="n">consumed</span><span class="p">,</span>
+                <span class="n">milestone_breach</span><span class="o">=</span><span class="n">milestone_breach</span><span class="p">,</span>
+                <span class="n">reason</span><span class="o">=</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Delayed to resolve overallocation on resource </span><span class="si">{</span><span class="n">resource_id</span><span class="si">}</span><span class="s2"> "</span>
+                    <span class="sa">f</span><span class="s2">"(peak load </span><span class="si">{</span><span class="n">peak_load</span><span class="si">:</span><span class="s2">.0%</span><span class="si">}</span><span class="s2">). Consumed </span><span class="si">{</span><span class="n">consumed</span><span class="si">}</span><span class="s2"> of "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">float_days</span><span class="si">}</span><span class="s2"> available float days."</span>
+                <span class="p">),</span>
+            <span class="p">))</span>
+
+            <span class="n">current_movable_capacity</span> <span class="o">-=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">allocated_units</span>
+            <span class="n">shift_map</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">]</span> <span class="o">=</span> <span class="n">proposed_start</span>
+
+    <span class="c1"># Deduplicate shifts (keep the one with the latest proposed_start)</span>
+    <span class="n">shift_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">LevelingShift</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">shift</span> <span class="ow">in</span> <span class="n">shifts</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">shift</span><span class="o">.</span><span class="n">node_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shift_dict</span> <span class="ow">or</span> <span class="n">shift</span><span class="o">.</span><span class="n">proposed_start</span> <span class="o">&gt;</span> <span class="n">shift_dict</span><span class="p">[</span><span class="n">shift</span><span class="o">.</span><span class="n">node_id</span><span class="p">]</span><span class="o">.</span><span class="n">proposed_start</span><span class="p">:</span>
+            <span class="n">shift_dict</span><span class="p">[</span><span class="n">shift</span><span class="o">.</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">shift</span>
+
+    <span class="n">unique_shifts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">shift_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">milestone_breaches</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">unique_shifts</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">milestone_breach</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"project_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
+        <span class="s2">"total_shifts"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_shifts</span><span class="p">),</span>
+        <span class="s2">"shifts"</span><span class="p">:</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">unique_shifts</span><span class="p">],</span>
+        <span class="s2">"overallocation_windows"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">overallocation_windows</span><span class="p">),</span>
+        <span class="s2">"milestone_breaches"</span><span class="p">:</span> <span class="n">milestone_breaches</span><span class="p">,</span>
+        <span class="s2">"computed_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Apply leveling to the database</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="apply_leveling">
+<a class="viewcode-back" href="../../../modules.html#app.services.leveling.apply_leveling">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_leveling</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">project_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">shifts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Commit signed-off leveling shifts to the database.</span>
+
+<span class="sd">    This updates the ``planned_start_date`` and ``planned_end_date``</span>
+<span class="sd">    for each node in the shifts list within a single atomic transaction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    project_id : UUID</span>
+<span class="sd">        The root project node (for validation).</span>
+<span class="sd">    shifts : list of dict</span>
+<span class="sd">        The shifts returned by ``compute_leveling_proposal``, where each</span>
+<span class="sd">        dict has ``node_id``, ``proposed_start``, and ``proposed_finish``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        {</span>
+<span class="sd">            "applied": int,</span>
+<span class="sd">            "failed": int,</span>
+<span class="sd">            "details": [...],</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If a node in the shifts list is not under the project root.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Validate project root exists</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">project_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Project </span><span class="si">{</span><span class="n">project_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="n">applied</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">failed</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">details</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">shift</span> <span class="ow">in</span> <span class="n">shifts</span><span class="p">:</span>
+        <span class="n">node_id</span> <span class="o">=</span> <span class="n">UUID</span><span class="p">(</span><span class="n">shift</span><span class="p">[</span><span class="s2">"node_id"</span><span class="p">])</span>
+        <span class="n">proposed_start_str</span> <span class="o">=</span> <span class="n">shift</span><span class="p">[</span><span class="s2">"proposed_start"</span><span class="p">]</span>
+        <span class="n">proposed_finish_str</span> <span class="o">=</span> <span class="n">shift</span><span class="p">[</span><span class="s2">"proposed_finish"</span><span class="p">]</span>
+
+        <span class="n">proposed_start</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">proposed_start_str</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="n">proposed_finish</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">proposed_finish_str</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+
+        <span class="n">node</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">failed</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">details</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_id</span><span class="p">),</span>
+                <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"failed"</span><span class="p">,</span>
+                <span class="s2">"reason"</span><span class="p">:</span> <span class="s2">"Node not found"</span><span class="p">,</span>
+            <span class="p">})</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Verify node is under project root via ltree</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">failed</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">details</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_id</span><span class="p">),</span>
+                <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"failed"</span><span class="p">,</span>
+                <span class="s2">"reason"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"Node </span><span class="si">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2"> is not under project </span><span class="si">{</span><span class="n">root</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="p">})</span>
+            <span class="k">continue</span>
+
+        <span class="n">old_start</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span>
+        <span class="n">old_finish</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span>
+
+        <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">=</span> <span class="n">proposed_start</span>
+        <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">=</span> <span class="n">proposed_finish</span>
+
+        <span class="n">applied</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">details</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_id</span><span class="p">),</span>
+            <span class="s2">"code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"applied"</span><span class="p">,</span>
+            <span class="s2">"old_start"</span><span class="p">:</span> <span class="n">old_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">old_start</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"old_finish"</span><span class="p">:</span> <span class="n">old_finish</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">old_finish</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"new_start"</span><span class="p">:</span> <span class="n">proposed_start</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s2">"new_finish"</span><span class="p">:</span> <span class="n">proposed_finish</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">})</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"project_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_id</span><span class="p">),</span>
+        <span class="s2">"applied"</span><span class="p">:</span> <span class="n">applied</span><span class="p">,</span>
+        <span class="s2">"failed"</span><span class="p">:</span> <span class="n">failed</span><span class="p">,</span>
+        <span class="s2">"details"</span><span class="p">:</span> <span class="n">details</span><span class="p">,</span>
+        <span class="s2">"applied_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="p">}</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

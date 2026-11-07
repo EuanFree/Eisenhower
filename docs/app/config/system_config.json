@@ -1,0 +1,14 @@
+{
+  "APP_NAME": "Eisenhower Portfolio Manager",
+  "MAINTENANCE_MODE": false,
+  "MAINTENANCE_MESSAGE": "System under maintenance",
+  "FEATURE_FLAGS": {
+    "costing_module": true,
+    "procurement_module": true,
+    "monte_carlo": true,
+    "supplier_portal": true
+  },
+  "SESSION_TIMEOUT_MINUTES": 30,
+  "MAX_LOGIN_ATTEMPTS": 5,
+  "LOCKOUT_DURATION_MINUTES": 15
+}

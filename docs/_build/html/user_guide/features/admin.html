@@ -1,0 +1,209 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>System Administration &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">System Administration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/user_guide/features/admin.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="system-administration">
+<h1>System Administration<a class="headerlink" href="#system-administration" title="Link to this heading"></a></h1>
+<p>System-wide administration tasks including security configuration, database health, and maintenance.</p>
+<section id="admin-security">
+<h2>admin_security<a class="headerlink" href="#admin-security" title="Link to this heading"></a></h2>
+<p>Admin security router for session management and spillage remediation.</p>
+<p>This module provides the administrative security endpoints required by
+UK MOD JSP 440 / JSP 604 and US DoD IL5/IL6 guidelines:</p>
+<ol class="arabic simple">
+<li><p><strong>Heartbeat</strong> — Client-side session keep-alive to prevent inactivity
+timeout (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/auth/heartbeat</span></code>).</p></li>
+<li><p><strong>Spillage Purge</strong> — Multi-signature emergency data redaction for
+classified spillage events (<code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/v1/admin/security/spillage/purge</span></code>).</p></li>
+<li><p><strong>Audit Certificates</strong> — Historic spillage redaction certificates for
+external security accreditation boards
+(<code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">/api/v1/admin/security/spillage/audit-certificates</span></code>).</p></li>
+</ol>
+</section>
+<section id="session-heartbeat">
+<h2>Session Heartbeat<a class="headerlink" href="#session-heartbeat" title="Link to this heading"></a></h2>
+<p>In a SCIF environment, an unattended terminal is a security risk.  The
+client sends periodic heartbeat pings to keep the session alive.  If
+the elapsed time since the last heartbeat exceeds 900 seconds (15
+minutes), the session is invalidated and the client receives HTTP 401
+with header <code class="docutils literal notranslate"><span class="pre">X-Session-Terminated:</span> <span class="pre">INACTIVITY_TIMEOUT</span></code>.</p>
+</section>
+<section id="spillage-purge">
+<h2>Spillage Purge<a class="headerlink" href="#spillage-purge" title="Link to this heading"></a></h2>
+<p>When classified data is accidentally disclosed to an unauthorized system
+or personnel, the contaminated content must be surgically redacted.
+This endpoint requires multi-signature authorization from two Superusers
+with clearance at or above SECRET.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Heartbeat — keep session alive</span>
+<span class="n">POST</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">auth</span><span class="o">/</span><span class="n">heartbeat</span>
+
+<span class="c1"># Execute spillage purge</span>
+<span class="n">POST</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">admin</span><span class="o">/</span><span class="n">security</span><span class="o">/</span><span class="n">spillage</span><span class="o">/</span><span class="n">purge</span>
+<span class="p">{</span>
+<span class="s2">"incident_ticket_ref"</span><span class="p">:</span> <span class="s2">"INC-2026-0042"</span><span class="p">,</span>
+<span class="s2">"search_terms"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"CLASSIFIED_PROGRAM_NAME"</span><span class="p">],</span>
+<span class="s2">"purging_user_ids"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="c1"># Retrieve audit certificates</span>
+<span class="n">GET</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">admin</span><span class="o">/</span><span class="n">security</span><span class="o">/</span><span class="n">spillage</span><span class="o">/</span><span class="n">audit</span><span class="o">-</span><span class="n">certificates</span>
+</pre></div>
+</div>
+</section>
+<section id="admin-tools">
+<h2>Admin Tools<a class="headerlink" href="#admin-tools" title="Link to this heading"></a></h2>
+<p>Admin Tools Router — Combined endpoints for all admin capabilities.</p>
+<p>This single router consolidates all admin tool endpoints to keep
+the router count manageable while providing full API coverage.</p>
+</section>
+<section id="endpoints">
+<h2>Endpoints<a class="headerlink" href="#endpoints" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>/admin/logs/*           - Log management</p></li>
+<li><p>/admin/config/*         - System configuration</p></li>
+<li><p>/admin/health/*         - Service health</p></li>
+<li><p>/admin/alerting/*       - Alerting and notifications</p></li>
+<li><p>/admin/monitoring/*     - Monitoring and metrics</p></li>
+<li><p>/admin/password/*       - Password policy and 2FA</p></li>
+<li><p>/admin/data/*           - Data export/import</p></li>
+<li><p>/admin/log-rotation/*   - Log rotation</p></li>
+<li><p>/admin/security-scan/*  - Security scans</p></li>
+<li><p>/admin/secrets/*        - Secret rotation</p></li>
+<li><p>/admin/maintenance/*    - Maintenance mode</p></li>
+<li><p>/admin/feature-flags/*  - Feature flags</p></li>
+<li><p>/admin/users/*          - User management</p></li>
+</ul>
+</section>
+<section id="what-you-can-do">
+<h2>What You Can Do<a class="headerlink" href="#what-you-can-do" title="Link to this heading"></a></h2>
+<p><strong>Viewing Information</strong></p>
+<ul class="simple">
+<li><p><strong>View</strong>: Retrieve historic spillage redaction certificates.</p></li>
+</ul>
+<p><strong>Creating New Items</strong></p>
+<ul class="simple">
+<li><p><strong>Create</strong>: Session heartbeat — keep session alive.</p></li>
+<li><p><strong>Create</strong>: Execute emergency classified spillage purge.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

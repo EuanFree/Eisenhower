@@ -1,0 +1,1290 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app.services.baseline_engine &mdash; Eisenhower Portfolio Manager — API Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2c3e50" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            Eisenhower Portfolio Manager
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html">Eisenhower Portfolio Manager — User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#who-is-this-guide-for">Who Is This Guide For?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#quick-start">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#features">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#reference">Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_guide/index.html#indices-and-tables">Indices and Tables</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">Application Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#core-security">Core Security</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.models.models">Data Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#pydantic-schemas">Pydantic Schemas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#api-routers">API Routers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#services">Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#utilities">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.config">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.database">Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.main">Application Entry Point</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-init_db">Database Initialization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html#module-app.cli.seed">CLI Seeder</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2c3e50" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Eisenhower Portfolio Manager</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app.services.baseline_engine</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app.services.baseline_engine</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Performance Measurement Baseline (PMB) engine.</span>
+
+<span class="sd">This module provides the core logic for freezing baselines and computing</span>
+<span class="sd">variance between live WBS state and frozen baseline snapshots.</span>
+
+<span class="sd">Baseline Freezing</span>
+<span class="sd">-----------------</span>
+
+<span class="sd">When a baseline is frozen, the entire sub-tree rooted at a PortfolioNode</span>
+<span class="sd">is cloned into :class:`BaselineNodeSnapshot` rows.  Each snapshot captures</span>
+<span class="sd">the node's schedule dates, cost figures, float values, and custom</span>
+<span class="sd">attributes at the point in time of the freeze.</span>
+
+<span class="sd">The freeze operation is atomic: either all snapshots are created, or none</span>
+<span class="sd">are.  This ensures a baseline always represents a consistent point-in-time</span>
+<span class="sd">view of the portfolio.</span>
+
+<span class="sd">Variance Calculation</span>
+<span class="sd">--------------------</span>
+
+<span class="sd">To compute variance, the engine compares each live node against its</span>
+<span class="sd">corresponding snapshot and calculates:</span>
+
+<span class="sd">- **start_variance_days** — How many calendar days the start date has</span>
+<span class="sd">  shifted from the baseline (positive = slipped later).</span>
+<span class="sd">- **finish_variance_days** — How many calendar days the finish date has</span>
+<span class="sd">  shifted.</span>
+<span class="sd">- **bac_variance** — The difference in Budget at Completion.</span>
+<span class="sd">- **critical_path_migrated** — Whether the node's critical path status</span>
+<span class="sd">  changed since the baseline was frozen.</span>
+<span class="sd">- **scope_drift** — Classification of scope change: UNCHANGED, MODIFIED,</span>
+<span class="sd">  ADDED_SCOPE, or DELETED_SCOPE.</span>
+
+<span class="sd">Scope drift is determined by comparing the set of node codes in the live</span>
+<span class="sd">tree against the set in the baseline:</span>
+
+<span class="sd">- **UNCHANGED** — Node exists in both with identical key fields.</span>
+<span class="sd">- **MODIFIED** — Node exists in both but at least one key field differs.</span>
+<span class="sd">- **ADDED_SCOPE** — Node exists in the live tree but not in the baseline.</span>
+<span class="sd">- **DELETED_SCOPE** — Node exists in the baseline but not in the live tree.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">~~~~~</span>
+
+<span class="sd">    from app.services.baseline_engine import freeze_baseline, compute_baseline_variance</span>
+
+<span class="sd">    # Freeze a new baseline</span>
+<span class="sd">    result = freeze_baseline(db, root_node_id, "B0_CONTRACT", "Contract Baseline", user_id)</span>
+
+<span class="sd">    # Compare live state against a baseline</span>
+<span class="sd">    variance = compute_baseline_variance(db, root_node_id, baseline_id)</span>
+
+<span class="sd">References</span>
+<span class="sd">~~~~~~~~~~</span>
+
+<span class="sd">- PMI, *A Guide to the Project Management Body of Knowledge (PMBOK Guide)*,</span>
+<span class="sd">  7th Edition, 2021.  Chapter 4: Project Scope Management.</span>
+<span class="sd">- DoD 5000.02, *Operation of the Defense Acquisition System*, for baseline</span>
+<span class="sd">  governance requirements.</span>
+<span class="sd">"""</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">date</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">uuid</span><span class="w"> </span><span class="kn">import</span> <span class="n">UUID</span><span class="p">,</span> <span class="n">uuid4</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sqlalchemy</span><span class="w"> </span><span class="kn">import</span> <span class="n">text</span> <span class="k">as</span> <span class="n">sa_text</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.models.models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PortfolioNode</span><span class="p">,</span> <span class="n">PortfolioBaseline</span><span class="p">,</span> <span class="n">BaselineNodeSnapshot</span><span class="p">,</span>
+    <span class="n">BaselineChangeRequest</span><span class="p">,</span> <span class="n">BaselineChangeRequestStatus</span><span class="p">,</span>
+    <span class="n">ForensicAuditLog</span><span class="p">,</span> <span class="n">LockOperationType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.services.lock_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">acquire_subtree_lock</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">app.core.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">LockedException</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BaselineValidationException">
+<a class="viewcode-back" href="../../../modules.html#app.services.baseline_engine.BaselineValidationException">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaselineValidationException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raised when one or more leaf nodes fail baseline validation.</span>
+
+<span class="sd">    Carries a structured list of per-node validation errors so the</span>
+<span class="sd">    caller can surface them to the user without losing context.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    errors : list of dict</span>
+<span class="sd">        Each dict contains ``node_id``, ``code``, and ``message``</span>
+<span class="sd">        describing why that node failed validation.</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="BaselineValidationException.__init__">
+<a class="viewcode-back" href="../../../modules.html#app.services.baseline_engine.BaselineValidationException.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">errors</span> <span class="o">=</span> <span class="n">errors</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'code'</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'node_id'</span><span class="p">,</span><span class="w"> </span><span class="s1">'unknown'</span><span class="p">))</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="p">[</span><span class="s1">'message'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">errors</span>
+        <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compute_state_hash</span><span class="p">(</span><span class="n">snapshots</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compute a SHA-256 cryptographic hash over a list of snapshot dicts.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    snapshots : list of dict</span>
+<span class="sd">        Plain-data dictionaries representing each baseline snapshot.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Hex-encoded SHA-256 digest.</span>
+<span class="sd">    """</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">snapshots</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">content</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"utf-8"</span><span class="p">))</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Leaf-node validation</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_leaf_node</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Validate a single leaf node is ready for baseline capture.</span>
+
+<span class="sd">    Checks for common preconditions that would make a baseline snapshot</span>
+<span class="sd">    unreliable:</span>
+
+<span class="sd">    - **Incomplete work package** – A leaf node (no active children) whose</span>
+<span class="sd">      ``percent_complete`` is ``None`` or less than 100 % and that has no</span>
+<span class="sd">      planned dates.  Such a node is considered an unstarted work package</span>
+<span class="sd">      that cannot be baselined.</span>
+<span class="sd">    - **Unapproved RFC** – A node whose ``custom_attributes`` contain an</span>
+<span class="sd">      ``rfc_status`` other than ``"APPROVED"`` (e.g. ``"PENDING"`` or</span>
+<span class="sd">      ``"REJECTED"``).  An unapproved Request for Change must not be</span>
+<span class="sd">      captured in a baseline.</span>
+<span class="sd">    - **Missing BAC** – A leaf node with no ``budgeted_cost_bac`` and no</span>
+<span class="sd">      ``pv`` (Planned Value).  Without a cost figure the baseline cannot</span>
+<span class="sd">      serve as an EVM reference.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The node to validate.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str or None</span>
+<span class="sd">        ``None`` when the node is valid, otherwise a human-readable error</span>
+<span class="sd">        message describing the first validation failure found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check for unapproved RFC</span>
+    <span class="n">custom</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">rfc_status</span> <span class="o">=</span> <span class="n">custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rfc_status"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rfc_status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">rfc_status</span> <span class="o">!=</span> <span class="s2">"APPROVED"</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Node has unapproved RFC (status=</span><span class="si">{</span><span class="n">rfc_status</span><span class="si">}</span><span class="s2">). "</span>
+            <span class="s2">"Resolve the RFC before baselining."</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Check for missing BAC on leaf nodes (nodes without children)</span>
+    <span class="n">has_children</span> <span class="o">=</span> <span class="n">custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"has_children"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_children</span><span class="p">:</span>
+        <span class="n">bac</span> <span class="o">=</span> <span class="n">_extract_bac</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="s2">"Leaf node has no Budget at Completion (BAC). "</span>
+                <span class="s2">"Assign a cost before baselining."</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_all_nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Validate every node in a sub-tree and collect structured errors.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nodes : list of PortfolioNode</span>
+<span class="sd">        All nodes in the sub-tree to be baselined.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of dict</span>
+<span class="sd">        Each dict contains ``node_id``, ``code``, and ``message``.</span>
+<span class="sd">        An empty list means all nodes passed validation.</span>
+<span class="sd">    """</span>
+    <span class="n">errors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">_validate_leaf_node</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="s2">"code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span> <span class="ow">or</span> <span class="s2">"UNKNOWN"</span><span class="p">,</span>
+                <span class="s2">"message"</span><span class="p">:</span> <span class="n">error</span><span class="p">,</span>
+            <span class="p">})</span>
+    <span class="k">return</span> <span class="n">errors</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Baseline freezing</span>
+<span class="c1"># ============================================================================</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_descendants</span><span class="p">(</span><span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span> <span class="n">root_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Collect all PortfolioNodes in the sub-tree rooted at *root_id*.</span>
+
+<span class="sd">    Uses ltree path containment on PostgreSQL, or falls back to string-based</span>
+<span class="sd">    prefix matching on SQLite (for tests).  Includes the root node itself.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    root_id : UUID</span>
+<span class="sd">        The root portfolio node ID.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of PortfolioNode</span>
+<span class="sd">        All nodes in the sub-tree, including the root.</span>
+<span class="sd">    """</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c1"># Use ltree containment: find all nodes whose path starts with root's path</span>
+    <span class="n">root_path</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span>
+    <span class="k">if</span> <span class="n">root_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">root</span><span class="p">]</span>
+
+    <span class="c1"># Try PostgreSQL ltree first; fall back to LIKE-based prefix matching</span>
+    <span class="c1"># for SQLite (used in tests).</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">sa_text</span><span class="p">(</span><span class="sa">f</span><span class="s2">"path @&gt; '</span><span class="si">{</span><span class="n">root_path</span><span class="si">}</span><span class="s2">'::ltree"</span><span class="p">),</span>
+            <span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="c1"># Fallback: string prefix matching (works on SQLite)</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">is_active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="c1"># Filter by path prefix in Python</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">root_path</span> <span class="o">+</span> <span class="s2">"."</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">path</span> <span class="o">==</span> <span class="n">root_path</span> <span class="ow">or</span> <span class="n">n</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">)]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_duration</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract the duration in days from a PortfolioNode.</span>
+
+<span class="sd">    Tries custom_attributes first (from CPM), then falls back to</span>
+<span class="sd">    planned dates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int or None</span>
+<span class="sd">        Duration in days, or None if not available.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Check custom_attributes for CPM-computed duration</span>
+    <span class="n">custom</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">schedule</span> <span class="o">=</span> <span class="n">custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schedule"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">schedule</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"duration_days"</span> <span class="ow">in</span> <span class="n">schedule</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">schedule</span><span class="p">[</span><span class="s2">"duration_days"</span><span class="p">])</span>
+
+    <span class="c1"># Fall back to planned dates</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span>
+        <span class="c1"># Convert datetime to date if needed</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">end</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">):</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">end</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">end</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_total_float</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract the total float from a PortfolioNode's custom_attributes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int or None</span>
+<span class="sd">        Total float in days, or None if not available.</span>
+<span class="sd">    """</span>
+    <span class="n">custom</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">schedule</span> <span class="o">=</span> <span class="n">custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schedule"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">schedule</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"total_float"</span> <span class="ow">in</span> <span class="n">schedule</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">schedule</span><span class="p">[</span><span class="s2">"total_float"</span><span class="p">])</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_bac</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract the Budget at Completion from a PortfolioNode.</span>
+
+<span class="sd">    Tries custom_attributes first, then falls back to the PV (Planned Value)</span>
+<span class="sd">    field.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    float or None</span>
+<span class="sd">        Budget at Completion, or None if not available.</span>
+<span class="sd">    """</span>
+    <span class="n">custom</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="s2">"budgeted_cost_bac"</span> <span class="ow">in</span> <span class="n">custom</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">custom</span><span class="p">[</span><span class="s2">"budgeted_cost_bac"</span><span class="p">])</span>
+    <span class="c1"># Fall back to PV (Planned Value) as a proxy</span>
+    <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">pv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">pv</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="freeze_baseline">
+<a class="viewcode-back" href="../../../modules.html#app.services.baseline_engine.freeze_baseline">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">freeze_baseline</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">baseline_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">frozen_by_user_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">bcr_reference</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">PortfolioBaseline</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Atomically freeze a new Performance Measurement Baseline.</span>
+
+<span class="sd">    Clones the entire sub-tree rooted at *root_node_id* into</span>
+<span class="sd">    :class:`BaselineNodeSnapshot` rows.  The operation is atomic:</span>
+<span class="sd">    either all snapshots are created, or none are.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        The root PortfolioNode whose sub-tree to freeze.</span>
+<span class="sd">    baseline_code : str</span>
+<span class="sd">        Short code identifying this baseline (e.g., 'B0_CONTRACT').</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Human-readable name for the baseline.</span>
+<span class="sd">    frozen_by_user_id : UUID or None</span>
+<span class="sd">        The user who initiated the freeze.</span>
+<span class="sd">    bcr_reference : str or None</span>
+<span class="sd">        Reference to the BCR that led to this baseline (if any).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (PortfolioBaseline, int)</span>
+<span class="sd">        The newly created baseline and the number of snapshots created.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the root node is not found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Verify root node exists</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">root_node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># Collect all descendants</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">_collect_descendants</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No active nodes found under </span><span class="si">{</span><span class="n">root_node_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+    <span class="c1"># Create the baseline record</span>
+    <span class="n">baseline</span> <span class="o">=</span> <span class="n">PortfolioBaseline</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+        <span class="n">root_portfolio_node_id</span><span class="o">=</span><span class="n">root_node_id</span><span class="p">,</span>
+        <span class="n">baseline_code</span><span class="o">=</span><span class="n">baseline_code</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">frozen_by_user_id</span><span class="o">=</span><span class="n">frozen_by_user_id</span><span class="p">,</span>
+        <span class="n">bcr_reference</span><span class="o">=</span><span class="n">bcr_reference</span><span class="p">,</span>
+        <span class="n">is_active_target</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">baseline</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>  <span class="c1"># Get the baseline ID</span>
+
+    <span class="c1"># Create snapshots for each node</span>
+    <span class="n">snapshots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+        <span class="n">snapshot</span> <span class="o">=</span> <span class="n">BaselineNodeSnapshot</span><span class="p">(</span>
+            <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+            <span class="n">baseline_id</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">path</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">code</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+            <span class="n">planned_start_date</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="s1">'date'</span><span class="p">)</span> <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span>
+            <span class="n">planned_end_date</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span> <span class="s1">'date'</span><span class="p">)</span> <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+            <span class="n">duration_days</span><span class="o">=</span><span class="n">_extract_duration</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+            <span class="n">total_float</span><span class="o">=</span><span class="n">_extract_total_float</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+            <span class="n">budgeted_cost_bac</span><span class="o">=</span><span class="n">_extract_bac</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+            <span class="n">custom_attributes</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">snapshots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">snapshot</span><span class="p">)</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">snapshot</span><span class="p">)</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># Check if this is the first baseline for this root; if so, make it active</span>
+    <span class="n">existing</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">root_portfolio_node_id</span> <span class="o">==</span> <span class="n">root_node_id</span><span class="p">,</span>
+            <span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">is_active_target</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">baseline</span><span class="o">.</span><span class="n">is_active_target</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">baseline</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshots</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="freeze_baseline_atomic">
+<a class="viewcode-back" href="../../../modules.html#app.services.baseline_engine.freeze_baseline_atomic">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">freeze_baseline_atomic</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">baseline_code</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">frozen_by_user_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">bcr_reference</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">ttl_seconds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">PortfolioBaseline</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Atomically freeze a baseline with sub-tree lock isolation.</span>
+
+<span class="sd">    This is the transactional variant of :func:`freeze_baseline` that adds:</span>
+
+<span class="sd">    1. **Sub-tree lock** – Acquires an exclusive lock via</span>
+<span class="sd">       :func:`acquire_subtree_lock` before any snapshot work begins.</span>
+<span class="sd">       Concurrent writer requests across the sub-tree are rejected with</span>
+<span class="sd">       HTTP 423 (``LockedException``).</span>
+
+<span class="sd">    2. **Leaf-node validation** – Every node in the sub-tree is validated</span>
+<span class="sd">       (BAC presence, RFC approval, V&amp;V gates).  If any single node fails,</span>
+<span class="sd">       the entire transaction rolls back and a structured</span>
+<span class="sd">       :class:`BaselineValidationException` is raised.</span>
+
+<span class="sd">    3. **Atomic multi-node snapshotting** – All baseline records are</span>
+<span class="sd">       inserted inside a single nested transaction (SAVEPOINT).  On any</span>
+<span class="sd">       failure the SAVEPOINT is rolled back, leaving zero orphan rows.</span>
+
+<span class="sd">    4. **Forensic audit log** – An immutable :class:`ForensicAuditLog`</span>
+<span class="sd">       entry is written with a cryptographic SHA-256 hash of the complete</span>
+<span class="sd">       baseline state.</span>
+
+<span class="sd">    5. **Parent milestone pointer update** – After a successful freeze,</span>
+<span class="sd">       each parent :class:`UniversalBreakdownNode` in the sub-tree has its</span>
+<span class="sd">       ``custom_attributes`` updated with a ``baseline_milestone`` pointer</span>
+<span class="sd">       to the newly created baseline ID.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        The root PortfolioNode whose sub-tree to freeze.</span>
+<span class="sd">    baseline_code : str</span>
+<span class="sd">        Short code identifying this baseline (e.g., 'B0_CONTRACT').</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Human-readable name for the baseline.</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        The integer user ID used to acquire the sub-tree lock.</span>
+<span class="sd">    frozen_by_user_id : UUID or None</span>
+<span class="sd">        The UUID of the user who initiated the freeze.</span>
+<span class="sd">    bcr_reference : str or None</span>
+<span class="sd">        Reference to the BCR that led to this baseline (if any).</span>
+<span class="sd">    ttl_seconds : int</span>
+<span class="sd">        Lock time-to-live in seconds (default 60 for large baselines).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (PortfolioBaseline, int)</span>
+<span class="sd">        The newly created baseline and the number of snapshots created.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the root node is not found.</span>
+<span class="sd">    LockedException</span>
+<span class="sd">        If the sub-tree is already locked by another operation (HTTP 423).</span>
+<span class="sd">    BaselineValidationException</span>
+<span class="sd">        If one or more leaf nodes fail validation.  The ``errors``</span>
+<span class="sd">        attribute contains structured per-node error details.</span>
+<span class="sd">    """</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># 0. Verify root node exists (outside lock to fail fast)</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioNode</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">root_node_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"PortfolioNode </span><span class="si">{</span><span class="n">root_node_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="n">root_path</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">path</span> <span class="ow">or</span> <span class="s2">"1"</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># 1. Acquire exclusive sub-tree lock</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">acquire_subtree_lock</span><span class="p">(</span>
+        <span class="n">db</span><span class="p">,</span> <span class="n">root_path</span><span class="p">,</span> <span class="n">LockOperationType</span><span class="o">.</span><span class="n">BASELINE_FREEZE</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span>
+        <span class="n">ttl_seconds</span><span class="o">=</span><span class="n">ttl_seconds</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># 2. Collect all descendants</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">_collect_descendants</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No active nodes found under </span><span class="si">{</span><span class="n">root_node_id</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># 3. Validate all leaf nodes</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="n">validation_errors</span> <span class="o">=</span> <span class="n">_validate_all_nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">validation_errors</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BaselineValidationException</span><span class="p">(</span><span class="n">validation_errors</span><span class="p">)</span>
+
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># 4. Begin nested transaction (SAVEPOINT)</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># Use db.begin_nested() via the session's connection.</span>
+        <span class="c1"># db.get_bind() may return an Engine; we need a Connection.</span>
+        <span class="n">nested_txn</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">begin_nested</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="c1"># 4a. Create the baseline record</span>
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="n">baseline</span> <span class="o">=</span> <span class="n">PortfolioBaseline</span><span class="p">(</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+                <span class="n">root_portfolio_node_id</span><span class="o">=</span><span class="n">root_node_id</span><span class="p">,</span>
+                <span class="n">baseline_code</span><span class="o">=</span><span class="n">baseline_code</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">frozen_by_user_id</span><span class="o">=</span><span class="n">frozen_by_user_id</span><span class="p">,</span>
+                <span class="n">bcr_reference</span><span class="o">=</span><span class="n">bcr_reference</span><span class="p">,</span>
+                <span class="n">is_active_target</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">baseline</span><span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="c1"># 4b. Batch-insert immutable baseline records</span>
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="n">snapshot_objects</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">BaselineNodeSnapshot</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">snapshot_dicts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                <span class="n">snapshot</span> <span class="o">=</span> <span class="n">BaselineNodeSnapshot</span><span class="p">(</span>
+                    <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+                    <span class="n">baseline_id</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">portfolio_node_id</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">path</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+                    <span class="n">code</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                    <span class="n">planned_start_date</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="s1">'date'</span><span class="p">)</span> <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span>
+                    <span class="n">planned_end_date</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span> <span class="s1">'date'</span><span class="p">)</span> <span class="k">else</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+                    <span class="n">duration_days</span><span class="o">=</span><span class="n">_extract_duration</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+                    <span class="n">total_float</span><span class="o">=</span><span class="n">_extract_total_float</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+                    <span class="n">budgeted_cost_bac</span><span class="o">=</span><span class="n">_extract_bac</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+                    <span class="n">custom_attributes</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">snapshot_objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">snapshot</span><span class="p">)</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">snapshot</span><span class="p">)</span>
+
+                <span class="c1"># Collect plain dict for cryptographic hash</span>
+                <span class="n">snapshot_dicts</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">"node_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                    <span class="s2">"code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">,</span>
+                    <span class="s2">"path"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+                    <span class="s2">"planned_start_date"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">snapshot</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">),</span>
+                    <span class="s2">"planned_end_date"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">snapshot</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">),</span>
+                    <span class="s2">"duration_days"</span><span class="p">:</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">duration_days</span><span class="p">,</span>
+                    <span class="s2">"total_float"</span><span class="p">:</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">total_float</span><span class="p">,</span>
+                    <span class="s2">"budgeted_cost_bac"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">snapshot</span><span class="o">.</span><span class="n">budgeted_cost_bac</span><span class="p">)</span> <span class="k">if</span> <span class="n">snapshot</span><span class="o">.</span><span class="n">budgeted_cost_bac</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">})</span>
+
+            <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="c1"># 4c. Update parent UniversalBreakdownNode baseline milestone</span>
+            <span class="c1">#     pointers (deferred until after nested txn to avoid version_id</span>
+            <span class="c1">#     conflicts with joined-table inheritance on SQLite)</span>
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="c1"># We store the milestone data and apply it after the nested</span>
+            <span class="c1"># transaction commits, to avoid SQLAlchemy version_id conflicts</span>
+            <span class="c1"># when modifying existing rows inside a SAVEPOINT.</span>
+            <span class="n">_milestone_data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">"baseline_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                <span class="s2">"baseline_code"</span><span class="p">:</span> <span class="n">baseline_code</span><span class="p">,</span>
+                <span class="s2">"frozen_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="p">}</span>
+            <span class="n">_milestone_node_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">]</span>
+
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="c1"># 4d. Write atomic ForensicAuditLog block with cryptographic hash</span>
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="n">state_hash</span> <span class="o">=</span> <span class="n">_compute_state_hash</span><span class="p">(</span><span class="n">snapshot_dicts</span><span class="p">)</span>
+
+            <span class="c1"># Get the latest audit log hash for chain continuity</span>
+            <span class="n">last_audit</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">created_at</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+                <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="n">prev_hash</span> <span class="o">=</span> <span class="n">last_audit</span><span class="o">.</span><span class="n">current_hash</span> <span class="k">if</span> <span class="n">last_audit</span> <span class="k">else</span> <span class="s2">""</span>
+
+            <span class="n">audit_entry</span> <span class="o">=</span> <span class="n">ForensicAuditLog</span><span class="o">.</span><span class="n">create_entry</span><span class="p">(</span>
+                <span class="n">transaction_id</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">user_upn</span><span class="o">=</span><span class="sa">f</span><span class="s2">"user:</span><span class="si">{</span><span class="n">user_id</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">client_ip</span><span class="o">=</span><span class="s2">"system"</span><span class="p">,</span>
+                <span class="n">action_type</span><span class="o">=</span><span class="s2">"BASELINE_FREEZE"</span><span class="p">,</span>
+                <span class="n">entity_type</span><span class="o">=</span><span class="s2">"PortfolioBaseline"</span><span class="p">,</span>
+                <span class="n">entity_id</span><span class="o">=</span><span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="n">json_diff</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">"baseline_id"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">),</span>
+                    <span class="s2">"baseline_code"</span><span class="p">:</span> <span class="n">baseline_code</span><span class="p">,</span>
+                    <span class="s2">"snapshot_count"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshot_objects</span><span class="p">),</span>
+                    <span class="s2">"state_hash"</span><span class="p">:</span> <span class="n">state_hash</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="n">security_marking</span><span class="o">=</span><span class="n">root</span><span class="o">.</span><span class="n">security_classification</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">security_classification</span><span class="p">,</span> <span class="s1">'value'</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">security_classification</span><span class="p">),</span>
+                <span class="n">prev_hash</span><span class="o">=</span><span class="n">prev_hash</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">audit_entry</span><span class="p">)</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="c1"># 4e. Set active target flag</span>
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="n">existing</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">root_portfolio_node_id</span> <span class="o">==</span> <span class="n">root_node_id</span><span class="p">,</span>
+                    <span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">is_active_target</span> <span class="o">==</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">existing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">baseline</span><span class="o">.</span><span class="n">is_active_target</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="c1"># Commit the nested transaction</span>
+            <span class="n">nested_txn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="c1"># 4f. Update parent UniversalBreakdownNode baseline milestone</span>
+            <span class="c1">#     pointers (using raw SQL to bypass ORM version_id issues)</span>
+            <span class="c1"># ------------------------------------------------------------------</span>
+            <span class="k">for</span> <span class="n">nid</span> <span class="ow">in</span> <span class="n">_milestone_node_ids</span><span class="p">:</span>
+                <span class="c1"># Use hex string (no hyphens) for SQLite UUID column matching</span>
+                <span class="n">nid_hex</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">nid</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+                <span class="c1"># Read current custom_attributes, merge, and write back via raw SQL</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                    <span class="n">sa_text</span><span class="p">(</span>
+                        <span class="s2">"SELECT custom_attributes FROM universal_breakdown_nodes WHERE id = :nid"</span>
+                    <span class="p">),</span>
+                    <span class="p">{</span><span class="s2">"nid"</span><span class="p">:</span> <span class="n">nid_hex</span><span class="p">},</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">row</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">custom</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">custom</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">custom</span><span class="p">[</span><span class="s2">"baseline_milestone"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_milestone_data</span>
+                <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                    <span class="n">sa_text</span><span class="p">(</span>
+                        <span class="s2">"UPDATE universal_breakdown_nodes SET custom_attributes = :ca WHERE id = :nid"</span>
+                    <span class="p">),</span>
+                    <span class="p">{</span><span class="s2">"ca"</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">custom</span><span class="p">),</span> <span class="s2">"nid"</span><span class="p">:</span> <span class="n">nid_hex</span><span class="p">},</span>
+                <span class="p">)</span>
+
+            <span class="n">db</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"Atomic baseline freeze completed: baseline=</span><span class="si">%s</span><span class="s2">, snapshots=</span><span class="si">%d</span><span class="s2">, hash=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshot_objects</span><span class="p">),</span> <span class="n">state_hash</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">baseline</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshot_objects</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># Rollback the nested transaction on any failure</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">nested_txn</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>  <span class="c1"># SQLite may not support rollback on nested txn</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span>
+                <span class="s2">"Atomic baseline freeze failed – rolled back: root=</span><span class="si">%s</span><span class="s2">, code=</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+                <span class="n">root_node_id</span><span class="p">,</span> <span class="n">baseline_code</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">raise</span></div>
+
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Variance calculation</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="compute_baseline_variance">
+<a class="viewcode-back" href="../../../modules.html#app.services.baseline_engine.compute_baseline_variance">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_baseline_variance</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">root_node_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">baseline_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Compare live WBS state against a frozen baseline and return deltas.</span>
+
+<span class="sd">    For each node in the baseline, the engine finds the corresponding</span>
+<span class="sd">    live node and calculates schedule variance, cost variance, and</span>
+<span class="sd">    scope drift classification.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    root_node_id : UUID</span>
+<span class="sd">        The root portfolio node (used to find the baseline).</span>
+<span class="sd">    baseline_id : UUID</span>
+<span class="sd">        The baseline to compare against.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        A dictionary containing:</span>
+<span class="sd">        - baseline_id: UUID of the baseline</span>
+<span class="sd">        - baseline_code: str code of the baseline</span>
+<span class="sd">        - root_node_id: UUID of the root node</span>
+<span class="sd">        - total_nodes_compared: int</span>
+<span class="sd">        - nodes_with_variance: int</span>
+<span class="sd">        - total_start_variance_days: int</span>
+<span class="sd">        - total_finish_variance_days: int</span>
+<span class="sd">        - total_bac_variance: float</span>
+<span class="sd">        - nodes_added: int (in live tree but not in baseline)</span>
+<span class="sd">        - nodes_deleted: int (in baseline but not in live tree)</span>
+<span class="sd">        - node_variances: list of per-node variance dicts</span>
+<span class="sd">        - compared_at: ISO-format timestamp</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the baseline is not found.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Fetch the baseline</span>
+    <span class="n">baseline</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">PortfolioBaseline</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">baseline_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">baseline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Baseline </span><span class="si">{</span><span class="n">baseline_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># Fetch all snapshots for this baseline</span>
+    <span class="n">snapshots</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">BaselineNodeSnapshot</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">BaselineNodeSnapshot</span><span class="o">.</span><span class="n">baseline_id</span> <span class="o">==</span> <span class="n">baseline_id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Build a lookup by portfolio_node_id</span>
+    <span class="n">snapshot_by_node</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">BaselineNodeSnapshot</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">snapshot_codes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">snap</span> <span class="ow">in</span> <span class="n">snapshots</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">snap</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">:</span>
+            <span class="n">snapshot_by_node</span><span class="p">[</span><span class="n">snap</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">snap</span>
+        <span class="k">if</span> <span class="n">snap</span><span class="o">.</span><span class="n">code</span><span class="p">:</span>
+            <span class="n">snapshot_codes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">snap</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+
+    <span class="c1"># Fetch all live nodes in the current sub-tree</span>
+    <span class="n">live_nodes</span> <span class="o">=</span> <span class="n">_collect_descendants</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">root_node_id</span><span class="p">)</span>
+    <span class="n">live_by_id</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">UUID</span><span class="p">,</span> <span class="n">PortfolioNode</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">live_nodes</span><span class="p">}</span>
+    <span class="n">live_codes</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="o">.</span><span class="n">code</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">live_nodes</span> <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span><span class="p">}</span>
+
+    <span class="c1"># Identify added and deleted nodes by code</span>
+    <span class="n">added_codes</span> <span class="o">=</span> <span class="n">live_codes</span> <span class="o">-</span> <span class="n">snapshot_codes</span>
+    <span class="n">deleted_codes</span> <span class="o">=</span> <span class="n">snapshot_codes</span> <span class="o">-</span> <span class="n">live_codes</span>
+
+    <span class="c1"># Compute per-node variance</span>
+    <span class="n">node_variances</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">total_start_variance</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">total_finish_variance</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">total_bac_variance</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+    <span class="n">nodes_with_variance</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">snap</span> <span class="ow">in</span> <span class="n">snapshots</span><span class="p">:</span>
+        <span class="n">live_node</span> <span class="o">=</span> <span class="n">live_by_id</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">snap</span><span class="o">.</span><span class="n">portfolio_node_id</span><span class="p">)</span> <span class="k">if</span> <span class="n">snap</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="n">code</span> <span class="o">=</span> <span class="n">snap</span><span class="o">.</span><span class="n">code</span> <span class="ow">or</span> <span class="s2">"UNKNOWN"</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">live_node</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">live_node</span> <span class="k">else</span> <span class="p">(</span><span class="n">snap</span><span class="o">.</span><span class="n">code</span> <span class="ow">or</span> <span class="s2">"UNKNOWN"</span><span class="p">)</span>
+
+        <span class="c1"># Determine scope drift</span>
+        <span class="k">if</span> <span class="n">live_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">scope_drift</span> <span class="o">=</span> <span class="s2">"DELETED_SCOPE"</span>
+        <span class="k">elif</span> <span class="n">snap</span><span class="o">.</span><span class="n">code</span> <span class="ow">in</span> <span class="n">added_codes</span><span class="p">:</span>
+            <span class="n">scope_drift</span> <span class="o">=</span> <span class="s2">"ADDED_SCOPE"</span>
+        <span class="k">elif</span> <span class="n">live_node</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Check if key fields have changed</span>
+            <span class="k">if</span> <span class="n">_has_fields_changed</span><span class="p">(</span><span class="n">snap</span><span class="p">,</span> <span class="n">live_node</span><span class="p">):</span>
+                <span class="n">scope_drift</span> <span class="o">=</span> <span class="s2">"MODIFIED"</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">scope_drift</span> <span class="o">=</span> <span class="s2">"UNCHANGED"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scope_drift</span> <span class="o">=</span> <span class="s2">"UNCHANGED"</span>
+
+        <span class="c1"># Calculate start variance</span>
+        <span class="n">start_variance</span> <span class="o">=</span> <span class="n">_date_variance</span><span class="p">(</span><span class="n">snap</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="n">_get_live_start</span><span class="p">(</span><span class="n">live_node</span><span class="p">))</span>
+        <span class="n">finish_variance</span> <span class="o">=</span> <span class="n">_date_variance</span><span class="p">(</span><span class="n">snap</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span> <span class="n">_get_live_end</span><span class="p">(</span><span class="n">live_node</span><span class="p">))</span>
+
+        <span class="c1"># Calculate BAC variance</span>
+        <span class="n">bac_variance</span> <span class="o">=</span> <span class="n">_numeric_variance</span><span class="p">(</span>
+            <span class="n">snap</span><span class="o">.</span><span class="n">budgeted_cost_bac</span><span class="p">,</span>
+            <span class="n">_extract_bac</span><span class="p">(</span><span class="n">live_node</span><span class="p">)</span> <span class="k">if</span> <span class="n">live_node</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Check critical path migration</span>
+        <span class="n">critical_migrated</span> <span class="o">=</span> <span class="n">_check_critical_migration</span><span class="p">(</span><span class="n">snap</span><span class="p">,</span> <span class="n">live_node</span><span class="p">)</span>
+
+        <span class="c1"># Accumulate totals</span>
+        <span class="k">if</span> <span class="n">start_variance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">total_start_variance</span> <span class="o">+=</span> <span class="n">start_variance</span>
+        <span class="k">if</span> <span class="n">finish_variance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">total_finish_variance</span> <span class="o">+=</span> <span class="n">finish_variance</span>
+        <span class="k">if</span> <span class="n">bac_variance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">total_bac_variance</span> <span class="o">+=</span> <span class="n">bac_variance</span>
+
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">start_variance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">start_variance</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="n">finish_variance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">finish_variance</span> <span class="o">!=</span> <span class="mi">0</span>
+            <span class="ow">or</span> <span class="n">bac_variance</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">bac_variance</span> <span class="o">!=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s2">"0"</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">scope_drift</span> <span class="o">!=</span> <span class="s2">"UNCHANGED"</span>
+        <span class="p">):</span>
+            <span class="n">nodes_with_variance</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">node_variances</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">snap</span><span class="o">.</span><span class="n">portfolio_node_id</span> <span class="ow">or</span> <span class="n">snap</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="s2">"code"</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">"start_variance_days"</span><span class="p">:</span> <span class="n">start_variance</span><span class="p">,</span>
+            <span class="s2">"finish_variance_days"</span><span class="p">:</span> <span class="n">finish_variance</span><span class="p">,</span>
+            <span class="s2">"bac_variance"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">bac_variance</span><span class="p">)</span> <span class="k">if</span> <span class="n">bac_variance</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">"critical_path_migrated"</span><span class="p">:</span> <span class="n">critical_migrated</span><span class="p">,</span>
+            <span class="s2">"scope_drift"</span><span class="p">:</span> <span class="n">scope_drift</span><span class="p">,</span>
+            <span class="s2">"baseline_start"</span><span class="p">:</span> <span class="n">snap</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span>
+            <span class="s2">"baseline_finish"</span><span class="p">:</span> <span class="n">snap</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span>
+            <span class="s2">"live_start"</span><span class="p">:</span> <span class="n">_get_live_start</span><span class="p">(</span><span class="n">live_node</span><span class="p">),</span>
+            <span class="s2">"live_finish"</span><span class="p">:</span> <span class="n">_get_live_end</span><span class="p">(</span><span class="n">live_node</span><span class="p">),</span>
+        <span class="p">})</span>
+
+    <span class="c1"># Add nodes that exist in live tree but not in baseline</span>
+    <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">live_nodes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">snapshot_by_node</span> <span class="ow">and</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span> <span class="ow">in</span> <span class="n">added_codes</span><span class="p">:</span>
+            <span class="n">node_variances</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">"node_id"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="s2">"code"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">code</span> <span class="ow">or</span> <span class="s2">"UNKNOWN"</span><span class="p">,</span>
+                <span class="s2">"name"</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">"start_variance_days"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"finish_variance_days"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"bac_variance"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"critical_path_migrated"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">"scope_drift"</span><span class="p">:</span> <span class="s2">"ADDED_SCOPE"</span><span class="p">,</span>
+                <span class="s2">"baseline_start"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"baseline_finish"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">"live_start"</span><span class="p">:</span> <span class="n">_get_live_start</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+                <span class="s2">"live_finish"</span><span class="p">:</span> <span class="n">_get_live_end</span><span class="p">(</span><span class="n">node</span><span class="p">),</span>
+            <span class="p">})</span>
+            <span class="n">nodes_with_variance</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"baseline_id"</span><span class="p">:</span> <span class="n">baseline</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+        <span class="s2">"baseline_code"</span><span class="p">:</span> <span class="n">baseline</span><span class="o">.</span><span class="n">baseline_code</span><span class="p">,</span>
+        <span class="s2">"root_node_id"</span><span class="p">:</span> <span class="n">baseline</span><span class="o">.</span><span class="n">root_portfolio_node_id</span><span class="p">,</span>
+        <span class="s2">"total_nodes_compared"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshots</span><span class="p">),</span>
+        <span class="s2">"nodes_with_variance"</span><span class="p">:</span> <span class="n">nodes_with_variance</span><span class="p">,</span>
+        <span class="s2">"total_start_variance_days"</span><span class="p">:</span> <span class="n">total_start_variance</span><span class="p">,</span>
+        <span class="s2">"total_finish_variance_days"</span><span class="p">:</span> <span class="n">total_finish_variance</span><span class="p">,</span>
+        <span class="s2">"total_bac_variance"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">total_bac_variance</span><span class="p">),</span>
+        <span class="s2">"nodes_added"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">added_codes</span><span class="p">),</span>
+        <span class="s2">"nodes_deleted"</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">deleted_codes</span><span class="p">),</span>
+        <span class="s2">"node_variances"</span><span class="p">:</span> <span class="n">node_variances</span><span class="p">,</span>
+        <span class="s2">"compared_at"</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_live_start</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract the live planned start date from a node."""</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_start_date</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_live_end</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Extract the live planned end date from a node."""</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">planned_end_date</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_date_variance</span><span class="p">(</span><span class="n">baseline_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">],</span> <span class="n">live_date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">date</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Calculate the variance in days between baseline and live dates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    baseline_date : date or None</span>
+<span class="sd">        The date from the baseline snapshot.</span>
+<span class="sd">    live_date : date or None</span>
+<span class="sd">        The current live date.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int or None</span>
+<span class="sd">        Positive if live date is later than baseline (slipped),</span>
+<span class="sd">        negative if live date is earlier.  None if either date is missing.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">baseline_date</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">live_date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">live_date</span> <span class="o">-</span> <span class="n">baseline_date</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_numeric_variance</span><span class="p">(</span><span class="n">baseline_val</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">live_val</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Decimal</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Calculate the numeric variance between baseline and live values.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    baseline_val : float or None</span>
+<span class="sd">        The value from the baseline snapshot.</span>
+<span class="sd">    live_val : float or None</span>
+<span class="sd">        The current live value.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Decimal or None</span>
+<span class="sd">        Positive if live value exceeds baseline (over budget),</span>
+<span class="sd">        negative if under.  None if either value is missing.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">baseline_val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">live_val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">live_val</span><span class="p">))</span> <span class="o">-</span> <span class="n">Decimal</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">baseline_val</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_fields_changed</span><span class="p">(</span><span class="n">snap</span><span class="p">:</span> <span class="n">BaselineNodeSnapshot</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">PortfolioNode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if any key fields have changed between snapshot and live node.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    snap : BaselineNodeSnapshot</span>
+<span class="sd">        The baseline snapshot.</span>
+<span class="sd">    node : PortfolioNode</span>
+<span class="sd">        The live portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if any key field differs.</span>
+<span class="sd">    """</span>
+    <span class="c1"># Compare dates</span>
+    <span class="k">if</span> <span class="n">snap</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">live_start</span> <span class="o">=</span> <span class="n">_get_live_start</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">live_start</span> <span class="ow">and</span> <span class="n">snap</span><span class="o">.</span><span class="n">planned_start_date</span> <span class="o">!=</span> <span class="n">live_start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">snap</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">live_end</span> <span class="o">=</span> <span class="n">_get_live_end</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">live_end</span> <span class="ow">and</span> <span class="n">snap</span><span class="o">.</span><span class="n">planned_end_date</span> <span class="o">!=</span> <span class="n">live_end</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># Compare duration</span>
+    <span class="k">if</span> <span class="n">snap</span><span class="o">.</span><span class="n">duration_days</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">live_duration</span> <span class="o">=</span> <span class="n">_extract_duration</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">live_duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">snap</span><span class="o">.</span><span class="n">duration_days</span> <span class="o">!=</span> <span class="n">live_duration</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># Compare BAC</span>
+    <span class="k">if</span> <span class="n">snap</span><span class="o">.</span><span class="n">budgeted_cost_bac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">live_bac</span> <span class="o">=</span> <span class="n">_extract_bac</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">live_bac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">snap</span><span class="o">.</span><span class="n">budgeted_cost_bac</span><span class="p">)</span> <span class="o">-</span> <span class="n">live_bac</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_critical_migration</span><span class="p">(</span><span class="n">snap</span><span class="p">:</span> <span class="n">BaselineNodeSnapshot</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PortfolioNode</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Check if a node's critical path status has changed since the baseline.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    snap : BaselineNodeSnapshot</span>
+<span class="sd">        The baseline snapshot.</span>
+<span class="sd">    node : PortfolioNode or None</span>
+<span class="sd">        The live portfolio node.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True if the critical path status has changed.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># Extract critical status from snapshot's custom_attributes</span>
+    <span class="n">snap_custom</span> <span class="o">=</span> <span class="n">snap</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">snap_schedule</span> <span class="o">=</span> <span class="n">snap_custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schedule"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">snap_critical</span> <span class="o">=</span> <span class="n">snap_schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_critical"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">snap_schedule</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">False</span>
+
+    <span class="c1"># Extract critical status from live node's custom_attributes</span>
+    <span class="n">live_custom</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">custom_attributes</span> <span class="ow">or</span> <span class="p">{}</span>
+    <span class="n">live_schedule</span> <span class="o">=</span> <span class="n">live_custom</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"schedule"</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">live_critical</span> <span class="o">=</span> <span class="n">live_schedule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"is_critical"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">live_schedule</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="n">snap_critical</span> <span class="o">!=</span> <span class="n">live_critical</span>
+
+
+<span class="c1"># ============================================================================</span>
+<span class="c1"># Baseline Change Request helpers</span>
+<span class="c1"># ============================================================================</span>
+
+<div class="viewcode-block" id="create_bcr">
+<a class="viewcode-back" href="../../../modules.html#app.services.baseline_engine.create_bcr">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_bcr</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">bcr_number</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">justification</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">created_by_user_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">cost_delta_amount</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">schedule_finish_slip_days</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">contingency_reserve_requested</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaselineChangeRequest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Create a new Baseline Change Request.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    bcr_number : str</span>
+<span class="sd">        Unique BCR number (e.g., 'BCR-2024-001').</span>
+<span class="sd">    title : str</span>
+<span class="sd">        Short title describing the proposed change.</span>
+<span class="sd">    justification : str</span>
+<span class="sd">        Detailed justification for the change.</span>
+<span class="sd">    tier : str</span>
+<span class="sd">        The governance tier (TIER_1_LOCAL_CAM, TIER_2_PROJECT_CCB, TIER_3_PROGRAMME_BOARD).</span>
+<span class="sd">    created_by_user_id : UUID or None</span>
+<span class="sd">        The user creating the BCR.</span>
+<span class="sd">    cost_delta_amount : float or None</span>
+<span class="sd">        Estimated change in total cost.</span>
+<span class="sd">    schedule_finish_slip_days : int or None</span>
+<span class="sd">        Estimated slip in finish date.</span>
+<span class="sd">    contingency_reserve_requested : float or None</span>
+<span class="sd">        Additional contingency reserve requested.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BaselineChangeRequest</span>
+<span class="sd">        The newly created BCR.</span>
+<span class="sd">    """</span>
+    <span class="n">bcr</span> <span class="o">=</span> <span class="n">BaselineChangeRequest</span><span class="p">(</span>
+        <span class="nb">id</span><span class="o">=</span><span class="n">uuid4</span><span class="p">(),</span>
+        <span class="n">bcr_number</span><span class="o">=</span><span class="n">bcr_number</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">justification</span><span class="o">=</span><span class="n">justification</span><span class="p">,</span>
+        <span class="n">tier</span><span class="o">=</span><span class="n">tier</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">BaselineChangeRequestStatus</span><span class="o">.</span><span class="n">DRAFT</span><span class="p">,</span>
+        <span class="n">created_by_user_id</span><span class="o">=</span><span class="n">created_by_user_id</span><span class="p">,</span>
+        <span class="n">cost_delta_amount</span><span class="o">=</span><span class="n">cost_delta_amount</span><span class="p">,</span>
+        <span class="n">schedule_finish_slip_days</span><span class="o">=</span><span class="n">schedule_finish_slip_days</span><span class="p">,</span>
+        <span class="n">contingency_reserve_requested</span><span class="o">=</span><span class="n">contingency_reserve_requested</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">bcr</span><span class="p">)</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">bcr</span></div>
+
+
+
+<div class="viewcode-block" id="update_bcr_status">
+<a class="viewcode-back" href="../../../modules.html#app.services.baseline_engine.update_bcr_status">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_bcr_status</span><span class="p">(</span>
+    <span class="n">db</span><span class="p">:</span> <span class="n">Session</span><span class="p">,</span>
+    <span class="n">bcr_id</span><span class="p">:</span> <span class="n">UUID</span><span class="p">,</span>
+    <span class="n">new_status</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">approver_user_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UUID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">rejection_reason</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaselineChangeRequest</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Update the status of a Baseline Change Request.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    db : Session</span>
+<span class="sd">        Active database session.</span>
+<span class="sd">    bcr_id : UUID</span>
+<span class="sd">        The BCR to update.</span>
+<span class="sd">    new_status : str</span>
+<span class="sd">        The new status (UNDER_REVIEW, APPROVED, REJECTED).</span>
+<span class="sd">    approver_user_id : UUID or None</span>
+<span class="sd">        The user approving or rejecting the BCR.</span>
+<span class="sd">    rejection_reason : str or None</span>
+<span class="sd">        If rejected, the reason for rejection.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    BaselineChangeRequest</span>
+<span class="sd">        The updated BCR.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the BCR is not found or the status transition is invalid.</span>
+<span class="sd">    """</span>
+    <span class="n">bcr</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">BaselineChangeRequest</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">bcr_id</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">bcr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"BCR </span><span class="si">{</span><span class="n">bcr_id</span><span class="si">}</span><span class="s2"> not found"</span><span class="p">)</span>
+
+    <span class="c1"># Validate status transition</span>
+    <span class="n">valid_transitions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">BaselineChangeRequestStatus</span><span class="o">.</span><span class="n">DRAFT</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">BaselineChangeRequestStatus</span><span class="o">.</span><span class="n">UNDER_REVIEW</span><span class="p">,</span>
+            <span class="n">BaselineChangeRequestStatus</span><span class="o">.</span><span class="n">REJECTED</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="n">BaselineChangeRequestStatus</span><span class="o">.</span><span class="n">UNDER_REVIEW</span><span class="p">:</span> <span class="p">[</span>
+            <span class="n">BaselineChangeRequestStatus</span><span class="o">.</span><span class="n">APPROVED</span><span class="p">,</span>
+            <span class="n">BaselineChangeRequestStatus</span><span class="o">.</span><span class="n">REJECTED</span><span class="p">,</span>
+        <span class="p">],</span>
+    <span class="p">}</span>
+    <span class="n">allowed</span> <span class="o">=</span> <span class="n">valid_transitions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">BaselineChangeRequestStatus</span><span class="p">(</span><span class="n">bcr</span><span class="o">.</span><span class="n">status</span><span class="p">),</span> <span class="p">[])</span>
+    <span class="k">if</span> <span class="n">BaselineChangeRequestStatus</span><span class="p">(</span><span class="n">new_status</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Cannot transition BCR from </span><span class="si">{</span><span class="n">bcr</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">new_status</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"Allowed transitions: </span><span class="si">{</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">value</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">allowed</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+        <span class="p">)</span>
+
+    <span class="n">bcr</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">new_status</span>
+    <span class="k">if</span> <span class="n">approver_user_id</span><span class="p">:</span>
+        <span class="n">bcr</span><span class="o">.</span><span class="n">approver_user_id</span> <span class="o">=</span> <span class="n">approver_user_id</span>
+    <span class="k">if</span> <span class="n">rejection_reason</span><span class="p">:</span>
+        <span class="n">bcr</span><span class="o">.</span><span class="n">rejection_reason</span> <span class="o">=</span> <span class="n">rejection_reason</span>
+
+    <span class="n">db</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">bcr</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Defence Programme Management.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
