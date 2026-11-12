@@ -1488,6 +1488,11 @@ class UserDisplaySettings(Base):
     - **Row height** — Explicit pixel height for grid rows.
     - **Theme** — Visual theme (dark, light, high-contrast, projector).
     - **Color accessibility** — Palette adjusted for color vision deficiency.
+    - **Font family** — Custom font family for the application.
+    - **Font size** — Base font size in pixels (12-24).
+    - **Default duration** — Default duration in days for new work items.
+    - **Default delivery mode** — Default delivery mode for new work items.
+    - **Default scheduling mode** — Default scheduling mode for new work items.
     - **View state overrides** — Arbitrary JSON for column widths, hidden
       columns, split-pane ratios, and other UI state.
 
@@ -1519,6 +1524,16 @@ class UserDisplaySettings(Base):
         Visual theme (SCIF_DARK, HIGH_CONTRAST_DARK, BALANCED_LIGHT, PROJECTOR).
     color_accessibility : ColorAccessibility
         Color palette for color vision deficiency.
+    font_family : str
+        Font family for the application (e.g., 'Inter', 'Roboto', 'Arial').
+    font_size : int
+        Base font size in pixels (12-24).
+    default_duration_days : int or None
+        Default duration in days for new work items.
+    default_delivery_mode : str or None
+        Default delivery mode for new work items (e.g., 'WATERFALL', 'AGILE').
+    default_scheduling_mode : str or None
+        Default scheduling mode for new work items (e.g., 'AUTO', 'MANUAL').
     view_state_overrides : dict or None
         Arbitrary JSON for custom UI state (column widths, hidden columns, etc.).
     created_at : datetime
@@ -1550,6 +1565,15 @@ class UserDisplaySettings(Base):
         default=ColorAccessibility.STANDARD_RAG,
         nullable=False,
     )
+
+    # Font customization
+    font_family = Column(String(50), default="Inter", nullable=True)
+    font_size = Column(Integer, default=16, nullable=True)
+
+    # Work item defaults
+    default_duration_days = Column(Integer, nullable=True)
+    default_delivery_mode = Column(String(20), nullable=True)
+    default_scheduling_mode = Column(String(10), nullable=True)
 
     # Custom view state
     view_state_overrides = Column(JSONB, nullable=True)
@@ -1793,7 +1817,6 @@ class UniversalBreakdownNode(Base):
     __mapper_args__ = {
         "polymorphic_on": "node_class",
         "with_polymorphic": "*",
-        "version_id_col": col_expr("version_id"),
     }
 
     # --- Core identity ---
@@ -2160,6 +2183,21 @@ class PortfolioNode(UniversalBreakdownNode):
     planned_end_date = Column(DateTime, nullable=True)
     actual_start_date = Column(DateTime, nullable=True)
     actual_end_date = Column(DateTime, nullable=True)
+    duration_days = Column(Float, nullable=True)
+    """Planned duration of this work package in working days.
+    
+    Stored as Float to support partial days (e.g., 0.25 for a 2-hour task,
+    or 0.0625 for a 15-minute chunk).  When set, the CPM engine and frontend
+    use this value directly to compute finish dates from start dates.
+    """
+    lag_days = Column(Float, nullable=True, default=0.0)
+    """Idle time within this work package in working days.
+    
+    Stored as Float to support partial-day lag (e.g., 0.5 for a half-day wait).
+    Represents non-work periods (e.g., concrete curing, waiting for approval)
+    that extend the end date beyond the actual work duration.
+    End date = start date + duration_days + lag_days (all in workdays).
+    """
     percent_complete = Column(Float, default=0.0, nullable=False)
 
     # Legacy Earned Value Management fields (retained for backward compatibility)
@@ -2250,6 +2288,34 @@ class PortfolioNode(UniversalBreakdownNode):
 
     The ``shape_factor`` parameter defaults to ``2.0`` and can be stored
     in ``custom_attributes`` as ``cost_shape_factor``.
+    """
+
+    # --- Hybrid Delivery Effort Tracking ---
+    # When a Waterfall task becomes the parent of Agile subtasks, these
+    # fields allow comparing the original estimate against actual Agile work.
+    baseline_effort_days = Column(
+        Float,
+        nullable=True,
+    )
+    """Original effort estimate in working days, captured when this node
+    was first scoped as a Waterfall task.
+
+    When Agile children are added under this node, the original estimate
+    is preserved here so it can be compared against the sum of Agile
+    component durations.  If NULL, the node has no baseline estimate
+    (e.g., it was created as Agile from the start).
+    """
+
+    agile_actual_effort_days = Column(
+        Float,
+        nullable=True,
+    )
+    """Sum of all Agile child task durations in working days.
+
+    Automatically computed from the ``duration_days`` of all direct
+    children with ``delivery_mode = 'AGILE'``.  Allows comparing the
+    original baseline estimate against the actual breakdown of work
+    in Agile sprints.  NULL when the node has no Agile children.
     """
 
     # Relationships

@@ -92,6 +92,111 @@ interface Breadcrumb {
   href?: string;
 }
 
+interface WbsProject {
+  id: string;
+  code: string;
+  name: string;
+  planned_start_date: string | null;
+  planned_end_date: string | null;
+  percent_complete: number | null;
+  security_classification: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Project Selector Component
+// ---------------------------------------------------------------------------
+
+const ProjectSelector: React.FC<{ activeProject: string }> = ({ activeProject }) => {
+  const [projects, setProjects] = useState<WbsProject[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const loadTree = useScheduleStore((s) => s.loadTree);
+
+  useEffect(() => {
+    api.get('/wbs/projects')
+      .then((res) => {
+        const data = res.data || res;
+        setProjects(Array.isArray(data) ? data : []);
+      })
+      .catch(() => setProjects([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuOpen]);
+
+  const handleSelect = (project: WbsProject) => {
+    setMenuOpen(false);
+    // Load the selected project's WBS tree
+    loadTree(project.id);
+  };
+
+  const selectedProject = projects.find((p) => p.name === activeProject);
+
+  return (
+    <div className="relative flex-shrink-0" ref={menuRef}>
+      <button
+        onClick={() => setMenuOpen((o) => !o)}
+        className="flex items-center gap-2 px-3 py-1.5 bg-bg-ops-overlay rounded-md border border-border-ops-subtle hover:border-border-ops-strong transition-colors"
+        aria-label="Select project"
+        aria-expanded={menuOpen}
+      >
+        <FolderOpen className="w-4 h-4 text-text-ops-muted" />
+        <span className="text-sm font-mono text-text-ops-primary truncate max-w-[200px]">
+          {loading ? 'Loading...' : (selectedProject?.name || activeProject || 'Select Project')}
+        </span>
+        <ChevronRight className="w-3 h-3 text-text-ops-muted rotate-90" />
+      </button>
+
+      {menuOpen && (
+        <div className="absolute right-0 top-full mt-1 w-80 bg-bg-ops-surface border border-border-ops-subtle rounded-md shadow-lg z-50 max-h-96 overflow-auto">
+          <div className="py-1">
+            {projects.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-text-ops-muted">No projects available</div>
+            ) : (
+              projects.map((project) => (
+                <button
+                  key={project.id}
+                  onClick={() => handleSelect(project)}
+                  className={clsx(
+                    'w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-bg-ops-overlay transition-colors',
+                    selectedProject?.id === project.id && 'bg-bg-ops-overlay/50'
+                  )}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm text-text-ops-primary truncate">{project.name}</div>
+                    <div className="text-xs text-text-ops-muted font-mono">{project.code}</div>
+                  </div>
+                  {project.percent_complete !== null && (
+                    <span className="text-xs text-text-ops-muted flex-shrink-0">{project.percent_complete}%</span>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 interface AppShellProps {
   /** Children content rendered in the main body (optional; if omitted, uses default workspace layout) */
   children?: React.ReactNode;
@@ -164,13 +269,8 @@ const NavBar: React.FC<{
         </kbd>
       </button>
 
-      {/* Active Project Selector */}
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-ops-overlay rounded-md border border-border-ops-subtle flex-shrink-0">
-        <FolderOpen className="w-4 h-4 text-text-ops-muted" />
-        <span className="text-sm font-mono text-text-ops-primary truncate max-w-[200px]">
-          {activeProject || 'No Project'}
-        </span>
-      </div>
+      {/* Active Project Selector with Dropdown */}
+      <ProjectSelector activeProject={activeProject} />
 
       {/* WebSocket Presence Indicator */}
       <PresenceIndicator isConnected={wsConnected} reconnectAttempts={wsReconnectAttempts} />
@@ -426,23 +526,53 @@ const AppShell: React.FC<AppShellProps> = ({
     onZoomToFit: () => {
       window.dispatchEvent(new CustomEvent('gantt:zoom-to-fit'));
     },
-    onIndent: () => {
-      addScifToast('Hierarchy indent requires an active WBS edit lease', 'info');
+    onIndent: async () => {
+      if (selectedNodeId) {
+        await useScheduleStore.getState().indentTask(selectedNodeId);
+        addScifToast('Indented task under previous sibling', 'info');
+      }
     },
-    onOutdent: () => {
-      addScifToast('Hierarchy outdent requires an active WBS edit lease', 'info');
+    onOutdent: async () => {
+      if (selectedNodeId) {
+        await useScheduleStore.getState().outdentTask(selectedNodeId);
+        addScifToast('Outdented task to parent level', 'info');
+      }
     },
-    onInsertTaskAbove: () => {
-      setCreateWorkItemOpen(true);
-      setCreateWorkItemParentId(selectedRow?.parent_id || selectedNodeId || null);
-      setCreateWorkItemParentPath(selectedRow?.path || '');
+    onInsertSibling: async () => {
+      if (selectedNodeId) {
+        const created = await useScheduleStore.getState().insertSiblingTask(selectedNodeId, 'FOLLOW_ON');
+        if (created) {
+          addScifToast(`Inserted sibling task ${created.code}`, 'info');
+        }
+      } else if (useScheduleStore.getState().rows.length > 0) {
+        const rowsList = useScheduleStore.getState().rows;
+        const lastRow = rowsList[rowsList.length - 1];
+        const created = await useScheduleStore.getState().insertSiblingTask(lastRow.id, 'FOLLOW_ON');
+        if (created) {
+          addScifToast(`Inserted sibling task ${created.code}`, 'info');
+        }
+      }
+    },
+    onInsertChild: async () => {
+      if (selectedNodeId) {
+        const created = await useScheduleStore.getState().insertChildTask(selectedNodeId);
+        if (created) {
+          addScifToast(`Inserted child task ${created.code}`, 'info');
+        }
+      }
+    },
+    onInsertTaskAbove: async () => {
+      if (selectedNodeId) {
+        const created = await useScheduleStore.getState().insertSiblingTask(selectedNodeId, 'FOLLOW_ON');
+        if (created) {
+          addScifToast(`Inserted sibling task ${created.code}`, 'info');
+        }
+      }
     },
     onDelete: async () => {
       if (selectedNodeId && selectedRow) {
         try {
-          await api.delete(`/wbs/nodes/${selectedNodeId}`);
-          selectNode(null);
-          await loadTree(effectiveProjectId || 'default');
+          await useScheduleStore.getState().deleteNode(selectedNodeId);
           addScifToast(`Deleted ${selectedRow.code}`, 'info');
         } catch (err: any) {
           addScifToast(err?.response?.data?.detail || 'Failed to delete node', 'error');
@@ -541,10 +671,26 @@ const AppShell: React.FC<AppShellProps> = ({
     setDrawerOpen(true);
   }, []);
 
+  // Listen for custom workbench tab open requests (e.g. from Agile Kanban badge)
+  useEffect(() => {
+    const handleWorkbenchTab = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { tab } = customEvent.detail || {};
+      if (tab === 'KANBAN') {
+        openDrawer('KANBAN');
+      }
+    };
+    window.addEventListener('workbench:open-tab', handleWorkbenchTab);
+    return () => {
+      window.removeEventListener('workbench:open-tab', handleWorkbenchTab);
+    };
+  }, [openDrawer]);
+
   // Create Work Item & Resource Modal state
   const [createWorkItemOpen, setCreateWorkItemOpen] = useState(false);
   const [createWorkItemParentId, setCreateWorkItemParentId] = useState<string | null>(null);
   const [createWorkItemParentPath, setCreateWorkItemParentPath] = useState('');
+  const [createWorkItemEditNodeId, setCreateWorkItemEditNodeId] = useState<string | null>(null);
   const [createResourceOpen, setCreateResourceOpen] = useState(false);
 
   // ---------------------------------------------------------------------------
@@ -659,19 +805,34 @@ const AppShell: React.FC<AppShellProps> = ({
             {/* Contextual Ribbon */}
             <RibbonContainer
               callbacks={{
-                onIndent: () => addScifToast('Hierarchy indent requires an active WBS edit lease', 'info'),
-                onOutdent: () => addScifToast('Hierarchy outdent requires an active WBS edit lease', 'info'),
-                onInsertTask: () => {
-                  setCreateWorkItemOpen(true);
-                  setCreateWorkItemParentId(selectedNodeId || effectiveProjectId || null);
-                  setCreateWorkItemParentPath(selectedRow?.path || '');
+                onIndent: async () => {
+                  if (selectedNodeId) {
+                    await useScheduleStore.getState().indentTask(selectedNodeId);
+                    addScifToast('Indented task under previous sibling', 'info');
+                  }
+                },
+                onOutdent: async () => {
+                  if (selectedNodeId) {
+                    await useScheduleStore.getState().outdentTask(selectedNodeId);
+                    addScifToast('Outdented task to parent level', 'info');
+                  }
+                },
+                onInsertTask: async () => {
+                  if (selectedNodeId) {
+                    const created = await useScheduleStore.getState().insertSiblingTask(selectedNodeId, 'FOLLOW_ON');
+                    if (created) {
+                      addScifToast(`Inserted sibling task ${created.code}`, 'info');
+                    }
+                  } else {
+                    setCreateWorkItemOpen(true);
+                    setCreateWorkItemParentId(selectedNodeId || effectiveProjectId || null);
+                    setCreateWorkItemParentPath(selectedRow?.path || '');
+                  }
                 },
                 onDelete: async () => {
                   if (selectedNodeId && selectedRow) {
                     try {
-                      await api.delete(`/wbs/nodes/${selectedNodeId}`);
-                      selectNode(null);
-                      await loadTree(effectiveProjectId || 'default');
+                      await useScheduleStore.getState().deleteNode(selectedNodeId);
                       addScifToast(`Deleted ${selectedRow.code}`, 'info');
                     } catch (err: any) {
                       addScifToast(err?.response?.data?.detail || 'Failed to delete node', 'error');
@@ -871,10 +1032,30 @@ const AppShell: React.FC<AppShellProps> = ({
 
         {/* Context Menu Renderer — displays the active right-click menu */}
         <ContextMenuRenderer onAction={(targetType, action, data) => {
+          const payload = data as Record<string, unknown> | undefined;
           if (action === 'ADD_CHILD' && targetType === 'TASK') {
             setCreateWorkItemOpen(true);
-            setCreateWorkItemParentId((data as any)?.id || null);
-            setCreateWorkItemParentPath((data as any)?.path || '');
+            setCreateWorkItemParentId((payload?.nodeId || payload?.id) as string || null);
+            setCreateWorkItemParentPath(payload?.path as string || '');
+            setCreateWorkItemEditNodeId(null);
+          } else if (action === 'EDIT_TASK' && targetType === 'TASK') {
+            // Open the CreateWorkItemModal in edit mode with the selected task
+            const nodeId = (payload?.nodeId || payload?.id) as string;
+            if (nodeId) {
+              useScheduleStore.getState().selectNode(nodeId);
+              setCreateWorkItemEditNodeId(nodeId);
+              setCreateWorkItemParentId(null);
+              setCreateWorkItemParentPath('');
+              setCreateWorkItemOpen(true);
+            }
+          } else if (action === 'TASK_INFO' && targetType === 'TASK') {
+            // Select the task node and open the Task Info drawer panel
+            const nodeId = (payload?.nodeId || payload?.id) as string;
+            if (nodeId) {
+              useScheduleStore.getState().selectNode(nodeId);
+            }
+            setDrawerPanel('TASK_INFO');
+            setDrawerOpen(true);
           } else {
             console.log('Context menu action:', targetType, action, data);
           }
@@ -885,10 +1066,18 @@ const AppShell: React.FC<AppShellProps> = ({
           <CreateWorkItemModal
             parentId={createWorkItemParentId}
             parentPath={createWorkItemParentPath}
-            onClose={() => setCreateWorkItemOpen(false)}
+            editNodeId={createWorkItemEditNodeId}
+            onClose={() => {
+              setCreateWorkItemOpen(false);
+              setCreateWorkItemEditNodeId(null);
+            }}
             onCreated={() => {
               loadTree(effectiveProjectId || 'default');
               addScifToast('Work item created successfully', 'info');
+            }}
+            onUpdated={() => {
+              loadTree(effectiveProjectId || 'default');
+              addScifToast('Work item updated successfully', 'info');
             }}
           />
         )}

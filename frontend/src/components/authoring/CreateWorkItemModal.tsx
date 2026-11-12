@@ -39,6 +39,8 @@ import { clsx } from 'clsx';
 import api from '../../services/api';
 import { useHistoryStore } from '../../stores/useHistoryStore';
 import { useScheduleStore } from '../../stores/useScheduleStore';
+import { computeFinishDate, computeDurationFromDates } from '../../utils/scheduleCalculator';
+import EndEditChoiceModal from '../common/EndEditChoiceModal';
 import {
   WorkItemTier,
   DeliveryMode,
@@ -81,6 +83,7 @@ interface FormState {
   planned_start: string;
   planned_finish: string;
   duration_days: number;
+  lag_days: number;
   security_classification: SecurityClassification;
   caveats: string[];
   dal_sil_level: DALSILLevel | null;
@@ -95,6 +98,7 @@ const DEFAULT_FORM: FormState = {
   planned_start: '',
   planned_finish: '',
   duration_days: 0,
+  lag_days: 0,
   security_classification: 'OFFICIAL',
   caveats: [],
   dal_sil_level: null,
@@ -110,10 +114,14 @@ export interface CreateWorkItemModalProps {
   parentId: string | null;
   /** Parent ltree path (for code suggestion) */
   parentPath?: string;
+  /** Node ID to edit (null for create mode) */
+  editNodeId?: string | null;
   /** Close callback */
   onClose: () => void;
   /** Success callback with the created node */
   onCreated?: (node: { id: string; code: string; name: string; path: string }) => void;
+  /** Success callback after updating a node */
+  onUpdated?: (node: { id: string; code: string; name: string; path: string }) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -123,9 +131,12 @@ export interface CreateWorkItemModalProps {
 const CreateWorkItemModal: React.FC<CreateWorkItemModalProps> = ({
   parentId,
   parentPath = '',
+  editNodeId = null,
   onClose,
   onCreated,
+  onUpdated,
 }) => {
+  const isEditMode = editNodeId !== null;
   const [activeTab, setActiveTab] = useState<TabId>('general');
   const [form, setForm] = useState<FormState>({ ...DEFAULT_FORM });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -134,8 +145,63 @@ const CreateWorkItemModal: React.FC<CreateWorkItemModalProps> = ({
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>([]);
   const [caveatInput, setCaveatInput] = useState('');
 
+  // End date edit choice modal state
+  const [showEndEditChoice, setShowEndEditChoice] = useState(false);
+  const [endEditPending, setEndEditPending] = useState<{
+    newFinish: string;
+    startDate: string;
+  } | null>(null);
+
   const pushCommand = useHistoryStore((s) => s.pushCommand);
   const addRow = (useScheduleStore as any)((s: any) => s.addRow) as Function | undefined;
+
+  // -----------------------------------------------------------------------
+  // Load existing task data in edit mode
+  // -----------------------------------------------------------------------
+
+  useEffect(() => {
+    if (!editNodeId) return;
+    setLoading(true);
+    api.get(`/api/v1/wbs/nodes/${editNodeId}`)
+      .then((res) => {
+        const node = res.data;
+        const customAttrs = node.custom_attributes || {};
+        const startDate = node.planned_start_date ? node.planned_start_date.split('T')[0] : '';
+        const finishDate = node.planned_end_date ? node.planned_end_date.split('T')[0] : '';
+        const durationDays = node.duration_days ?? 0;
+        setForm({
+          code: node.code || '',
+          name: node.name || '',
+          tier: node.tier || 'TASK',
+          delivery_mode: node.delivery_mode || null,
+          planned_start: startDate,
+          planned_finish: finishDate,
+          duration_days: typeof durationDays === 'number' ? durationDays : 0,
+          lag_days: typeof (node.lag_days as number) === 'number' ? (node.lag_days as number) : 0,
+          security_classification: node.security_classification || 'OFFICIAL',
+          caveats: Array.isArray(node.caveats) ? node.caveats : [],
+          dal_sil_level: customAttrs.dal_sil_level || null,
+          custom_attributes: customAttrs,
+        });
+      })
+      .catch(() => {
+        setErrors({ submit: 'Failed to load task data' });
+      })
+      .finally(() => setLoading(false));
+  }, [editNodeId]);
+
+  // -----------------------------------------------------------------------
+  // Auto-compute finish date from start + duration + lag
+  // -----------------------------------------------------------------------
+
+  useEffect(() => {
+    if (form.planned_start && form.duration_days > 0) {
+      const finish = computeFinishDate(form.planned_start, form.duration_days, form.lag_days);
+      if (finish && finish !== form.planned_finish) {
+        setForm((prev) => ({ ...prev, planned_finish: finish }));
+      }
+    }
+  }, [form.planned_start, form.duration_days, form.lag_days]);
 
   // -----------------------------------------------------------------------
   // Load custom fields on mount
@@ -254,58 +320,86 @@ const CreateWorkItemModal: React.FC<CreateWorkItemModalProps> = ({
 
     setSubmitting(true);
 
-    const payload: WorkItemCreatePayload = {
-      parent_id: parentId,
-      code: form.code.trim(),
-      name: form.name.trim(),
-      tier: form.tier,
-      delivery_mode: form.delivery_mode,
-      planned_start: form.planned_start || null,
-      planned_finish: form.planned_finish || null,
-      duration_days: form.duration_days,
-      security_classification: form.security_classification,
-      caveats: form.caveats,
-      dal_sil_level: form.dal_sil_level,
-      custom_attributes: form.custom_attributes,
-    };
-
     try {
-      const res = await api.post('/api/v1/wbs/', payload);
-      const node = res.data;
-
-      // Push to history store
-      pushCommand({
-        type: 'BATCH_EDIT',
-        description: `Created work item ${form.code}`,
-        operations: [{
-          node_id: node.id,
-          field: 'created',
-          oldValue: null,
-          newValue: node.code,
-        }],
-      });
-
-      // Add to schedule store
-      if (addRow) {
-        addRow({
-          id: node.id,
-          code: node.code,
-          name: node.name,
-          path: node.path,
-          parent_id: node.parent_id,
-          indentLevel: (node.path || '').split('.').length - 1,
+      if (isEditMode && editNodeId) {
+        // Update existing node
+        const updatePayload: Record<string, unknown> = {
+          code: form.code.trim(),
+          name: form.name.trim(),
+          delivery_mode: form.delivery_mode,
+          planned_start_date: form.planned_start || null,
+          planned_end_date: form.planned_finish || null,
+          duration_days: form.duration_days,
+          lag_days: form.lag_days,
+          security_classification: form.security_classification,
+          caveats: form.caveats,
+          custom_attributes: {
+            ...form.custom_attributes,
+            dal_sil_level: form.dal_sil_level,
+          },
+        };
+        const res = await api.put(`/api/v1/wbs/nodes/${editNodeId}`, updatePayload);
+        const node = res.data;
+        pushCommand({
+          type: 'BATCH_EDIT',
+          description: `Updated work item ${form.code}`,
+          operations: [{
+            node_id: editNodeId,
+            field: 'updated',
+            oldValue: null,
+            newValue: node?.code || form.code,
+          }],
         });
+        onUpdated?.({ id: editNodeId, code: form.code, name: form.name, path: '' });
+      } else {
+        // Create new node
+        const payload: WorkItemCreatePayload = {
+          parent_id: parentId,
+          code: form.code.trim(),
+          name: form.name.trim(),
+          tier: form.tier,
+          delivery_mode: form.delivery_mode,
+          planned_start: form.planned_start || null,
+          planned_finish: form.planned_finish || null,
+          duration_days: form.duration_days,
+          lag_days: form.lag_days,
+          security_classification: form.security_classification,
+          caveats: form.caveats,
+          dal_sil_level: form.dal_sil_level,
+          custom_attributes: form.custom_attributes,
+        };
+        const res = await api.post('/api/v1/wbs/', payload);
+        const node = res.data;
+        pushCommand({
+          type: 'BATCH_EDIT',
+          description: `Created work item ${form.code}`,
+          operations: [{
+            node_id: node.id,
+            field: 'created',
+            oldValue: null,
+            newValue: node.code,
+          }],
+        });
+        if (addRow) {
+          addRow({
+            id: node.id,
+            code: node.code,
+            name: node.name,
+            path: node.path,
+            parent_id: node.parent_id,
+            indentLevel: (node.path || '').split('.').length - 1,
+          });
+        }
+        onCreated?.(node);
       }
-
-      onCreated?.(node);
       onClose();
     } catch (err: any) {
-      const detail = err?.response?.data?.detail || 'Failed to create work item';
+      const detail = err?.response?.data?.detail || (isEditMode ? 'Failed to update work item' : 'Failed to create work item');
       setErrors({ submit: typeof detail === 'string' ? detail : JSON.stringify(detail) });
     } finally {
       setSubmitting(false);
     }
-  }, [form, parentId, validate, pushCommand, addRow, onCreated, onClose]);
+  }, [form, parentId, validate, pushCommand, addRow, onCreated, onUpdated, onClose, isEditMode, editNodeId]);
 
   // -----------------------------------------------------------------------
   // Render Custom Field Input
@@ -433,13 +527,17 @@ const CreateWorkItemModal: React.FC<CreateWorkItemModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-ops-subtle">
           <div>
             <h2 className="text-lg font-semibold text-text-ops-primary">
-              Create Work Item
+              {isEditMode ? 'Edit Work Item' : 'Create Work Item'}
             </h2>
-            {parentPath && (
+            {isEditMode ? (
+              <p className="text-xs text-text-ops-muted font-mono mt-0.5">
+                Editing: {form.code} — {form.name}
+              </p>
+            ) : parentPath ? (
               <p className="text-xs text-text-ops-muted font-mono mt-0.5">
                 Parent: {parentPath}
               </p>
-            )}
+            ) : null}
           </div>
           <button
             onClick={onClose}
@@ -558,7 +656,16 @@ const CreateWorkItemModal: React.FC<CreateWorkItemModalProps> = ({
                     type="date"
                     className="w-full px-3 py-2 bg-bg-ops-overlay border border-border-ops-subtle rounded text-text-ops-primary text-sm focus:border-blue-500 focus:outline-none"
                     value={form.planned_finish}
-                    onChange={(e) => updateField('planned_finish', e.target.value)}
+                    onChange={(e) => {
+                      const newFinish = e.target.value;
+                      // If start date exists and finish changed, ask how to apply
+                      if (form.planned_start && newFinish !== form.planned_finish) {
+                        setEndEditPending({ newFinish, startDate: form.planned_start });
+                        setShowEndEditChoice(true);
+                      } else {
+                        updateField('planned_finish', newFinish);
+                      }
+                    }}
                   />
                   {errors.planned_finish && <p className="mt-1 text-xs text-rag-red">{errors.planned_finish}</p>}
                 </div>
@@ -576,6 +683,21 @@ const CreateWorkItemModal: React.FC<CreateWorkItemModalProps> = ({
                   value={form.duration_days}
                   onChange={(e) => updateField('duration_days', parseFloat(e.target.value) || 0)}
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-ops-primary mb-1">
+                  Lag (workdays)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  className="w-full px-3 py-2 bg-bg-ops-overlay border border-border-ops-subtle rounded text-text-ops-primary font-mono text-sm focus:border-blue-500 focus:outline-none"
+                  value={form.lag_days}
+                  onChange={(e) => updateField('lag_days', parseInt(e.target.value) || 0)}
+                />
+                <p className="mt-1 text-xs text-text-ops-muted">Idle time within the task (e.g., curing, approval waits)</p>
               </div>
             </div>
           ) : activeTab === 'governance' ? (
@@ -709,18 +831,65 @@ const CreateWorkItemModal: React.FC<CreateWorkItemModalProps> = ({
               {submitting ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  Creating...
+                  {isEditMode ? 'Updating...' : 'Creating...'}
                 </>
               ) : (
                 <>
                   <CheckCircle size={14} />
-                  Create Work Item
+                  {isEditMode ? 'Update Work Item' : 'Create Work Item'}
                 </>
               )}
             </button>
           </div>
         </div>
       </div>
+
+      {/* End Date Edit Choice Modal */}
+      {showEndEditChoice && endEditPending && form.planned_finish && (
+        <EndEditChoiceModal
+          oldEndDate={form.planned_finish}
+          newEndDate={endEditPending.newFinish}
+          startDate={endEditPending.startDate}
+          onAdjustDuration={() => {
+            // Compute new duration from the new dates
+            const newDuration = computeDurationFromDates(
+              endEditPending.startDate,
+              endEditPending.newFinish
+            );
+            setForm((prev) => ({
+              ...prev,
+              planned_finish: endEditPending.newFinish,
+              duration_days: Math.max(1, newDuration),
+            }));
+            setShowEndEditChoice(false);
+            setEndEditPending(null);
+          }}
+          onAddLag={() => {
+            // Keep duration, compute lag from the difference
+            const oldDuration = computeDurationFromDates(
+              endEditPending.startDate,
+              form.planned_finish
+            );
+            const newDuration = computeDurationFromDates(
+              endEditPending.startDate,
+              endEditPending.newFinish
+            );
+            const lagDiff = newDuration - oldDuration;
+            setForm((prev) => ({
+              ...prev,
+              planned_finish: endEditPending.newFinish,
+              lag_days: Math.max(0, (prev.lag_days || 0) + lagDiff),
+            }));
+            setShowEndEditChoice(false);
+            setEndEditPending(null);
+          }}
+          onCancel={() => {
+            // Revert: keep the old finish date
+            setShowEndEditChoice(false);
+            setEndEditPending(null);
+          }}
+        />
+      )}
     </div>
   );
 };

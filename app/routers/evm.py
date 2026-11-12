@@ -658,3 +658,40 @@ def verify_milestone(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to verify milestone: {str(e)}")
+
+
+@router.get("/data", summary="EVM data overview with key metrics")
+def get_evm_data(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return high-level EVM metrics across all projects."""
+    nodes = db.query(PortfolioNode).all()
+    total_tasks = len(nodes)
+    total_bac = 0.0
+    total_ev = 0.0
+    total_ac = 0.0
+    total_pv = 0.0
+    for n in nodes:
+        total_bac += float(n.bac_cost or 0)
+        total_ev += float(n.earned_value or 0)
+        total_ac += float(n.actual_cost or 0)
+        total_pv += float(n.planned_value or 0)
+
+    cpi = round(total_ev / total_ac, 3) if total_ac else 0
+    spi = round(total_ev / total_pv, 3) if total_pv else 0
+    eac = round(total_bac / cpi, 2) if cpi else total_bac
+
+    return {
+        "total_tasks": total_tasks,
+        "budget_at_completion": total_bac,
+        "earned_value": total_ev,
+        "actual_cost": total_ac,
+        "planned_value": total_pv,
+        "cost_performance_index": cpi,
+        "schedule_performance_index": spi,
+        "estimate_at_completion": eac,
+        "variance_at_completion": round(total_bac - eac, 2) if cpi else 0,
+        "cost_variance": round(total_ev - total_ac, 2),
+        "schedule_variance": round(total_ev - total_pv, 2),
+    }

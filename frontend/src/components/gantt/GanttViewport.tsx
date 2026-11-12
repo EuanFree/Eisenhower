@@ -72,6 +72,22 @@ const PIXELS_PER_DAY: Record<ZoomLevel, number> = {
 };
 
 /**
+ * Continuous zoom levels for fine-grained pixel-per-day control.
+ * Used when auto-fit or mouse-wheel zoom is active.
+ */
+export type ContinuousZoomLevel = number; // pixels per day, e.g. 0.25, 0.5, 1, 2, 4, 8
+
+/**
+ * Map a continuous zoom value to the nearest discrete ZoomLevel label
+ * for display purposes.
+ */
+function continuousToZoomLabel(ppd: number): ZoomLevel {
+  if (ppd >= 3) return 'DAYS';
+  if (ppd >= 1) return 'WEEKS';
+  return 'MONTHS';
+}
+
+/**
  * Dependency link between two nodes.
  * Corresponds to the backend DependencyLink model.
  */
@@ -261,8 +277,13 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
   }, [allRows, visibleNodeIds, filterMode]);
   const isDimmed = filterMode === 'DIM' && visibleNodeIds.size > 0;
   const containerRef = useRef<HTMLDivElement>(null);
-  const [zoom, setZoom] = useState<ZoomLevel>('WEEKS');
+  const [pixelsPerDay, setPixelsPerDay] = useState<number>(2); // continuous zoom value
   const [scrollX, setScrollX] = useState(0);
+  const [autoFit, setAutoFit] = useState(true); // default to auto-fit
+  const zoomRef = useRef<number>(2); // track current zoom for wheel delta
+
+  // Derived discrete zoom label for display
+  const zoom = continuousToZoomLabel(pixelsPerDay);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [containerWidth, setContainerWidth] = useState(800);
   const [showDependencies, setShowDependencies] = useState<boolean>(propShowDependencies);
@@ -290,19 +311,24 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
   useEffect(() => {
     if (!activeTab) return;
     const saved = loadViewState(activeTab.id);
-    if (saved?.ganttZoom) setZoom(saved.ganttZoom);
+    if (saved?.ganttPixelsPerDay) {
+      setPixelsPerDay(saved.ganttPixelsPerDay);
+      zoomRef.current = saved.ganttPixelsPerDay;
+    }
     if (saved?.scrollX !== undefined) setScrollX(saved.scrollX);
+    if (saved?.ganttAutoFit !== undefined) setAutoFit(saved.ganttAutoFit);
   }, [activeTab?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist zoom, scroll, and selected node on change
   useEffect(() => {
     if (!activeTab) return;
     saveViewState(activeTab.id, {
-      ganttZoom: zoom,
+      ganttPixelsPerDay: pixelsPerDay,
+      ganttAutoFit: autoFit,
       scrollX,
       selectedNodeId,
     });
-  }, [zoom, scrollX, selectedNodeId, activeTab?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pixelsPerDay, autoFit, scrollX, selectedNodeId, activeTab?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Read row height from display store & CSS tokens so WbsTable and GanttViewport stay in sync
   const displayRowHeight = useDisplayStore((s) => s.settings.rowHeightPx);
@@ -411,7 +437,7 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
     const paddedEnd = new Date(maxDate.getTime() + padding);
 
     const days = Math.ceil((paddedEnd.getTime() - paddedStart.getTime()) / (1000 * 60 * 60 * 24));
-    const ppx = PIXELS_PER_DAY[zoom];
+    const ppx = pixelsPerDay;
 
     return {
       startDate: paddedStart,
@@ -419,7 +445,7 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
       totalDays: days,
       timelineWidth: days * ppx,
     };
-  }, [rows, zoom, statusDate]);
+  }, [rows, pixelsPerDay, statusDate]);
 
   // Date-to-pixel conversion function
   const dateToX = useCallback(
@@ -429,9 +455,9 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
 
       const diffMs = d.getTime() - startDate.getTime();
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      return diffDays * PIXELS_PER_DAY[zoom];
+      return diffDays * pixelsPerDay;
     },
-    [startDate, zoom],
+    [startDate, pixelsPerDay],
   );
 
   // Timeline header dates
@@ -441,28 +467,50 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
   );
 
   // Zoom controls
+  const clampPixelsPerDay = (ppd: number): number => {
+    return Math.max(0.1, Math.min(20, ppd)); // 0.1 to 20 pixels per day
+  };
+
   const zoomIn = () => {
-    setZoom((prev) => {
-      if (prev === 'DAYS') return 'DAYS';
-      if (prev === 'WEEKS') return 'DAYS';
-      return 'WEEKS';
-    });
+    setPixelsPerDay((prev) => clampPixelsPerDay(prev * 1.5));
+    setAutoFit(false);
   };
 
   const zoomOut = () => {
-    setZoom((prev) => {
-      if (prev === 'MONTHS') return 'MONTHS';
-      if (prev === 'WEEKS') return 'MONTHS';
-      return 'WEEKS';
-    });
+    setPixelsPerDay((prev) => clampPixelsPerDay(prev / 1.5));
+    setAutoFit(false);
   };
+
+  // Auto-fit: compute pixels per day to fill the visible container width
+  const zoomToFit = useCallback(() => {
+    if (!containerRef.current || totalDays <= 0) {
+      setAutoFit(true);
+      return;
+    }
+    const visibleWidth = containerRef.current.clientWidth;
+    const ppd = visibleWidth / totalDays;
+    setPixelsPerDay(clampPixelsPerDay(ppd));
+    setAutoFit(true);
+  }, [totalDays]);
+
+  // Auto-fit on container resize when autoFit is enabled
+  useEffect(() => {
+    if (!autoFit) return;
+    zoomToFit();
+  }, [containerWidth, autoFit, zoomToFit]);
+
+  // Auto-fit when rows change (e.g., project loaded) when autoFit is enabled
+  useEffect(() => {
+    if (!autoFit || totalDays <= 0) return;
+    zoomToFit();
+  }, [totalDays, autoFit, zoomToFit]);
 
   // Listen for custom Ribbon / Keyboard zoom & layer events
   useEffect(() => {
     const handleZoomIn = () => zoomIn();
     const handleZoomOut = () => zoomOut();
     const handleZoomToFit = () => {
-      setZoom('WEEKS');
+      zoomToFit();
       if (containerRef.current) {
         containerRef.current.scrollLeft = 0;
       }
@@ -487,21 +535,44 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
     };
   }, []);
 
-  // Horizontal scroll handler
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
-      if (e.deltaY === 0) return;
+  // Horizontal scroll handler with mouse-wheel zoom (Ctrl/Cmd + scroll)
+  // Registered via addEventListener with { passive: false } to allow preventDefault()
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (e.deltaY === 0 && e.deltaX === 0) return;
 
-      const container = containerRef.current;
-      if (!container) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-      if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-        e.preventDefault();
-        container.scrollLeft += e.deltaX || e.deltaY;
-      }
-    },
-    [],
-  );
+    // Ctrl/Cmd + scroll = zoom
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      setPixelsPerDay((prev) => {
+        const newPpd = clampPixelsPerDay(prev * delta);
+        zoomRef.current = newPpd;
+        return newPpd;
+      });
+      setAutoFit(false);
+      return;
+    }
+
+    if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      e.preventDefault();
+      container.scrollLeft += e.deltaX || e.deltaY;
+    }
+  }, []);
+
+  // Register wheel listener with passive: false to allow preventDefault()
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const opts: AddEventListenerOptions = { passive: false };
+    container.addEventListener('wheel', handleWheel as EventListener, opts);
+    return () => {
+      container.removeEventListener('wheel', handleWheel as EventListener, opts);
+    };
+  }, [handleWheel]);
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     setScrollX((e.target as HTMLDivElement).scrollLeft);
@@ -547,7 +618,7 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
 
       const mouseXInContainer = e.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
       const pixelDelta = mouseXInContainer - origStartX;
-      const deltaDays = Math.round(pixelDelta / PIXELS_PER_DAY[zoom]);
+      const deltaDays = Math.round(pixelDelta / pixelsPerDay);
 
       cascade.updateDragPosition(deltaDays, e.clientX, e.clientY);
     };
@@ -641,7 +712,7 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [cascade.isDragging, cascade.draggedNodeId, cascade.deltaDays, rows, dateToX, zoom, cascade.updateDragPosition, cascade.endDrag]);
+  }, [cascade.isDragging, cascade.draggedNodeId, cascade.deltaDays, rows, dateToX, pixelsPerDay, cascade.updateDragPosition, cascade.endDrag]);
 
   // Start drag handler passed to GanttBar
   const handleStartDrag = useCallback(
@@ -678,7 +749,6 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
       {/* Scrollable chart viewport (matches WbsTable scrollRef flex-1 min-h-0 overflow-auto) */}
       <div
         ref={containerRef}
-        onWheel={handleWheel}
         onScroll={handleScroll}
         style={{
           flex: 1,
@@ -941,7 +1011,7 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
                       isDimmed={isDimmed && !matchingNodeIds.has(row.id)}
                       isMatch={isDimmed && matchingNodeIds.has(row.id)}
                       isDragBreach={cascade.hasCriticalBreach && (isDragged || isCascadeAffected)}
-                      pixelsPerDay={PIXELS_PER_DAY[zoom]}
+                      pixelsPerDay={pixelsPerDay}
                       onStartDrag={handleStartDrag}
                     />
                   </div>
@@ -990,40 +1060,60 @@ const GanttViewport: React.FC<GanttViewportProps> = ({
 
         <div style={{ flex: 1 }} />
 
+        {/* Auto-fit toggle */}
+        <button
+          onClick={() => {
+            setAutoFit((prev) => !prev);
+            if (!autoFit) zoomToFit();
+          }}
+          style={{
+            background: autoFit ? 'rgba(56, 189, 248, 0.14)' : 'none',
+            border: `1px solid ${autoFit ? '#38BDF8' : 'var(--border-ops-subtle, #334155)'}`,
+            borderRadius: '4px',
+            padding: '2px 6px',
+            cursor: 'pointer',
+            color: autoFit ? '#38BDF8' : '#94A3B8',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '3px',
+            fontSize: '10px',
+          }}
+          title="Auto-fit timeline to fill window"
+        >
+          <Calendar size={10} />
+          Fit
+        </button>
+
         <span style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase' }}>
           {zoom}
         </span>
 
         <button
           onClick={zoomOut}
-          disabled={zoom === 'MONTHS'}
           style={{
             background: 'none',
             border: '1px solid var(--border-ops-subtle, #334155)',
             borderRadius: '4px',
             padding: '2px 6px',
-            cursor: zoom === 'MONTHS' ? 'not-allowed' : 'pointer',
-            opacity: zoom === 'MONTHS' ? 0.4 : 1,
+            cursor: 'pointer',
             color: '#94A3B8',
           }}
-          title="Zoom out"
+          title="Zoom out (or Ctrl+Scroll)"
         >
           <ZoomOut size={12} />
         </button>
 
         <button
           onClick={zoomIn}
-          disabled={zoom === 'DAYS'}
           style={{
             background: 'none',
             border: '1px solid var(--border-ops-subtle, #334155)',
             borderRadius: '4px',
             padding: '2px 6px',
-            cursor: zoom === 'DAYS' ? 'not-allowed' : 'pointer',
-            opacity: zoom === 'DAYS' ? 0.4 : 1,
+            cursor: 'pointer',
             color: '#94A3B8',
           }}
-          title="Zoom in"
+          title="Zoom in (or Ctrl+Scroll)"
         >
           <ZoomIn size={12} />
         </button>

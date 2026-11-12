@@ -108,6 +108,7 @@ import GanttViewport from '../../gantt/GanttViewport';
 
 // Lazy-loaded views
 const DailyCockpitView = React.lazy(() => import('../../../views/DailyCockpitView'));
+const BlockedActivitiesView = React.lazy(() => import('../../../views/BlockedActivitiesView'));
 const ScheduleRiskView = React.lazy(() => import('../../../views/ScheduleRiskView'));
 const FacilitySchedulingView = React.lazy(() => import('../../../views/FacilitySchedulingView'));
 const SupplierPortalView = React.lazy(() => import('../../../views/SupplierPortalView'));
@@ -192,6 +193,9 @@ const CamEvmCloseoutWizardView = React.lazy(() => import('../../../views/evm/Cam
 // AI Agent Governance
 const AgentReviewWorkbenchView = React.lazy(() => import('../../../views/agents/AgentReviewWorkbenchView'));
 
+// User Preferences
+const SettingsView = React.lazy(() => import('../../../views/SettingsView'));
+
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
@@ -252,6 +256,13 @@ const ViewResolver: React.FC<ViewResolverProps> = ({ tab, projectId }) => {
       return (
         <React.Suspense fallback={<SuspenseFallback tab={tab} />}>
           <DailyCockpitView />
+        </React.Suspense>
+      );
+
+    case 'BLOCKED_ACTIVITIES':
+      return (
+        <React.Suspense fallback={<SuspenseFallback tab={tab} />}>
+          <BlockedActivitiesView />
         </React.Suspense>
       );
 
@@ -726,6 +737,17 @@ const ViewResolver: React.FC<ViewResolverProps> = ({ tab, projectId }) => {
       return (
         <React.Suspense fallback={<SuspenseFallback tab={tab} />}>
           <AgentReviewWorkbenchView />
+        </React.Suspense>
+      );
+
+    // ---------------------------------------------------------------------------
+    // User Preferences
+    // ---------------------------------------------------------------------------
+
+    case 'SETTINGS':
+      return (
+        <React.Suspense fallback={<SuspenseFallback tab={tab} />}>
+          <SettingsView />
         </React.Suspense>
       );
 

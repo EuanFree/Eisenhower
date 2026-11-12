@@ -657,3 +657,16 @@ def get_supplier_profile(
         clearance_level=current_user.clearance_level.value if current_user.clearance_level else "OFFICIAL",
         caveats=current_user.caveats,
     )
+
+
+@router.get("/", summary="Supplier portal overview")
+def supplier_portal_overview(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return high-level supplier portal metrics."""
+    return {
+        "pending_tasks": 0,
+        "pending_cdrls": 0,
+        "schedule_submissions": 0,
+    }

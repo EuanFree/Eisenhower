@@ -474,11 +474,11 @@ describe('Summary Bar Enclosing & Risk Rollup', () => {
     // When collapsed, the summary bar should span from minStart to maxFinish
     expect(minStart).toBeDefined();
     expect(maxFinish).toBeDefined();
-    expect(minStart).toBeLessThanOrEqual(maxFinish);
+    expect(new Date(minStart!).getTime()).toBeLessThanOrEqual(new Date(maxFinish!).getTime());
 
     // The parent's planned dates should encompass the children
-    expect(wp1!.planned_start_date).toBeLessThanOrEqual(minStart);
-    expect(wp1!.planned_end_date).toBeGreaterThanOrEqual(maxFinish);
+    expect(new Date(wp1!.planned_start_date!).getTime()).toBeLessThanOrEqual(new Date(minStart!).getTime());
+    expect(new Date(wp1!.planned_end_date!).getTime()).toBeGreaterThanOrEqual(new Date(maxFinish!).getTime());
   });
 
   it('parent with blocked child renders cross-hatch blocker pattern', () => {

@@ -47,6 +47,13 @@ export interface DisplaySettings {
   rowHeightPx: number;
   theme: Theme;
   colorAccessibility: ColorAccessibility;
+  // Font customization
+  fontFamily: string | null;
+  fontSize: number | null;
+  // Work item defaults
+  defaultDurationDays: number | null;
+  defaultDeliveryMode: string | null;
+  defaultSchedulingMode: string | null;
   viewStateOverrides: ViewStateOverrides;
 }
 
@@ -81,6 +88,11 @@ const defaultSettings: DisplaySettings = {
   rowHeightPx: 36,
   theme: 'SCIF_DARK',
   colorAccessibility: 'STANDARD_RAG',
+  fontFamily: 'Inter',
+  fontSize: 16,
+  defaultDurationDays: 5,
+  defaultDeliveryMode: 'WATERFALL',
+  defaultSchedulingMode: 'AUTO',
   viewStateOverrides: {},
 };
 
@@ -113,6 +125,16 @@ function applyToDOM(settings: DisplaySettings) {
 
   // Scale factor — drives root font-size via calc()
   el.style.setProperty('--ui-scale', String(settings.scaleFactor));
+
+  // Font family
+  if (settings.fontFamily) {
+    document.body.style.fontFamily = `${settings.fontFamily}, system-ui, -apple-system, sans-serif`;
+  }
+
+  // Font size
+  if (settings.fontSize) {
+    el.style.fontSize = `${settings.fontSize}px`;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -151,6 +173,11 @@ export const useDisplayStore = create<DisplayStoreState>((set, get) => ({
         rowHeightPx: data.rowHeightPx ?? data.row_height_px ?? defaultSettings.rowHeightPx,
         theme: data.theme || defaultSettings.theme,
         colorAccessibility: data.colorAccessibility || data.color_accessibility || defaultSettings.colorAccessibility,
+        fontFamily: data.fontFamily ?? data.font_family ?? defaultSettings.fontFamily,
+        fontSize: data.fontSize ?? data.font_size ?? defaultSettings.fontSize,
+        defaultDurationDays: data.defaultDurationDays ?? data.default_duration_days ?? defaultSettings.defaultDurationDays,
+        defaultDeliveryMode: data.defaultDeliveryMode ?? data.default_delivery_mode ?? defaultSettings.defaultDeliveryMode,
+        defaultSchedulingMode: data.defaultSchedulingMode ?? data.default_scheduling_mode ?? defaultSettings.defaultSchedulingMode,
         viewStateOverrides: data.viewStateOverrides || data.view_state_overrides || defaultSettings.viewStateOverrides,
       } : defaultSettings;
       applyToDOM(settings);

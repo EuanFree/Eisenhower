@@ -165,7 +165,7 @@ class DashboardResponse(BaseModel):
     id: UUID
     name: str
     description: Optional[str] = None
-    owner_user_id: UUID
+    owner_user_id: int
     project_id: Optional[UUID] = None
     sharing_scope: SharingScope
     classification: PresetClassification

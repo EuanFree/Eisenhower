@@ -39,6 +39,13 @@ export type TreeType = 'WBS' | 'RBS' | 'LBS';
  */
 export type DeliveryMode = 'WATERFALL' | 'AGILE' | 'HYBRID';
 
+/**
+ * Scheduling mode for a WBS task or work package.
+ * AUTO = Task dates dynamically recalculate based on predecessors and duration.
+ * MANUAL = Task dates are fixed/pinned and do not automatically shift.
+ */
+export type SchedulingMode = 'AUTO' | 'MANUAL';
+
 // ---------------------------------------------------------------------------
 // Universal Breakdown Node (base)
 // ---------------------------------------------------------------------------
@@ -85,6 +92,9 @@ export interface WBSNode extends UBNBase {
   /** WATERFALL, AGILE, or HYBRID delivery approach */
   delivery_mode: DeliveryMode | null;
 
+  /** AUTO or MANUAL scheduling mode (defaults to AUTO) */
+  scheduling_mode?: SchedulingMode | null;
+
   /** Planned start date (ISO 8601 date string) */
   planned_start_date: string | null;
 
@@ -96,6 +106,12 @@ export interface WBSNode extends UBNBase {
 
   /** Actual end date, set when work completes */
   actual_end_date: string | null;
+
+  /** Planned duration in working days — first-class temporal attribute */
+  duration_days: number | null;
+
+  /** Idle time within the task in working days (e.g., curing, approval waits) */
+  lag_days: number | null;
 
   /** Physical percent complete (0–100) */
   percent_complete: number;
@@ -136,6 +152,24 @@ export interface WBSNode extends UBNBase {
 
   /** Calendar binding */
   calendar_id: string | null;
+
+  /** T0 relative scheduling */
+  is_relative_t0_mode?: boolean;
+  relative_start_day_offset?: number | null;
+  relative_finish_day_offset?: number | null;
+  atp_anchor_date?: string | null;
+
+  /** Cost distribution profile for time-phased spending */
+  cost_distribution_profile?: string | null;
+
+  /** DAL/SIL safety criticality */
+  dal_sil_level?: string | null;
+  engineering_baseline_tier?: string | null;
+  linked_requirements_manifest?: unknown[] | null;
+
+  /** Hybrid delivery effort tracking */
+  baseline_effort_days?: number | null;
+  agile_actual_effort_days?: number | null;
 }
 
 // ---------------------------------------------------------------------------

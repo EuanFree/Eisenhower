@@ -31,6 +31,8 @@
 
 import { actionRegistry } from './ActionRegistry';
 import type { ActionDefinition, ActionContext } from './types';
+import { useWorkspaceStore } from '../../stores/useWorkspaceStore';
+import type { ViewType } from '../../stores/useWorkspaceStore';
 import {
   governanceActions as governanceActionsDefs,
   baselineActions,
@@ -79,6 +81,14 @@ function createAction(
     execute,
     ...options,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Helper: Navigate to a view type from the action metadata
+// ---------------------------------------------------------------------------
+
+function navigateToView(viewType: ViewType) {
+  useWorkspaceStore.getState().openView(viewType);
 }
 
 // ---------------------------------------------------------------------------
@@ -467,7 +477,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: WBS & Master Gantt'),
+    () => navigateToView('WBS_GANTT'),
     { viewTypes: ['WBS_GANTT'] },
   ),
   createAction(
@@ -478,7 +488,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Daily Cockpit'),
+    () => navigateToView('DAILY_COCKPIT'),
     { viewTypes: ['DAILY_COCKPIT'] },
   ),
   createAction(
@@ -489,7 +499,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Schedule Health'),
+    () => navigateToView('SCHEDULE_HEALTH'),
     { viewTypes: ['SCHEDULE_HEALTH'] },
   ),
   createAction(
@@ -500,7 +510,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Dashboard Builder'),
+    () => navigateToView('DASHBOARD'),
     { viewTypes: ['DASHBOARD'] },
   ),
   createAction(
@@ -526,7 +536,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: SRA Risk'),
+    () => navigateToView('SRA_RISK'),
     { viewTypes: ['SRA_RISK'] },
   ),
   createAction(
@@ -537,7 +547,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: EVM Reporting'),
+    () => navigateToView('EVM_REPORTING'),
     { viewTypes: ['EVM_REPORTING'] },
   ),
   createAction(
@@ -548,7 +558,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Facility Chamber'),
+    () => navigateToView('FACILITY_CHAMBER'),
     { viewTypes: ['FACILITY_CHAMBER'] },
   ),
   createAction(
@@ -559,7 +569,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Location Explorer'),
+    () => navigateToView('LOCATION_EXPLORER'),
     { viewTypes: ['LOCATION_EXPLORER'] },
   ),
   createAction(
@@ -570,7 +580,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Artifact Vault'),
+    () => navigateToView('DOCUMENT_VAULT'),
     { viewTypes: ['ARTIFACT_VAULT'] },
   ),
   createAction(
@@ -581,7 +591,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: CDRL'),
+    () => navigateToView('CONTRACT_DELIVERABLES'),
     { viewTypes: ['CDRL'] },
   ),
   createAction(
@@ -592,7 +602,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: CCB'),
+    () => navigateToView('CHANGE_CONTROL'),
     { viewTypes: ['CCB'] },
   ),
   createAction(
@@ -603,7 +613,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Custom Fields'),
+    () => navigateToView('CUSTOM_FIELDS'),
     { viewTypes: ['CUSTOM_FIELDS'] },
   ),
   createAction(
@@ -614,7 +624,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Merkle Sync'),
+    () => navigateToView('MERKLE_SYNC'),
     { viewTypes: ['MERKLE_SYNC'] },
   ),
   createAction(
@@ -625,7 +635,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Help Center'),
+    () => navigateToView('HELP_CENTER'),
     { viewTypes: ['HELP_CENTER'] },
   ),
   createAction(
@@ -636,7 +646,7 @@ const navigationActions: ActionDefinition[] = [
     'SYSTEM',
     () => true,
     () => true,
-    () => console.log('Navigate: Supplier Portal'),
+    () => navigateToView('SUPPLIER_PORTAL'),
     { viewTypes: ['SUPPLIER_PORTAL'] },
   ),
 ];

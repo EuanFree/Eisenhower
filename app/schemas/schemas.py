@@ -131,6 +131,21 @@ class UserResponse(UserBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+    @field_validator("caveats", mode="before")
+    @classmethod
+    def normalize_caveats(cls, v):
+        """Normalize caveats from DB string format to list."""
+        if v is None:
+            return None
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            stripped = v.strip("{}")
+            if not stripped:
+                return []
+            return [x.strip(' "') for x in stripped.split(",") if x.strip(' "')]
+        return list(v) if v else []
+
 
 # ==================== Universal Breakdown Node Schemas ====================
 
@@ -213,10 +228,22 @@ class PortfolioNodeCreate(UBNCreate):
     delivery_mode: Optional[DeliveryMode] = None
     planned_start_date: Optional[datetime] = None
     planned_end_date: Optional[datetime] = None
+    duration_days: Optional[float] = None
+    lag_days: Optional[float] = 0.0
     percent_complete: float = 0.0
     pv: Optional[float] = None
     ev: Optional[float] = None
     ac: Optional[float] = None
+    evm_technique: Optional[str] = None
+    bac_cost: Optional[float] = None
+    planned_value: Optional[float] = None
+    earned_value: Optional[float] = None
+    actual_cost: Optional[float] = None
+    requires_vv_signoff: bool = False
+    calendar_id: Optional[UUID] = None
+    currency_code: str = "GBP"
+    contract_exchange_rate_id: Optional[UUID] = None
+    baseline_effort_days: Optional[float] = None
 
 
 class PortfolioNodeUpdate(UBNUpdate):
@@ -224,12 +251,24 @@ class PortfolioNodeUpdate(UBNUpdate):
     delivery_mode: Optional[DeliveryMode] = None
     planned_start_date: Optional[datetime] = None
     planned_end_date: Optional[datetime] = None
+    duration_days: Optional[float] = None
+    lag_days: Optional[float] = None
     actual_start_date: Optional[datetime] = None
     actual_end_date: Optional[datetime] = None
     percent_complete: Optional[float] = None
     pv: Optional[float] = None
     ev: Optional[float] = None
     ac: Optional[float] = None
+    evm_technique: Optional[str] = None
+    bac_cost: Optional[float] = None
+    planned_value: Optional[float] = None
+    earned_value: Optional[float] = None
+    actual_cost: Optional[float] = None
+    requires_vv_signoff: Optional[bool] = None
+    calendar_id: Optional[UUID] = None
+    currency_code: Optional[str] = None
+    contract_exchange_rate_id: Optional[UUID] = None
+    baseline_effort_days: Optional[float] = None
 
 
 class PortfolioNodeResponse(UBNResponse):
@@ -237,12 +276,30 @@ class PortfolioNodeResponse(UBNResponse):
     delivery_mode: Optional[DeliveryMode] = None
     planned_start_date: Optional[datetime] = None
     planned_end_date: Optional[datetime] = None
+    duration_days: Optional[float] = None
+    lag_days: Optional[float] = 0.0
     actual_start_date: Optional[datetime] = None
     actual_end_date: Optional[datetime] = None
     percent_complete: float
     pv: Optional[float] = None
     ev: Optional[float] = None
     ac: Optional[float] = None
+    evm_technique: Optional[str] = None
+    bac_cost: Optional[float] = None
+    planned_value: Optional[float] = None
+    earned_value: Optional[float] = None
+    actual_cost: Optional[float] = None
+    requires_vv_signoff: bool = False
+    calendar_id: Optional[UUID] = None
+    currency_code: str = "GBP"
+    contract_exchange_rate_id: Optional[UUID] = None
+    is_relative_t0_mode: bool = False
+    relative_start_day_offset: Optional[int] = None
+    relative_finish_day_offset: Optional[int] = None
+    atp_anchor_date: Optional[date] = None
+    cost_distribution_profile: Optional[str] = None
+    baseline_effort_days: Optional[float] = None
+    agile_actual_effort_days: Optional[float] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -306,7 +363,8 @@ class DisplaySettingsBase(BaseModel):
     """Base schema for user display settings.
 
     Contains all fields that define a user's visual preferences:
-    density, scale, theme, color accessibility, and custom view state.
+    density, scale, theme, color accessibility, font customization,
+    work item defaults, and custom view state.
     """
     profile_name: str = Field(default="DEFAULT", max_length=50)
     is_active_default: bool = True
@@ -315,6 +373,13 @@ class DisplaySettingsBase(BaseModel):
     row_height_px: int = Field(default=36, ge=20, le=100)
     theme: Theme = Theme.SCIF_DARK
     color_accessibility: ColorAccessibility = ColorAccessibility.STANDARD_RAG
+    # Font customization
+    font_family: Optional[str] = Field(default="Inter", max_length=50)
+    font_size: Optional[int] = Field(default=16, ge=12, le=24)
+    # Work item defaults
+    default_duration_days: Optional[int] = Field(default=None, ge=1, le=3650)
+    default_delivery_mode: Optional[str] = Field(default=None, max_length=20)
+    default_scheduling_mode: Optional[str] = Field(default=None, max_length=10)
     view_state_overrides: Optional[Dict[str, Any]] = None
 
 
@@ -324,7 +389,7 @@ class DisplaySettingsUpdate(BaseModel):
     All fields are optional.  Only the fields included in the request
     will be merged into the existing profile.  Validation constraints
     are enforced: scale_factor must be 0.80–1.50, row_height_px must
-    be 20–100.
+    be 20–100, font_size must be 12–24.
     """
     profile_name: Optional[str] = Field(None, max_length=50)
     is_active_default: Optional[bool] = None
@@ -333,6 +398,13 @@ class DisplaySettingsUpdate(BaseModel):
     row_height_px: Optional[int] = Field(None, ge=20, le=100)
     theme: Optional[Theme] = None
     color_accessibility: Optional[ColorAccessibility] = None
+    # Font customization
+    font_family: Optional[str] = Field(None, max_length=50)
+    font_size: Optional[int] = Field(None, ge=12, le=24)
+    # Work item defaults
+    default_duration_days: Optional[int] = Field(None, ge=1, le=3650)
+    default_delivery_mode: Optional[str] = Field(None, max_length=20)
+    default_scheduling_mode: Optional[str] = Field(None, max_length=10)
     view_state_overrides: Optional[Dict[str, Any]] = None
 
 

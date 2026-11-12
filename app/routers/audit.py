@@ -37,6 +37,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -274,3 +275,36 @@ async def export_ledger(
             ),
         },
     )
+
+
+@router.get("/log", summary="Audit log entries")
+def get_audit_log(
+    limit: int = Query(100, ge=1, le=1000),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return recent audit log entries."""
+    from app.models.models import ForensicAuditLog
+
+    entries = (
+        db.query(ForensicAuditLog)
+        .order_by(ForensicAuditLog.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return {
+        "total": len(entries),
+        "entries": [
+            {
+                "id": str(e.id),
+                "transaction_id": e.transaction_id,
+                "user_upn": e.user_upn,
+                "action_type": e.action_type,
+                "entity_type": e.entity_type,
+                "entity_id": str(e.entity_id) if e.entity_id else None,
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+                "client_ip": e.client_ip,
+            }
+            for e in entries
+        ],
+    }

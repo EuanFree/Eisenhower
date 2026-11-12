@@ -43,6 +43,7 @@ import {
   LogIn,
   LogOut,
   XCircle,
+  Pencil,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useContextMenu } from './ContextMenuProvider';
@@ -244,6 +245,17 @@ const WbsTaskContextMenu: React.FC<WbsTaskContextMenuProps> = ({
         label="Task Information..."
         shortcut="Shift+F2"
         onClick={() => handleAction('TASK_INFO')}
+      />
+
+      <Separator />
+
+      {/* Edit Task */}
+      <MenuItem
+        icon={<Pencil size={14} />}
+        label="Edit Task..."
+        shortcut="F2"
+        disabled={!canModify}
+        onClick={() => handleAction('EDIT_TASK')}
       />
 
       <Separator />

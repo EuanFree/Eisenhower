@@ -1,8 +1,8 @@
 /**
  * Widget Palette Component
  *
- * Sidebar with draggable widget type icons. Clicking a widget type adds it
- * to the current dashboard canvas.
+ * Sidebar with draggable widget type icons. Clicking or dragging a widget type
+ * adds it to the current dashboard canvas.
  */
 
 import React from 'react';
@@ -33,6 +33,12 @@ const ICON_MAP: Record<WidgetType, React.ElementType> = {
 const WidgetPalette: React.FC = () => {
   const { addWidget, isEditMode } = useDashboardStore();
 
+  const handleDragStart = (e: React.DragEvent, widgetType: WidgetType) => {
+    if (!isEditMode) return;
+    e.dataTransfer.setData('application/json', JSON.stringify({ widgetType }));
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
   return (
     <div className="w-56 bg-surface-ops-sidebar border-r border-border-ops-subtle flex flex-col overflow-y-auto">
       <div className="p-3 border-b border-border-ops-subtle">
@@ -45,16 +51,17 @@ const WidgetPalette: React.FC = () => {
         {WIDGET_TYPE_INFO.map((info) => {
           const Icon = ICON_MAP[info.type];
           return (
-            <button
+            <div
               key={info.type}
+              draggable={isEditMode}
+              onDragStart={(e) => handleDragStart(e, info.type)}
               onClick={() => isEditMode && addWidget(info.type)}
-              disabled={!isEditMode}
               title={info.description}
               className={`
                 w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left
-                transition-colors duration-100
+                transition-colors duration-100 select-none
                 ${isEditMode
-                  ? 'hover:bg-surface-ops-hover cursor-pointer text-text-ops-primary'
+                  ? 'hover:bg-surface-ops-hover cursor-grab active:cursor-grabbing text-text-ops-primary'
                   : 'opacity-40 cursor-not-allowed text-text-ops-muted'
                 }
               `}
@@ -64,7 +71,7 @@ const WidgetPalette: React.FC = () => {
                 <p className="text-sm font-medium truncate">{info.label}</p>
                 <p className="text-xs text-text-ops-muted truncate">{info.description}</p>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

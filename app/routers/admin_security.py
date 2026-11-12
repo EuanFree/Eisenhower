@@ -93,6 +93,17 @@ endpoints for classified operational environments.
 """
 
 
+@router.get("/system-config", summary="Get system configuration settings")
+def get_system_config():
+    """Return active SCIF idle timeout and session settings."""
+    return {
+        "SCIF_IDLE_TIMEOUT_SECONDS": 180,
+        "SESSION_TIMEOUT_MINUTES": 15,
+        "INACTIVITY_TIMEOUT_SECONDS": INACTIVITY_TIMEOUT_SECONDS,
+        "INACTIVITY_WARNING_SECONDS": INACTIVITY_WARNING_SECONDS,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Pydantic Schemas
 # ---------------------------------------------------------------------------

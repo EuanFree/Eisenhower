@@ -66,6 +66,10 @@ router = APIRouter(prefix="/v1/resources", tags=["Resources - RBS"])
 
 
 @router.get(
+    "",
+    summary="List resources for assignment / autocomplete",
+)
+@router.get(
     "/",
     summary="List resources for assignment / autocomplete",
 )

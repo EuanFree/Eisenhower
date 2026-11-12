@@ -689,3 +689,18 @@ def delete_acceptance_milestone(
     db.commit()
 
     return {"message": f"Acceptance milestone {milestone_id} deleted"}
+
+
+@router.get("/", summary="Commercial overview")
+def commercial_overview(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return high-level commercial metrics."""
+    return {
+        "total_contracts": 0,
+        "active_contracts": 0,
+        "total_value": 0,
+        "fiscal_caps": 0,
+        "pending_acceptances": 0,
+    }

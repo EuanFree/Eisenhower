@@ -21,6 +21,7 @@
  */
 
 import React, { useMemo, useCallback, useEffect, useRef, useState } from 'react';
+import { clsx } from 'clsx';
 import {
   ColumnDef,
   flexRender,
@@ -38,6 +39,9 @@ import {
   Loader2,
   User,
   Users,
+  Zap,
+  Pin,
+  Kanban,
 } from 'lucide-react';
 import { useScheduleStore } from '../../stores/useScheduleStore';
 import { useDisplayStore } from '../../stores/useDisplayStore';
@@ -50,6 +54,7 @@ import PresenceAvatars from '../common/PresenceAvatars';
 import { useInlineEdit, addWorkdays, calculateWorkdayDuration } from '../../hooks/useInlineEdit';
 import InlineEditCell from './InlineEditCell';
 import WbsCellRenderer from './WbsCellRenderer';
+import DependencyModal from './DependencyModal';
 import BulkOperationsHUD from './BulkOperationsHUD';
 import DragFillHandle from './DragFillHandle';
 import { EditableField, EDITABLE_COLUMN_IDS } from '../../types/editing';
@@ -60,9 +65,12 @@ import { useCellPresence } from '../../hooks/useCellPresence';
 import { ExportControlBadge } from '../../views/compliance/ExportControlDashboardView';
 import { parseDependencyText, formatDependencyList } from '../../utils/dependencyText';
 import { parseDurationToDays, formatDaysToDuration } from '../../utils/durationText';
+import { computeDurationFromDates } from '../../utils/scheduleCalculator';
 import api from '../../services/api';
 import ColumnVisibilityMenu from './ColumnVisibilityMenu';
 import ResourcePickerPopup from './ResourcePickerPopup';
+import EndEditChoiceModal from '../common/EndEditChoiceModal';
+import EffortComparison from './EffortComparison';
 
 // ---------------------------------------------------------------------------
 // Tooltip Component
@@ -180,8 +188,39 @@ const deliveryModeColors: Record<string, string> = {
   HYBRID: 'bg-purple-900/50 text-purple-300 border-purple-700',
 };
 
-const DeliveryModeBadge: React.FC<{ mode: string | null }> = ({ mode }) => {
+const DeliveryModeBadge: React.FC<{
+  mode: string | null;
+  backlogName?: string | null;
+  onOpenKanban?: () => void;
+}> = ({ mode, backlogName, onOpenKanban }) => {
   if (!mode) return <span className="text-text-ops-muted text-xs">—</span>;
+
+  if (mode === 'AGILE' || mode === 'HYBRID') {
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenKanban?.();
+        }}
+        className={clsx(
+          'inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded border transition-colors select-none',
+          mode === 'AGILE'
+            ? 'bg-emerald-950/70 text-emerald-300 border-emerald-600/70 hover:bg-emerald-900 hover:border-emerald-500'
+            : 'bg-purple-950/70 text-purple-300 border-purple-600/70 hover:bg-purple-900 hover:border-purple-500',
+        )}
+        title={backlogName ? `Backlog: ${backlogName} — Click to open Sprint Kanban Board` : 'Agile Task — Click to open Sprint Kanban Board'}
+      >
+        <Kanban size={11} className={mode === 'AGILE' ? 'text-emerald-400' : 'text-purple-400'} />
+        <span>{mode}</span>
+        {backlogName && (
+          <span className="text-[10px] opacity-80 font-mono truncate max-w-[70px]">
+            ({backlogName})
+          </span>
+        )}
+      </button>
+    );
+  }
 
   return (
     <span
@@ -191,6 +230,48 @@ const DeliveryModeBadge: React.FC<{ mode: string | null }> = ({ mode }) => {
     >
       {mode}
     </span>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Scheduling Mode Badge (Auto vs Manual)
+// ---------------------------------------------------------------------------
+
+const SchedulingModeBadge: React.FC<{
+  mode?: string | null;
+  onToggle?: () => void;
+  disabled?: boolean;
+}> = ({ mode, onToggle, disabled }) => {
+  const isAuto = (mode || 'AUTO') === 'AUTO';
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle?.();
+      }}
+      disabled={disabled}
+      className={clsx(
+        'inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono font-medium transition-colors border select-none',
+        isAuto
+          ? 'bg-blue-950/60 border-blue-600/60 text-blue-300 hover:bg-blue-900/60 hover:border-blue-500'
+          : 'bg-slate-800/80 border-slate-600/60 text-slate-300 hover:bg-slate-700/80 hover:border-slate-500',
+        disabled && 'opacity-50 cursor-not-allowed',
+      )}
+      title={isAuto ? 'Auto Scheduling (click to toggle Manual)' : 'Manual Scheduling (click to toggle Auto)'}
+    >
+      {isAuto ? (
+        <>
+          <Zap size={11} className="text-amber-400 fill-amber-400/30" />
+          <span>Auto</span>
+        </>
+      ) : (
+        <>
+          <Pin size={11} className="text-slate-400" />
+          <span>Manual</span>
+        </>
+      )}
+    </button>
   );
 };
 
@@ -445,11 +526,28 @@ const WbsTable: React.FC<WbsTableProps> = ({
   const addResourceAssignment = useScheduleStore((s) => s.addResourceAssignment);
   const removeResourceAssignment = useScheduleStore((s) => s.removeResourceAssignment);
   const updateNode = useScheduleStore((s) => s.updateNode);
+  const toggleSchedulingMode = useScheduleStore((s) => s.toggleSchedulingMode);
+  const insertChildTask = useScheduleStore((s) => s.insertChildTask);
+  const insertSiblingTask = useScheduleStore((s) => s.insertSiblingTask);
+  const siblingRelationshipMode = useScheduleStore((s) => s.siblingRelationshipMode);
+  const setSiblingRelationshipMode = useScheduleStore((s) => s.setSiblingRelationshipMode);
   const hiddenColumns = useScheduleStore((s) => s.columnState.hiddenColumns);
   const updateColumnState = useScheduleStore((s) => s.updateColumnState);
 
   // Right-click header menu for toggling column visibility
   const [columnMenuPos, setColumnMenuPos] = useState<{ x: number; y: number } | null>(null);
+
+  // Dependency modal state
+  const [dependencyModalNode, setDependencyModalNode] = useState<string | null>(null);
+
+  // End date edit choice modal state
+  const [showEndEditChoice, setShowEndEditChoice] = useState(false);
+  const [endEditInfo, setEndEditInfo] = useState<{
+    nodeId: string;
+    oldEndDate: string;
+    newEndDate: string;
+    startDate: string;
+  } | null>(null);
 
   // Resource picker popover state for the filterable checklist
   const [resourcePickerState, setResourcePickerState] = useState<{
@@ -644,11 +742,35 @@ const WbsTable: React.FC<WbsTableProps> = ({
         if (days == null) return true; // Unparseable — ignore the edit
 
         const node = allRows.find((r) => r.id === nodeId);
-        const startDate = node?.planned_start_date;
-        if (startDate) {
-          const newEndDate = addWorkdays(startDate, Math.round(days));
-          updateNode(nodeId, { planned_end_date: newEndDate } as any);
+        const roundedDays = Math.round(days);
+        const todayStr = new Date().toISOString().split('T')[0];
+        let startDate = node?.planned_start_date || todayStr;
+        const lag = (node?.lag_days as number) ?? 0;
+        const totalWorkdays = roundedDays + lag;
+        const newEndDate = addWorkdays(startDate, Math.max(0, totalWorkdays - 1));
+
+        // Update duration as a first-class field along with computed dates
+        updateNode(nodeId, {
+          planned_start_date: startDate,
+          planned_end_date: newEndDate,
+          duration_days: roundedDays,
+        } as any);
+        return true;
+      }
+
+      if (field === 'planned_end_date') {
+        // Show the end-date-edit choice modal
+        const node = allRows.find((r) => r.id === nodeId);
+        const oldEndDate = node?.planned_end_date as string | null;
+        const startDate = (node?.planned_start_date as string) || '';
+        const newEndDate = String(newValue || '');
+        if (startDate && oldEndDate && newEndDate !== oldEndDate) {
+          setEndEditInfo({ nodeId, oldEndDate, newEndDate, startDate });
+          setShowEndEditChoice(true);
+          return true; // Handled by modal
         }
+        // No start date or same value — just update normally
+        updateNode(nodeId, { planned_end_date: newEndDate } as any);
         return true;
       }
 
@@ -910,14 +1032,50 @@ const WbsTable: React.FC<WbsTableProps> = ({
         },
       },
 
-      // Column 3: Delivery Mode
+      // Column 2b: Scheduling Mode (Auto vs Manual)
+      {
+        accessorKey: 'scheduling_mode',
+        header: 'Mode',
+        size: 85,
+        cell: ({ row: reactRow }) => {
+          const node = reactRow.original;
+          const nodeLocked = isNodeLocked(node.path || '');
+          const mode = node.scheduling_mode || (node.custom_attributes?.scheduling_mode as string) || 'AUTO';
+          return (
+            <div className="flex items-center">
+              <SchedulingModeBadge
+                mode={mode}
+                onToggle={() => toggleSchedulingMode(node.id)}
+                disabled={nodeLocked}
+              />
+            </div>
+          );
+        },
+      },
+
+      // Column 3: Delivery Mode & Backlog Badge
       {
         accessorKey: 'delivery_mode',
         header: 'Delivery Mode',
-        size: 110,
-        cell: ({ getValue }) => {
-          const mode = getValue() as string | null;
-          return <DeliveryModeBadge mode={mode} />;
+        size: 130,
+        cell: ({ row: reactRow }) => {
+          const node = reactRow.original;
+          const mode = node.delivery_mode;
+          const backlogName = node.custom_attributes?.backlog_name as string | undefined;
+          return (
+            <DeliveryModeBadge
+              mode={mode}
+              backlogName={backlogName}
+              onOpenKanban={() => {
+                selectNode(node.id);
+                window.dispatchEvent(
+                  new CustomEvent('workbench:open-tab', {
+                    detail: { tab: 'KANBAN', nodeId: node.id },
+                  }),
+                );
+              }}
+            />
+          );
         },
       },
 
@@ -1005,24 +1163,30 @@ const WbsTable: React.FC<WbsTableProps> = ({
         },
       },
 
-      // Column 5b: Predecessors (editable text, e.g. "1.2FS+2d, 1.3SS")
+      // Column 5a: Duration (editable text, e.g. "3d", "2w", "8h", "1m")
       {
-        id: 'predecessors',
-        header: 'Predecessors',
-        size: 160,
+        id: 'duration',
+        header: 'Duration',
+        size: 100,
         cell: ({ row: reactRow }) => {
           const node = reactRow.original;
           const globalIndex = reactRow.index;
           const nodeLocked = isNodeLocked(node.path || '');
-          const text = formatDependencyList(node.id, dependencies, idToCode, 'predecessors');
+          // Prefer first-class duration_days; fall back to computed dates only when null
+          const days = node.duration_days ?? (
+            node.planned_start_date && node.planned_end_date
+              ? calculateWorkdayDuration(node.planned_start_date, node.planned_end_date)
+              : null
+          );
+          const text = days != null ? formatDaysToDuration(days) : '';
 
           return (
             <WbsCellRenderer
               nodeId={node.id}
-              field="predecessors"
+              field="duration"
               value={text}
               renderContent={(v) => (
-                <span className="truncate" title={v ? String(v) : undefined}>
+                <span className="font-mono text-sm truncate" title={v ? String(v) : undefined}>
                   {v || '—'}
                 </span>
               )}
@@ -1043,40 +1207,66 @@ const WbsTable: React.FC<WbsTableProps> = ({
         },
       },
 
-      // Column 5c: Successors (editable text, e.g. "1.5FF-1d")
+      // Column 5b: Predecessors (double-click opens dependency modal)
+      {
+        id: 'predecessors',
+        header: 'Predecessors',
+        size: 160,
+        cell: ({ row: reactRow }) => {
+          const node = reactRow.original;
+          const nodeLocked = isNodeLocked(node.path || '');
+          const text = formatDependencyList(node.id, dependencies, idToCode, 'predecessors');
+
+          return (
+            <span
+              className="font-mono text-sm text-text-ops-muted cursor-pointer hover:text-text-ops-primary"
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                if (nodeLocked) return;
+                setDependencyModalNode(node.id);
+              }}
+              title="Double-click to edit dependencies"
+              style={{
+                willChange: 'transform',
+                transform: 'translateZ(0)',
+              }}
+            >
+              <span className="truncate" title={text || undefined}>
+                {text || '—'}
+              </span>
+            </span>
+          );
+        },
+      },
+
+      // Column 5c: Successors (double-click opens dependency modal)
       {
         id: 'successors',
         header: 'Successors',
         size: 160,
         cell: ({ row: reactRow }) => {
           const node = reactRow.original;
-          const globalIndex = reactRow.index;
           const nodeLocked = isNodeLocked(node.path || '');
           const text = formatDependencyList(node.id, dependencies, idToCode, 'successors');
 
           return (
-            <WbsCellRenderer
-              nodeId={node.id}
-              field="successors"
-              value={text}
-              renderContent={(v) => (
-                <span className="truncate" title={v ? String(v) : undefined}>
-                  {v || '—'}
-                </span>
-              )}
-              nodeLocked={nodeLocked}
-              rowHeight={rowHeight}
-              globalIndex={globalIndex}
-              activeCell={editHook.activeCell}
-              onChange={editHook.updateValue}
-              onKeyDown={handleEditKeyDown}
-              onBlur={commitEditWithBlur}
-              inputRef={editHook.inputRef}
-              getCellFocus={getCellFocus}
-              isCellSoftLocked={cellPresence.isCellSoftLocked}
-              getSoftLockHolder={cellPresence.getSoftLockHolder}
-              tryStartEdit={tryStartEditWithSoftLockCheck}
-            />
+            <span
+              className="font-mono text-sm text-text-ops-muted cursor-pointer hover:text-text-ops-primary"
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                if (nodeLocked) return;
+                setDependencyModalNode(node.id);
+              }}
+              title="Double-click to edit dependencies"
+              style={{
+                willChange: 'transform',
+                transform: 'translateZ(0)',
+              }}
+            >
+              <span className="truncate" title={text || undefined}>
+                {text || '—'}
+              </span>
+            </span>
           );
         },
       },
@@ -1140,48 +1330,6 @@ const WbsTable: React.FC<WbsTableProps> = ({
                 <Users size={12} />
               </button>
             </div>
-          );
-        },
-      },
-
-      // Column 5d: Duration (editable text, e.g. "3d", "2w", "8h", "1m")
-      {
-        id: 'duration',
-        header: 'Duration',
-        size: 100,
-        cell: ({ row: reactRow }) => {
-          const node = reactRow.original;
-          const globalIndex = reactRow.index;
-          const nodeLocked = isNodeLocked(node.path || '');
-          const days =
-            node.planned_start_date && node.planned_end_date
-              ? calculateWorkdayDuration(node.planned_start_date, node.planned_end_date)
-              : null;
-          const text = days != null ? formatDaysToDuration(days) : '';
-
-          return (
-            <WbsCellRenderer
-              nodeId={node.id}
-              field="duration"
-              value={text}
-              renderContent={(v) => (
-                <span className="font-mono text-sm truncate" title={v ? String(v) : undefined}>
-                  {v || '—'}
-                </span>
-              )}
-              nodeLocked={nodeLocked}
-              rowHeight={rowHeight}
-              globalIndex={globalIndex}
-              activeCell={editHook.activeCell}
-              onChange={editHook.updateValue}
-              onKeyDown={handleEditKeyDown}
-              onBlur={commitEditWithBlur}
-              inputRef={editHook.inputRef}
-              getCellFocus={getCellFocus}
-              isCellSoftLocked={cellPresence.isCellSoftLocked}
-              getSoftLockHolder={cellPresence.getSoftLockHolder}
-              tryStartEdit={tryStartEditWithSoftLockCheck}
-            />
           );
         },
       },
@@ -1287,6 +1435,25 @@ const WbsTable: React.FC<WbsTableProps> = ({
           return <PresenceAvatars nodeId={row.original.id} size={20} />;
         },
       },
+
+      // Column 10: Effort Comparison (Baseline vs Agile actual)
+      {
+        id: 'effortComparison',
+        header: 'Effort',
+        size: 200,
+        cell: ({ row }) => {
+          const node = row.original;
+          if (node.baseline_effort_days != null || node.agile_actual_effort_days != null) {
+            return (
+              <EffortComparison
+                baselineEffort={node.baseline_effort_days}
+                agileActualEffort={node.agile_actual_effort_days}
+              />
+            );
+          }
+          return <span className="text-xs text-text-ops-muted">—</span>;
+        },
+      },
     ],
     [
       toggleExpand,
@@ -1377,23 +1544,52 @@ const WbsTable: React.FC<WbsTableProps> = ({
     }
   }, [selectedNodeId, rows, rowHeight, containerHeight, scrollTop]);
 
+  // Keyboard listener for inline task creation shortcuts (Insert for sibling, Ctrl+Enter for child)
+  const handleContainerKeyDown = useCallback(
+    async (e: React.KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      if (e.key === 'Insert' && !e.ctrlKey && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        const refId = selectedNodeId || (rows.length > 0 ? rows[rows.length - 1].id : null);
+        if (refId) {
+          const created = await insertSiblingTask(refId, 'FOLLOW_ON');
+          if (created) {
+            const currentRows = useScheduleStore.getState().rows;
+            const idx = currentRows.findIndex((r) => r.id === created.id);
+            editHook.startEdit(idx >= 0 ? idx : 0, created.id, 'name' as any, created.name);
+          }
+        }
+      } else if (e.key === 'Enter' && (e.ctrlKey || (e as any).metaKey) && !e.altKey && !e.shiftKey) {
+        e.preventDefault();
+        const refId = selectedNodeId || (rows.length > 0 ? rows[0].id : null);
+        if (refId) {
+          const created = await insertChildTask(refId);
+          if (created) {
+            const currentRows = useScheduleStore.getState().rows;
+            const idx = currentRows.findIndex((r) => r.id === created.id);
+            editHook.startEdit(idx >= 0 ? idx : 0, created.id, 'name' as any, created.name);
+          }
+        }
+      }
+    },
+    [selectedNodeId, rows, insertSiblingTask, insertChildTask, editHook],
+  );
+
   // -----------------------------------------------------------------------
   // Render
   // -----------------------------------------------------------------------
 
-  if (loading) {
-    return (
-      <div className={`flex items-center justify-center h-64 ${className}`}>
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 size={32} className="text-text-ops-muted animate-spin" />
-          <span className="text-text-ops-muted text-sm">Loading WBS tree...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div ref={containerRef} className={`relative flex flex-col overflow-hidden ${className}`}>
+    <div
+      ref={containerRef}
+      tabIndex={0}
+      onKeyDown={handleContainerKeyDown}
+      className={`relative flex flex-col overflow-hidden focus:outline-none ${className}`}
+    >
       {/* Loading overlay */}
       {loading && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-bg-ops-base/80">
@@ -1595,12 +1791,48 @@ const WbsTable: React.FC<WbsTableProps> = ({
         </div>
       </div>
 
-      {/* Footer with row count */}
-      <div className="flex items-center justify-between px-3 h-8 flex-shrink-0 border-t border-border-ops-subtle bg-bg-ops-surface text-xs text-text-ops-muted box-border">
-        <span>
-          {rows.length} {rows.length !== allRows.length ? `of ${allRows.length} nodes (filtered)` : 'nodes'}
-        </span>
-        <span>Row height: {rowHeight}px</span>
+      {/* Footer with row count and Sibling Relationship Mode Radio Selector */}
+      <div className="flex items-center justify-between px-3 h-8 flex-shrink-0 border-t border-border-ops-subtle bg-bg-ops-surface text-xs text-text-ops-muted box-border overflow-x-auto gap-4">
+        <div className="flex items-center gap-3">
+          <span>
+            {rows.length} {rows.length !== allRows.length ? `of ${allRows.length} nodes (filtered)` : 'nodes'}
+          </span>
+          <span className="text-border-ops-subtle">|</span>
+          {/* Sibling Insertion Mode Radio Selector */}
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-text-ops-primary text-[11px]">New Sibling:</span>
+            <label className="flex items-center gap-1 cursor-pointer text-[11px] hover:text-text-ops-primary">
+              <input
+                type="radio"
+                name="sibling-mode"
+                value="FOLLOW_ON"
+                checked={siblingRelationshipMode === 'FOLLOW_ON'}
+                onChange={() => setSiblingRelationshipMode('FOLLOW_ON')}
+                className="w-3 h-3 text-blue-500 focus:ring-blue-500"
+              />
+              <span>Follow-On (FS)</span>
+            </label>
+            <label className="flex items-center gap-1 cursor-pointer text-[11px] hover:text-text-ops-primary">
+              <input
+                type="radio"
+                name="sibling-mode"
+                value="PARALLEL"
+                checked={siblingRelationshipMode === 'PARALLEL'}
+                onChange={() => setSiblingRelationshipMode('PARALLEL')}
+                className="w-3 h-3 text-blue-500 focus:ring-blue-500"
+              />
+              <span>Parallel</span>
+            </label>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 text-[11px]">
+          <span className="hidden sm:inline text-text-ops-muted">
+            <kbd className="px-1 py-0.5 bg-bg-ops-overlay border border-border-ops-subtle rounded text-[10px] font-mono text-text-ops-primary">Insert</kbd> Sibling &bull;{' '}
+            <kbd className="px-1 py-0.5 bg-bg-ops-overlay border border-border-ops-subtle rounded text-[10px] font-mono text-text-ops-primary">Ctrl+Enter</kbd> Child
+          </span>
+          <span className="text-border-ops-subtle">|</span>
+          <span>{rowHeight}px</span>
+        </div>
       </div>
 
       {/* Hover Summary Modal — rendered when dwell timer triggers */}
@@ -1687,6 +1919,56 @@ const WbsTable: React.FC<WbsTableProps> = ({
             </span>
           </div>
         </div>
+      )}
+
+      {/* Dependency Modal — opened by double-clicking predecessors/successors */}
+      {dependencyModalNode && (
+        <DependencyModal
+          nodeId={dependencyModalNode}
+          dependencies={dependencies}
+          allRows={allRows}
+          onClose={() => {
+            setDependencyModalNode(null);
+            loadTree(rootNodeId || 'default');
+          }}
+        />
+      )}
+
+      {/* End Date Edit Choice Modal */}
+      {showEndEditChoice && endEditInfo && (
+        <EndEditChoiceModal
+          oldEndDate={endEditInfo.oldEndDate}
+          newEndDate={endEditInfo.newEndDate}
+          startDate={endEditInfo.startDate}
+          onAdjustDuration={() => {
+            const { nodeId, newEndDate, startDate } = endEditInfo;
+            const newDuration = computeDurationFromDates(startDate, newEndDate);
+            updateNode(nodeId, {
+              planned_end_date: newEndDate,
+              duration_days: Math.max(1, newDuration),
+            } as any);
+            setShowEndEditChoice(false);
+            setEndEditInfo(null);
+          }}
+          onAddLag={() => {
+            const { nodeId, oldEndDate, newEndDate, startDate } = endEditInfo;
+            const node = allRows.find((r) => r.id === nodeId);
+            const oldDuration = computeDurationFromDates(startDate, oldEndDate);
+            const newDuration = computeDurationFromDates(startDate, newEndDate);
+            const lagDiff = newDuration - oldDuration;
+            const currentLag = (node?.lag_days as number) ?? 0;
+            updateNode(nodeId, {
+              planned_end_date: newEndDate,
+              lag_days: Math.max(0, currentLag + lagDiff),
+            } as any);
+            setShowEndEditChoice(false);
+            setEndEditInfo(null);
+          }}
+          onCancel={() => {
+            setShowEndEditChoice(false);
+            setEndEditInfo(null);
+          }}
+        />
       )}
     </div>
   );

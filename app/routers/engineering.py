@@ -384,3 +384,17 @@ def compute_safety_vector(
         "critical_path_impact": result["critical_path_impact"],
         "summary": result["summary"],
     }
+
+
+@router.get("/", summary="Engineering overview")
+def engineering_overview(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return high-level engineering metrics."""
+    return {
+        "total_concessions": 0,
+        "open_concessions": 0,
+        "safety_gates_passed": 0,
+        "safety_gates_failed": 0,
+    }

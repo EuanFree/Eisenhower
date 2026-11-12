@@ -63,6 +63,7 @@ import {
   HardDrive,
   ScrollText,
   Users,
+  Settings,
   Settings2,
   HeartPulse,
   Bell,
@@ -136,6 +137,14 @@ const NAV_ITEMS: NavItem[] = [
     label: 'My Daily Cockpit',
     shortLabel: 'Cockpit',
     icon: UserCheck,
+    category: 'Programmes & Scheduling',
+  },
+  {
+    id: 'blocked-activities',
+    viewType: 'BLOCKED_ACTIVITIES',
+    label: 'Blocked Activities',
+    shortLabel: 'Blocked',
+    icon: ShieldAlert,
     category: 'Programmes & Scheduling',
   },
   {
@@ -600,6 +609,15 @@ const NAV_ITEMS: NavItem[] = [
     icon: Key,
     category: 'System Administration',
     requiredRole: 'SYSTEM_ADMIN',
+  },
+  // User Preferences
+  {
+    id: 'settings',
+    viewType: 'SETTINGS',
+    label: 'Settings',
+    shortLabel: 'Settings',
+    icon: Settings,
+    category: 'User Preferences',
   },
 ];
 

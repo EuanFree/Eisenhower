@@ -5,7 +5,7 @@
  * Uses react-rnd for positioning in edit mode.
  */
 
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Rnd } from 'react-rnd';
 import { Settings, X, Trash2, Edit3, Copy, Move, Maximize2, RefreshCw } from 'lucide-react';
 import { useDashboardStore } from '../../stores/useDashboardStore';
@@ -37,6 +37,22 @@ const CHART_COMPONENTS: Record<string, React.FC<{ data: unknown; config: unknown
   TABLE: TableWidget,
 };
 
+const GRID_SIZE = 20;
+const snapToGrid = (v: number) => Math.round(v / GRID_SIZE) * GRID_SIZE;
+
+/** Normalize widget position so every field is a safe positive number. */
+const normalizePosition = (raw: DashboardWidget['position']) => {
+  if (!raw || typeof raw !== 'object') {
+    return { x: 0, y: 0, width: 300, height: 250 };
+  }
+  return {
+    x: typeof raw.x === 'number' && isFinite(raw.x) ? raw.x : 0,
+    y: typeof raw.y === 'number' && isFinite(raw.y) ? raw.y : 0,
+    width: typeof raw.width === 'number' && isFinite(raw.width) && raw.width > 0 ? raw.width : 300,
+    height: typeof raw.height === 'number' && isFinite(raw.height) && raw.height > 0 ? raw.height : 250,
+  };
+};
+
 const WidgetContainer: React.FC<WidgetContainerProps> = ({ widget }) => {
   const {
     isEditMode,
@@ -51,9 +67,8 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({ widget }) => {
   const [showEditor, setShowEditor] = useState(false);
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const pos = widget.position || { x: 0, y: 0, width: 300, height: 250 };
+  const pos = normalizePosition(widget.position);
   const data = widgetData[widget.id];
   const ChartComponent = CHART_COMPONENTS[widget.widget_type] || NumberCardWidget;
 
@@ -66,13 +81,20 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({ widget }) => {
   }, [showContextMenu]);
 
   const handleDragStop = (_e: MouseEvent, d: { x: number; y: number }) => {
-    updateWidgetPosition(widget.id, { ...pos, x: d.x, y: d.y });
+    updateWidgetPosition(widget.id, {
+      ...pos,
+      x: snapToGrid(d.x),
+      y: snapToGrid(d.y),
+    });
   };
 
-  const handleResizeStop = (_e: MouseEvent, _size: unknown, _pos: unknown, delta: { deltaX: number; deltaY: number }, ref: HTMLElement) => {
-    const newWidth = pos.width + delta.deltaX;
-    const newHeight = pos.height + delta.deltaY;
-    updateWidgetPosition(widget.id, { ...pos, width: newWidth, height: newHeight });
+  const handleResizeStop = (_e: MouseEvent, size: { width: number; height: number }, position: { x: number; y: number }) => {
+    updateWidgetPosition(widget.id, {
+      x: snapToGrid(position.x),
+      y: snapToGrid(position.y),
+      width: snapToGrid(size.width),
+      height: snapToGrid(size.height),
+    });
   };
 
   const handleEdit = () => {
@@ -114,24 +136,30 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({ widget }) => {
 
   if (isEditMode) {
     return (
-      <div className="relative" ref={containerRef}>
+      <>
         <Rnd
           size={{ width: pos.width, height: pos.height }}
           position={{ x: pos.x, y: pos.y }}
+          onDragStart={() => {
+            // Ensure the widget is brought to front while dragging
+            setActiveWidget(widget.id);
+          }}
           onDragStop={handleDragStop}
           onResizeStop={handleResizeStop as any}
           dragHandleClassName="widget-drag-handle"
           resizeHandleEdges={{ top: 3, right: 3, bottom: 3, left: 3 }}
           bounds="parent"
           lockAspectRatio={false}
+          grid={[GRID_SIZE, GRID_SIZE]}
           enableResizing={{
-            top: false, right: true, bottom: true, left: false,
+            top: true, right: true, bottom: true, left: true,
             topRight: true, bottomRight: true, bottomLeft: true, topLeft: true,
           }}
+          style={{ zIndex: activeWidgetId === widget.id ? 100 : 10 }}
         >
           <div
             className={`
-              h-full bg-surface-ops-panel border-2 rounded-lg shadow-lg
+              h-full bg-surface-ops-panel border-2 rounded-lg shadow-lg flex flex-col
               ${activeWidgetId === widget.id
                 ? 'border-blue-500 ring-2 ring-blue-500/20'
                 : 'border-border-ops-subtle hover:border-border-ops-border'
@@ -140,8 +168,8 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({ widget }) => {
             onClick={handleClick}
             onContextMenu={handleContextMenu}
           >
-            {/* Header */}
-            <div className="widget-drag-handle flex items-center justify-between px-3 py-2 border-b border-border-ops-subtle bg-surface-ops-hover cursor-grab">
+            {/* Header / Drag Handle */}
+            <div className="widget-drag-handle flex items-center justify-between px-3 py-2 border-b border-border-ops-subtle bg-surface-ops-hover cursor-grab active:cursor-grabbing flex-shrink-0">
               <span className="text-sm font-medium text-text-ops-primary truncate">
                 {widget.title}
               </span>
@@ -164,7 +192,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({ widget }) => {
             </div>
 
             {/* Content */}
-            <div className="p-3 overflow-hidden" style={{ height: `calc(100% - 36px)` }}>
+            <div className="p-3 overflow-hidden flex-1 min-h-0">
               <ChartComponent data={data} config={widget.display_config} />
             </div>
           </div>
@@ -173,7 +201,7 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({ widget }) => {
         {/* Right-click context menu */}
         {showContextMenu && (
           <div
-            className="fixed z-50 bg-surface-ops-panel border border-border-ops-border rounded-lg shadow-2xl py-1 min-w-[180px]"
+            className="fixed z-[200] bg-surface-ops-panel border border-border-ops-border rounded-lg shadow-2xl py-1 min-w-[180px]"
             style={{ left: contextMenuPos.x, top: contextMenuPos.y }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -217,7 +245,12 @@ const WidgetContainer: React.FC<WidgetContainerProps> = ({ widget }) => {
             </button>
           </div>
         )}
-      </div>
+
+        {/* Widget Editor Modal */}
+        {showEditor && (
+          <WidgetEditor widgetId={widget.id} onClose={() => setShowEditor(false)} />
+        )}
+      </>
     );
   }
 

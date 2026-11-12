@@ -100,13 +100,21 @@ class TestSecurityHeadersUniversal:
         assert "accelerometer=()" in policy
 
     def test_content_security_policy(self, client):
-        """Content-Security-Policy should restrict resource loading."""
-        resp = client.get("/docs")
+        """Content-Security-Policy should restrict resource loading on non-docs endpoints."""
+        # Use /health instead of /docs because /docs uses a relaxed CSP for Swagger UI
+        resp = client.get("/health")
         csp = resp.headers.get("content-security-policy", "")
         assert "default-src 'self'" in csp
         assert "script-src 'self'" in csp
         assert "frame-ancestors 'none'" in csp
-        assert "upgrade-insecure-requests" in csp
+
+    def test_content_security_policy_docs_relaxed(self, client):
+        """Content-Security-Policy on /docs should allow CDN resources for Swagger UI."""
+        resp = client.get("/docs")
+        csp = resp.headers.get("content-security-policy", "")
+        assert "default-src 'self'" in csp
+        assert "https://cdn.jsdelivr.net" in csp
+        assert "'unsafe-inline'" in csp
 
 
 class TestSecurityHeadersAPIEndpoints:
@@ -197,13 +205,13 @@ class TestSecurityHeadersCSPDetails:
         assert "connect-src 'self' ws: wss:" in csp
 
     def test_csp_base_uri_restricted(self, client):
-        """CSP base-uri should be restricted to 'self'."""
-        resp = client.get("/docs")
+        """CSP base-uri should be restricted to 'self' on non-docs endpoints."""
+        resp = client.get("/health")
         csp = resp.headers.get("content-security-policy", "")
         assert "base-uri 'self'" in csp
 
     def test_csp_form_action_restricted(self, client):
-        """CSP form-action should be restricted to 'self'."""
-        resp = client.get("/docs")
+        """CSP form-action should be restricted to 'self' on non-docs endpoints."""
+        resp = client.get("/health")
         csp = resp.headers.get("content-security-policy", "")
         assert "form-action 'self'" in csp

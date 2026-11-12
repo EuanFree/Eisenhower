@@ -50,6 +50,8 @@ export interface WorkItemCreatePayload {
   planned_finish: string | null;
   /** Duration in workdays */
   duration_days: number;
+  /** Idle time within the task in workdays (e.g., curing, approval waits) */
+  lag_days?: number;
   /** Security classification */
   security_classification: SecurityClassification;
   /** Security caveats */

@@ -72,8 +72,12 @@ export interface PerViewState {
   scrollTop?: number;
   /** Horizontal scroll offset of the Gantt viewport (pixels) */
   scrollX?: number;
-  /** Gantt timeline zoom level */
+  /** Gantt timeline zoom level (legacy discrete) */
   ganttZoom?: 'DAYS' | 'WEEKS' | 'MONTHS';
+  /** Gantt continuous zoom: pixels per day (e.g. 0.5, 2, 4) */
+  ganttPixelsPerDay?: number;
+  /** Whether Gantt auto-fit is enabled (fills window) */
+  ganttAutoFit?: boolean;
   /** Currently selected/focused node ID */
   selectedNodeId?: string | null;
   /** Active filter token string */

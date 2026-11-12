@@ -138,6 +138,11 @@ class WorkItemCreate(BaseModel):
         ge=0.0,
         description="Estimated duration in workdays. 0 for milestones.",
     )
+    lag_days: float = Field(
+        0.0,
+        ge=0.0,
+        description="Idle time within the task in workdays (e.g., curing, approval waits). Supports partial days.",
+    )
     security_classification: SecurityClassification = Field(
         SecurityClassification.OFFICIAL,
         description="Security classification level.",

@@ -32,8 +32,7 @@ Access Control
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, delete as sa_delete
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import Session, selectinload
 from typing import Optional
 from uuid import UUID
 
@@ -63,7 +62,7 @@ from app.schemas.dashboard import (
 )
 from app.services.sql_builder import (
     validate_query,
-    execute_query,
+    execute_query_sync,
     get_allowed_tables,
 )
 
@@ -87,21 +86,21 @@ def _check_clearance(user: User, classification: PresetClassification) -> bool:
         PresetClassification.SECRET: 2,
         PresetClassification.TOP_SECRET: 3,
     }
-    user_level = CLEARANCE_LEVELS.get(user.security_clearance, 0)
+    user_level = CLEARANCE_LEVELS.get(user.clearance_level, 0)
     required_level = preset_levels.get(classification, 0)
     return user_level >= required_level
 
 
-async def _get_dashboard(
+def _get_dashboard(
     dashboard_id: UUID,
-    db: AsyncSession,
+    db: Session,
     current_user: User,
 ) -> Dashboard:
     """Fetch a dashboard and verify access permissions.
 
     Raises HTTPException if the dashboard doesn't exist or user lacks access.
     """
-    result = await db.execute(
+    result = db.execute(
         select(Dashboard)
         .options(selectinload(Dashboard.widgets))
         .where(Dashboard.id == dashboard_id)
@@ -116,7 +115,7 @@ async def _get_dashboard(
         raise HTTPException(status_code=403, detail="Insufficient clearance to access this dashboard")
 
     # Check ownership or sharing scope
-    if dashboard.owner_user_id != str(current_user.id):
+    if dashboard.owner_user_id != current_user.id:
         if dashboard.sharing_scope == SharingScope.PRIVATE:
             raise HTTPException(status_code=403, detail="You do not have access to this dashboard")
         # For PROJECT_SHARED and SYSTEM_GLOBAL, allow access
@@ -125,7 +124,7 @@ async def _get_dashboard(
     return dashboard
 
 
-async def _require_owner_or_admin(
+def _require_owner_or_admin(
     dashboard: Dashboard,
     current_user: User,
 ) -> None:
@@ -133,7 +132,7 @@ async def _require_owner_or_admin(
 
     Raises HTTPException if the user is not authorized to modify the dashboard.
     """
-    is_owner = dashboard.owner_user_id == str(current_user.id)
+    is_owner = dashboard.owner_user_id == current_user.id
     is_admin = current_user.role in ("admin", "superadmin") if hasattr(current_user, 'role') else False
 
     if not is_owner and not is_admin:
@@ -188,10 +187,10 @@ def _dashboard_to_response(dashboard: Dashboard) -> DashboardResponse:
         "above the user's clearance are excluded."
     ),
 )
-async def list_dashboards(
+def list_dashboards(
     sharing_scope: Optional[SharingScope] = Query(None, description="Filter by sharing scope"),
     project_id: Optional[UUID] = Query(None, description="Filter by project ID"),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """List all dashboards accessible to the current user."""
@@ -199,7 +198,7 @@ async def list_dashboards(
         select(Dashboard)
         .options(selectinload(Dashboard.widgets))
         .where(
-            (Dashboard.owner_user_id == str(current_user.id))
+            (Dashboard.owner_user_id == current_user.id)
             | (Dashboard.sharing_scope.in_([SharingScope.PROJECT_SHARED, SharingScope.SYSTEM_GLOBAL]))
         )
     )
@@ -209,7 +208,7 @@ async def list_dashboards(
     if project_id:
         stmt = stmt.where(Dashboard.project_id == project_id)
 
-    result = await db.execute(stmt)
+    result = db.execute(stmt)
     dashboards = result.scalars().all()
 
     # Filter by classification
@@ -229,9 +228,9 @@ async def list_dashboards(
     status_code=201,
     summary="Create a new dashboard",
 )
-async def create_dashboard(
+def create_dashboard(
     payload: DashboardCreate,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Create a new dashboard."""
@@ -242,7 +241,7 @@ async def create_dashboard(
     dashboard = Dashboard(
         name=payload.name,
         description=payload.description,
-        owner_user_id=str(current_user.id),
+        owner_user_id=current_user.id,
         project_id=payload.project_id,
         sharing_scope=payload.sharing_scope,
         classification=payload.classification,
@@ -250,11 +249,11 @@ async def create_dashboard(
     )
 
     db.add(dashboard)
-    await db.commit()
-    await db.refresh(dashboard)
+    db.commit()
+    db.refresh(dashboard)
 
     # Reload with widgets
-    result = await db.execute(
+    result = db.execute(
         select(Dashboard)
         .options(selectinload(Dashboard.widgets))
         .where(Dashboard.id == dashboard.id)
@@ -269,13 +268,13 @@ async def create_dashboard(
     response_model=DashboardResponse,
     summary="Get dashboard with widgets",
 )
-async def get_dashboard(
+def get_dashboard(
     dashboard_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get a single dashboard with all its widgets."""
-    dashboard = await _get_dashboard(dashboard_id, db, current_user)
+    dashboard = _get_dashboard(dashboard_id, db, current_user)
     return _dashboard_to_response(dashboard)
 
 
@@ -284,15 +283,15 @@ async def get_dashboard(
     response_model=DashboardResponse,
     summary="Update a dashboard",
 )
-async def update_dashboard(
+def update_dashboard(
     dashboard_id: UUID,
     payload: DashboardUpdate,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Update a dashboard's metadata or layout config."""
-    dashboard = await _get_dashboard(dashboard_id, db, current_user)
-    await _require_owner_or_admin(dashboard, current_user)
+    dashboard = _get_dashboard(dashboard_id, db, current_user)
+    _require_owner_or_admin(dashboard, current_user)
 
     if payload.classification and not _check_clearance(current_user, payload.classification):
         raise HTTPException(status_code=403, detail="Insufficient clearance for this classification level")
@@ -302,11 +301,11 @@ async def update_dashboard(
         setattr(dashboard, key, value)
 
     db.add(dashboard)
-    await db.commit()
-    await db.refresh(dashboard)
+    db.commit()
+    db.refresh(dashboard)
 
     # Reload with widgets
-    result = await db.execute(
+    result = db.execute(
         select(Dashboard)
         .options(selectinload(Dashboard.widgets))
         .where(Dashboard.id == dashboard.id)
@@ -321,17 +320,17 @@ async def update_dashboard(
     status_code=204,
     summary="Delete a dashboard",
 )
-async def delete_dashboard(
+def delete_dashboard(
     dashboard_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Delete a dashboard and all its widgets (CASCADE)."""
-    dashboard = await _get_dashboard(dashboard_id, db, current_user)
-    await _require_owner_or_admin(dashboard, current_user)
+    dashboard = _get_dashboard(dashboard_id, db, current_user)
+    _require_owner_or_admin(dashboard, current_user)
 
-    await db.execute(sa_delete(Dashboard).where(Dashboard.id == dashboard_id))
-    await db.commit()
+    db.execute(sa_delete(Dashboard).where(Dashboard.id == dashboard_id))
+    db.commit()
 
 
 # ============================================================================
@@ -345,15 +344,15 @@ async def delete_dashboard(
     status_code=201,
     summary="Add a widget to a dashboard",
 )
-async def create_widget(
+def create_widget(
     dashboard_id: UUID,
     payload: DashboardWidgetCreate,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Add a new widget to an existing dashboard."""
-    dashboard = await _get_dashboard(dashboard_id, db, current_user)
-    await _require_owner_or_admin(dashboard, current_user)
+    dashboard = _get_dashboard(dashboard_id, db, current_user)
+    _require_owner_or_admin(dashboard, current_user)
 
     widget = DashboardWidget(
         dashboard_id=dashboard_id,
@@ -366,8 +365,8 @@ async def create_widget(
     )
 
     db.add(widget)
-    await db.commit()
-    await db.refresh(widget)
+    db.commit()
+    db.refresh(widget)
 
     return DashboardWidgetResponse(
         id=widget.id,
@@ -388,18 +387,18 @@ async def create_widget(
     response_model=DashboardWidgetResponse,
     summary="Update a widget",
 )
-async def update_widget(
+def update_widget(
     dashboard_id: UUID,
     widget_id: UUID,
     payload: DashboardWidgetUpdate,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Update a widget's configuration or position."""
-    dashboard = await _get_dashboard(dashboard_id, db, current_user)
-    await _require_owner_or_admin(dashboard, current_user)
+    dashboard = _get_dashboard(dashboard_id, db, current_user)
+    _require_owner_or_admin(dashboard, current_user)
 
-    result = await db.execute(
+    result = db.execute(
         select(DashboardWidget).where(
             DashboardWidget.id == widget_id,
             DashboardWidget.dashboard_id == dashboard_id,
@@ -415,8 +414,8 @@ async def update_widget(
         setattr(widget, key, value)
 
     db.add(widget)
-    await db.commit()
-    await db.refresh(widget)
+    db.commit()
+    db.refresh(widget)
 
     return DashboardWidgetResponse(
         id=widget.id,
@@ -437,17 +436,17 @@ async def update_widget(
     status_code=204,
     summary="Delete a widget",
 )
-async def delete_widget(
+def delete_widget(
     dashboard_id: UUID,
     widget_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Delete a widget from a dashboard."""
-    dashboard = await _get_dashboard(dashboard_id, db, current_user)
-    await _require_owner_or_admin(dashboard, current_user)
+    dashboard = _get_dashboard(dashboard_id, db, current_user)
+    _require_owner_or_admin(dashboard, current_user)
 
-    result = await db.execute(
+    result = db.execute(
         select(DashboardWidget).where(
             DashboardWidget.id == widget_id,
             DashboardWidget.dashboard_id == dashboard_id,
@@ -458,8 +457,8 @@ async def delete_widget(
     if not widget:
         raise HTTPException(status_code=404, detail="Widget not found")
 
-    await db.delete(widget)
-    await db.commit()
+    db.delete(widget)
+    db.commit()
 
 
 # ============================================================================
@@ -476,13 +475,13 @@ async def delete_widget(
         "For SQL_QUERY widgets, the query is executed via the SQL builder service."
     ),
 )
-async def fetch_dashboard_data(
+def fetch_dashboard_data(
     dashboard_id: UUID,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Fetch data for all widgets in a dashboard."""
-    dashboard = await _get_dashboard(dashboard_id, db, current_user)
+    dashboard = _get_dashboard(dashboard_id, db, current_user)
 
     widget_data = {}
     for widget in dashboard.widgets:
@@ -492,7 +491,7 @@ async def fetch_dashboard_data(
                 sql = config.get("sql", "")
                 params = config.get("params", {})
                 if sql:
-                    result = await execute_query(db, sql, params)
+                    result = execute_query_sync(db, sql, params)
                     widget_data[str(widget.id)] = {
                         "success": True,
                         "data": result["rows"],
@@ -539,7 +538,7 @@ async def fetch_dashboard_data(
     response_model=dict,
     summary="List allowed tables for SQL builder",
 )
-async def get_sql_allowed_tables(
+def get_sql_allowed_tables(
     current_user: User = Depends(get_current_user),
 ):
     """Return the list of allowed tables and columns for the SQL builder."""
@@ -558,14 +557,14 @@ async def get_sql_allowed_tables(
     response_model=SqlQueryResponse,
     summary="Execute a validated SQL query",
 )
-async def execute_sql_query(
+def execute_sql_query(
     payload: SqlQueryRequest,
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Execute a validated SQL query and return results."""
     try:
-        result = await execute_query(db, payload.sql, payload.params)
+        result = execute_query_sync(db, payload.sql, payload.params)
         return SqlQueryResponse(
             rows=result["rows"],
             row_count=result["row_count"],
@@ -575,3 +574,22 @@ async def execute_sql_query(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Query execution failed: {str(e)}")
+
+
+@router.get("/widgets", summary="List all available widget types")
+def list_widget_types(
+    current_user: User = Depends(get_current_user),
+):
+    """Return the list of available widget types for the dashboard palette."""
+    return {
+        "widget_types": [
+            {"type": "line_chart", "label": "Line Chart", "icon": "TrendingUp"},
+            {"type": "bar_chart", "label": "Bar Chart", "icon": "BarChart3"},
+            {"type": "pie_chart", "label": "Pie Chart", "icon": "PieChart"},
+            {"type": "gauge", "label": "Gauge", "icon": "Gauge"},
+            {"type": "kpi", "label": "KPI Card", "icon": "Target"},
+            {"type": "table", "label": "Data Table", "icon": "Table"},
+            {"type": "timeline", "label": "Timeline", "icon": "Calendar"},
+            {"type": "heatmap", "label": "Heatmap", "icon": "Flame"},
+        ]
+    }

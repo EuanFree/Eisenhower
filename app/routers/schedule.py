@@ -274,3 +274,29 @@ def export_msp_xml_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"MS Project XML export failed: {str(exc)}",
         )
+
+
+@router.get("/overview", summary="Schedule overview with key metrics")
+def schedule_overview(db: Session = Depends(get_db)):
+    """Return high-level schedule metrics across all projects."""
+    from app.models.models import PortfolioNode
+
+    nodes = db.query(PortfolioNode).all()
+    total_tasks = len(nodes)
+    completed = sum(1 for n in nodes if (n.percent_complete or 0) >= 100)
+    in_progress = sum(1 for n in nodes if 0 < (n.percent_complete or 0) < 100)
+    blocked = sum(1 for n in nodes if n.custom_attributes and n.custom_attributes.get("is_blocked"))
+
+    # Find projects (root nodes)
+    projects = [n for n in nodes if n.path and n.path.count('.') == 0]
+    total_projects = len(projects)
+
+    return {
+        "total_projects": total_projects,
+        "total_tasks": total_tasks,
+        "completed_tasks": completed,
+        "in_progress_tasks": in_progress,
+        "blocked_tasks": blocked,
+        "overall_progress": round((completed / total_tasks * 100) if total_tasks else 0, 1),
+        "schedule_health": "healthy" if blocked == 0 else "at_risk",
+    }

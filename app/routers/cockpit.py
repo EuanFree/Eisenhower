@@ -5,6 +5,7 @@ summary metrics, focus queue ordered by CPM priority, claimable placeholder
 tasks, quick progress updates, and atomic blocker creation.
 """
 from datetime import datetime, timezone, timedelta
+from typing import Optional, List, Dict, Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -13,9 +14,9 @@ from sqlalchemy import and_, or_
 
 from app.database import get_db
 from app.models.models import (
-    User, PortfolioNode, ResourceNode, ResourceAssignment,
+    User, UniversalBreakdownNode, PortfolioNode, ResourceNode, ResourceAssignment,
     NodeBlocker, ForensicAuditLog, BlockerCategory, BlockerSeverity,
-    AssignmentStatus, ExportControlRegime,
+    AssignmentStatus, ExportControlRegime, TreeType,
 )
 from app.schemas.schemas import (
     CockpitSummaryResponse,
@@ -86,6 +87,93 @@ def _get_accessible_project_root_ids(db: Session, user: User) -> list:
 # ============================================================================
 # GET /summary — Key metrics for the current user
 # ============================================================================
+
+# ============================================================================
+# GET /blocked-activities — All currently blocked tasks across all projects
+# ============================================================================
+
+@router.get("/blocked-activities")
+def get_blocked_activities(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return all currently blocked tasks across all accessible projects.
+
+    Returns a list of blocked activities with task details, blocker info,
+    and project context for the Blocked Activities Dashboard.
+    """
+    # Get all unresolved blockers with their associated nodes
+    blocked = (
+        db.query(
+            PortfolioNode.id,
+            PortfolioNode.code,
+            PortfolioNode.name,
+            PortfolioNode.path,
+            PortfolioNode.planned_start_date,
+            PortfolioNode.planned_end_date,
+            PortfolioNode.percent_complete,
+            PortfolioNode.delivery_mode,
+            PortfolioNode.security_classification,
+            PortfolioNode.custom_attributes,
+            NodeBlocker.id.label("blocker_id"),
+            NodeBlocker.category,
+            NodeBlocker.severity,
+            NodeBlocker.impacted_hours,
+            NodeBlocker.created_at,
+        )
+        .join(NodeBlocker, NodeBlocker.portfolio_node_id == PortfolioNode.id)
+        .filter(
+            NodeBlocker.resolved_at == None,
+            PortfolioNode.tree_type == TreeType.WBS,
+        )
+        .order_by(
+            NodeBlocker.severity.desc(),
+            NodeBlocker.created_at.desc(),
+        )
+        .all()
+    )
+
+    # Get root project info for each blocked task
+    results = []
+    for row in blocked:
+        # Find the root project by getting the first path segment
+        root_path = row.path.split(".")[0] if row.path else ""
+        root_node = (
+            db.query(PortfolioNode)
+            .filter(
+                PortfolioNode.path == root_path,
+                PortfolioNode.tree_type == TreeType.WBS,
+            )
+            .first()
+        )
+        results.append({
+            "task_id": str(row.id),
+            "task_code": row.code,
+            "task_name": row.name,
+            "task_path": row.path,
+            "project_id": str(root_node.id) if root_node else None,
+            "project_code": root_node.code if root_node else None,
+            "project_name": root_node.name if root_node else None,
+            "planned_start_date": row.planned_start_date.isoformat() if row.planned_start_date else None,
+            "planned_end_date": row.planned_end_date.isoformat() if row.planned_end_date else None,
+            "percent_complete": row.percent_complete,
+            "delivery_mode": row.delivery_mode.value if row.delivery_mode else None,
+            "security_classification": row.security_classification.value if row.security_classification else None,
+            "blocker_id": str(row.blocker_id),
+            "blocker_category": row.category.value if row.category else None,
+            "blocker_severity": row.severity.value if row.severity else None,
+            "impacted_hours": row.impacted_hours,
+            "blocker_created_at": row.created_at.isoformat() if row.created_at else None,
+        })
+
+    return {
+        "total_blocked": len(results),
+        "critical_count": sum(1 for r in results if r["blocker_severity"] == "CRITICAL"),
+        "major_count": sum(1 for r in results if r["blocker_severity"] == "MAJOR"),
+        "total_impacted_hours": sum(r["impacted_hours"] or 0 for r in results),
+        "blocked_activities": results,
+    }
+
 
 @router.get("/summary", response_model=CockpitSummaryResponse)
 def get_cockpit_summary(
@@ -712,3 +800,180 @@ def create_task_blocker(
         created_at=blocker.created_at or datetime.now(timezone.utc),
         audit_log_id=str(audit_entry.id),
     )
+
+
+# ============================================================================
+# GET /blockers — List all active and resolved blockers
+# ============================================================================
+
+@router.get("/blockers", summary="List all blocked activities across programmes and projects")
+def list_blockers(
+    project_id: Optional[str] = None,
+    status_filter: Optional[str] = "active",  # "active", "resolved", "all"
+    category: Optional[str] = None,
+    severity: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retrieve all blocked activities with project hierarchy, category, and severity details."""
+    query = (
+        db.query(NodeBlocker, PortfolioNode)
+        .join(PortfolioNode, NodeBlocker.portfolio_node_id == PortfolioNode.id)
+    )
+
+    if status_filter == "active":
+        query = query.filter(NodeBlocker.resolved_at == None)
+    elif status_filter == "resolved":
+        query = query.filter(NodeBlocker.resolved_at != None)
+
+    if category:
+        query = query.filter(NodeBlocker.category == category)
+    if severity:
+        query = query.filter(NodeBlocker.severity == severity)
+
+    rows = query.order_by(NodeBlocker.created_at.desc()).all()
+
+    # Find project root for each node
+    all_roots = (
+        db.query(UniversalBreakdownNode)
+        .filter(
+            UniversalBreakdownNode.tree_type == TreeType.WBS,
+            UniversalBreakdownNode.parent_id == None,
+        )
+        .all()
+    )
+    root_map = {str(r.id): r for r in all_roots}
+
+    blockers_list = []
+    for blocker, node in rows:
+        # Check ABAC visibility
+        if not is_node_visible(current_user.clearance_level, current_user.caveats, node):
+            continue
+
+        # Find project root
+        node_path = str(node.path) if node.path else ""
+        project_root = None
+        for r in all_roots:
+            r_path = str(r.path) if r.path else ""
+            if r_path and (node_path == r_path or node_path.startswith(f"{r_path}.")):
+                project_root = r
+                break
+
+        if project_id and project_root and str(project_root.id) != project_id:
+            continue
+
+        custom = node.custom_attributes or {}
+        # Find description from active_blockers list if present
+        description = "Activity is blocked by impediment"
+        for b in custom.get("active_blockers", []):
+            if b.get("blocker_id") == str(blocker.id) or b.get("category") == (blocker.category.value if hasattr(blocker.category, "value") else str(blocker.category)):
+                description = b.get("description") or description
+                break
+
+        blockers_list.append({
+            "id": str(blocker.id),
+            "node_id": str(node.id),
+            "task_code": node.code,
+            "task_name": node.name,
+            "project_id": str(project_root.id) if project_root else None,
+            "project_code": project_root.code if project_root else None,
+            "project_name": project_root.name if project_root else None,
+            "category": blocker.category.value if hasattr(blocker.category, "value") else str(blocker.category),
+            "severity": blocker.severity.value if hasattr(blocker.severity, "value") else str(blocker.severity),
+            "impacted_hours": blocker.impacted_hours or 0.0,
+            "created_at": blocker.created_at.isoformat() if blocker.created_at else None,
+            "resolved_at": blocker.resolved_at.isoformat() if blocker.resolved_at else None,
+            "description": description,
+            "security_classification": node.security_classification.value if hasattr(node.security_classification, "value") else str(node.security_classification),
+            "delivery_mode": node.delivery_mode.value if hasattr(node.delivery_mode, "value") and node.delivery_mode else (str(node.delivery_mode) if node.delivery_mode else "HYBRID"),
+            "percent_complete": node.percent_complete or 0.0,
+        })
+
+    return {
+        "total": len(blockers_list),
+        "critical_count": sum(1 for b in blockers_list if b["severity"] == "CRITICAL" and not b["resolved_at"]),
+        "major_count": sum(1 for b in blockers_list if b["severity"] == "MAJOR" and not b["resolved_at"]),
+        "total_impacted_hours": sum(b["impacted_hours"] for b in blockers_list if not b["resolved_at"]),
+        "blockers": blockers_list,
+    }
+
+
+# ============================================================================
+# POST /blockers/{blocker_id}/resolve — Resolve a blocker
+# ============================================================================
+
+@router.get("/overview", summary="Cockpit overview with key programme metrics")
+def get_cockpit_overview(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return high-level cockpit metrics for the current user."""
+    nodes = db.query(PortfolioNode).all()
+    total_tasks = len(nodes)
+    completed = sum(1 for n in nodes if (n.percent_complete or 0) >= 100)
+    in_progress = sum(1 for n in nodes if 0 < (n.percent_complete or 0) < 100)
+    blocked = sum(1 for n in nodes if n.custom_attributes and n.custom_attributes.get("is_blocked"))
+
+    # Count active blockers
+    active_blockers = db.query(NodeBlocker).filter(
+        NodeBlocker.resolved_at == None
+    ).count()
+
+    return {
+        "total_tasks": total_tasks,
+        "completed_tasks": completed,
+        "in_progress_tasks": in_progress,
+        "blocked_tasks": blocked,
+        "active_blockers": active_blockers,
+        "overall_progress": round((completed / total_tasks * 100) if total_tasks else 0, 1),
+        "schedule_health": "healthy" if blocked == 0 else "at_risk",
+    }
+
+
+@router.post("/blockers/{blocker_id}/resolve", summary="Resolve a blocker on a task")
+def resolve_task_blocker(
+    blocker_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Mark a blocker as resolved and unblock the task if no other active blockers remain."""
+    from uuid import UUID as PyUUID
+    try:
+        b_uuid = PyUUID(blocker_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid blocker ID format",
+        )
+
+    blocker = db.query(NodeBlocker).filter(NodeBlocker.id == b_uuid).first()
+    if not blocker:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Blocker {blocker_id} not found",
+        )
+
+    blocker.resolved_at = datetime.now(timezone.utc)
+
+    # Check node
+    node = db.query(PortfolioNode).filter(PortfolioNode.id == blocker.portfolio_node_id).first()
+    if node:
+        # Check remaining active blockers
+        remaining = (
+            db.query(NodeBlocker)
+            .filter(
+                NodeBlocker.portfolio_node_id == node.id,
+                NodeBlocker.id != blocker.id,
+                NodeBlocker.resolved_at == None,
+            )
+            .count()
+        )
+        custom = node.custom_attributes or {}
+        if remaining == 0:
+            custom["is_blocked"] = False
+            if custom.get("kanban_status") == "BLOCKED":
+                custom["kanban_status"] = "IN_PROGRESS" if (node.percent_complete or 0) > 0 else "BACKLOG"
+        node.custom_attributes = custom
+
+    db.commit()
+    return {"status": "success", "blocker_id": blocker_id, "resolved_at": blocker.resolved_at.isoformat()}

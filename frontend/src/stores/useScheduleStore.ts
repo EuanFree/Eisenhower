@@ -13,10 +13,16 @@
  */
 
 import { create } from 'zustand';
-import { WBSRow, WBSNode, WBSColumnState } from '../types/wbs';
+import { WBSRow, WBSNode, WBSColumnState, SchedulingMode } from '../types/wbs';
 import { ConcurrencyConflict, ConflictResolution } from '../types/concurrency';
 import { FilterVisualizationMode } from '../types/filter';
 import { getWindowSync } from '../utils/windowSync';
+import {
+  recalculateAutoSchedule,
+  getNodeSchedulingMode,
+  addWorkdays,
+  ScheduleDependencyLink as CalcDependencyLink,
+} from '../utils/scheduleCalculator';
 import api from '../services/api';
 
 // ---------------------------------------------------------------------------
@@ -200,6 +206,16 @@ interface ScheduleStoreState {
   updateRow: (nodeId: string, updates: Record<string, unknown>) => void;
 
   /**
+   * Toggle a node's scheduling mode between 'AUTO' and 'MANUAL'.
+   */
+  toggleSchedulingMode: (nodeId: string) => Promise<void>;
+
+  /**
+   * Manually trigger auto-schedule recalculation across all AUTO nodes.
+   */
+  recalculateSchedule: () => void;
+
+  /**
    * Create or update a dependency link between two WBS tasks.
    */
   addDependency: (
@@ -224,9 +240,43 @@ interface ScheduleStoreState {
   ) => Promise<ScheduleResourceAssignment | null>;
 
   /**
+   * Sibling creation relationship mode ('FOLLOW_ON' default vs. 'PARALLEL').
+   */
+  siblingRelationshipMode: 'FOLLOW_ON' | 'PARALLEL';
+  setSiblingRelationshipMode: (mode: 'FOLLOW_ON' | 'PARALLEL') => void;
+
+  /**
    * Remove a resource assignment by ID.
    */
   removeResourceAssignment: (assignmentId: string) => Promise<void>;
+
+  /**
+   * Insert a new child task underneath the specified parent node.
+   */
+  insertChildTask: (parentNodeId: string) => Promise<WBSNode | null>;
+
+  /**
+   * Insert a new sibling task adjacent to the specified reference node.
+   */
+  insertSiblingTask: (
+    referenceNodeId: string,
+    relationshipMode?: 'FOLLOW_ON' | 'PARALLEL',
+  ) => Promise<WBSNode | null>;
+
+  /**
+   * Indent a task (reparent under preceding sibling).
+   */
+  indentTask: (nodeId: string) => Promise<void>;
+
+  /**
+   * Outdent a task (promote to parent's level).
+   */
+  outdentTask: (nodeId: string) => Promise<void>;
+
+  /**
+   * Delete a node from the tree.
+   */
+  deleteNode: (nodeId: string) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -247,6 +297,7 @@ function computeIndentLevel(path: string): number {
 function nodeToRow(node: WBSNode, expandedNodes: Record<string, boolean>, childrenLoaded: Record<string, boolean>): WBSRow {
   return {
     ...node,
+    scheduling_mode: getNodeSchedulingMode(node),
     indentLevel: computeIndentLevel(node.path),
     expanded: expandedNodes[node.id] ?? false,
     childrenLoaded: childrenLoaded[node.id] ?? false,
@@ -311,6 +362,8 @@ export const useScheduleStore = create<ScheduleStoreState>((set, get) => ({
   selectedNodeIds: new Set(),
   rows: [],
   dependencies: [],
+  siblingRelationshipMode: 'FOLLOW_ON',
+  setSiblingRelationshipMode: (mode) => set({ siblingRelationshipMode: mode }),
   resourceAssignments: [],
   expandedNodes: {},
   childrenLoaded: {},
@@ -726,12 +779,22 @@ export const useScheduleStore = create<ScheduleStoreState>((set, get) => ({
 
   updateRow: (nodeId, updates) => {
     const rows = get().rows;
+    const dependencies = get().dependencies;
     const index = rows.findIndex((r) => r.id === nodeId);
     if (index === -1) return;
 
     const updatedRow = { ...rows[index], ...updates };
-    const newRows = [...rows];
+    let newRows = [...rows];
     newRows[index] = updatedRow;
+
+    // Automatically recalculate auto-scheduled downstream dates if dates changed
+    if (
+      updates.planned_start_date !== undefined ||
+      updates.planned_end_date !== undefined ||
+      updates.scheduling_mode !== undefined
+    ) {
+      newRows = recalculateAutoSchedule(newRows, dependencies);
+    }
 
     set({ rows: newRows });
 
@@ -746,6 +809,45 @@ export const useScheduleStore = create<ScheduleStoreState>((set, get) => ({
         });
       }
     }
+  },
+
+  toggleSchedulingMode: async (nodeId) => {
+    const rows = get().rows;
+    const row = rows.find((r) => r.id === nodeId);
+    if (!row) return;
+
+    const currentMode = getNodeSchedulingMode(row);
+    const newMode: SchedulingMode = currentMode === 'AUTO' ? 'MANUAL' : 'AUTO';
+
+    const customAttrs = { ...(row.custom_attributes || {}), scheduling_mode: newMode };
+    const updatedRow = {
+      ...row,
+      scheduling_mode: newMode,
+      custom_attributes: customAttrs,
+    };
+
+    let newRows = rows.map((r) => (r.id === nodeId ? updatedRow : r));
+    if (newMode === 'AUTO') {
+      newRows = recalculateAutoSchedule(newRows, get().dependencies);
+    }
+
+    set({ rows: newRows });
+
+    // Persist to backend
+    try {
+      await api.put(`/wbs/nodes/${nodeId}`, {
+        version_id: row.version_id,
+        custom_attributes: customAttrs,
+      });
+    } catch (err) {
+      console.error('Failed to persist scheduling mode toggle:', err);
+    }
+  },
+
+  recalculateSchedule: () => {
+    const { rows, dependencies } = get();
+    const updatedRows = recalculateAutoSchedule(rows, dependencies);
+    set({ rows: updatedRows });
   },
 
   addDependency: async (predecessorId, successorId, dependencyType = 'FS', lagDays = 0) => {
@@ -765,7 +867,9 @@ export const useScheduleStore = create<ScheduleStoreState>((set, get) => ({
               d.successor_id === created.successor_id
             ),
         );
-        set({ dependencies: [...existing, created] });
+        const newDeps = [...existing, created];
+        const newRows = recalculateAutoSchedule(get().rows, newDeps);
+        set({ dependencies: newDeps, rows: newRows });
         return created;
       }
       return null;
@@ -778,8 +882,11 @@ export const useScheduleStore = create<ScheduleStoreState>((set, get) => ({
   removeDependency: async (dependencyId) => {
     try {
       await api.delete(`/wbs/dependencies/${dependencyId}`);
+      const newDeps = get().dependencies.filter((d) => d.id !== dependencyId);
+      const newRows = recalculateAutoSchedule(get().rows, newDeps);
       set({
-        dependencies: get().dependencies.filter((d) => d.id !== dependencyId),
+        dependencies: newDeps,
+        rows: newRows,
       });
     } catch (err) {
       console.error('Failed to remove dependency:', err);
@@ -820,6 +927,367 @@ export const useScheduleStore = create<ScheduleStoreState>((set, get) => ({
       });
     } catch (err) {
       console.error('Failed to remove resource assignment:', err);
+    }
+  },
+
+  insertChildTask: async (parentNodeId: string) => {
+    const { rows, expandedNodes, childrenLoaded } = get();
+    const parentIndex = rows.findIndex((r) => r.id === parentNodeId);
+    if (parentIndex === -1) return null;
+
+    const parent = rows[parentIndex];
+
+    // Find all existing direct children of this parent
+    const directChildren = rows.filter((r) => r.parent_id === parentNodeId);
+    const childNumbers = directChildren.map((c) => {
+      const parts = c.path.split('.');
+      const last = parseInt(parts[parts.length - 1], 10);
+      return isNaN(last) ? 0 : last;
+    });
+    const nextNum = childNumbers.length > 0 ? Math.max(...childNumbers) + 1 : 1;
+    const newPath = `${parent.path}.${nextNum}`;
+    const codePrefix = parent.code.includes('-') ? parent.code.split('-')[0] + '-' : '';
+    const newCode = `${codePrefix}${newPath}`;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const startDate = parent.planned_start_date || todayStr;
+    const endDate = startDate;
+
+    const tempId = `draft-${Date.now()}`;
+    const newDraftNode: WBSNode = {
+      id: tempId,
+      parent_id: parent.id,
+      version_id: 1,
+      tree_type: 'WBS',
+      code: newCode,
+      name: 'New Child Task',
+      path: newPath,
+      security_classification: parent.security_classification || 'OFFICIAL',
+      caveats: parent.caveats || [],
+      odac_permissions: parent.odac_permissions || {},
+      custom_attributes: { scheduling_mode: 'AUTO' },
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      delivery_mode: parent.delivery_mode || 'WATERFALL',
+      scheduling_mode: 'AUTO',
+      planned_start_date: startDate,
+      planned_end_date: endDate,
+      duration_days: null,
+      lag_days: null,
+      actual_start_date: null,
+      actual_end_date: null,
+      percent_complete: 0,
+      evm_technique: parent.evm_technique || null,
+      bac_cost: null,
+      planned_value: null,
+      earned_value: null,
+      actual_cost: null,
+      early_start: null,
+      early_finish: null,
+      late_start: null,
+      late_finish: null,
+      total_float: null,
+      free_float: null,
+      is_critical: null,
+      requires_vv_signoff: false,
+      is_sandbox_branch: false,
+      sandbox_scenario_id: null,
+      origin_node_id: null,
+      currency_code: parent.currency_code || 'GBP',
+      contract_exchange_rate_id: null,
+      export_control_regime: null,
+      eccn_or_usml_category: null,
+      authorized_nationalities: null,
+      taa_mla_reference: null,
+      calendar_id: parent.calendar_id || null,
+    };
+
+    const newExpanded = { ...expandedNodes, [parent.id]: true };
+    const newRow = nodeToRow(newDraftNode, newExpanded, childrenLoaded);
+
+    // Insert right after parent (or after parent's last visible descendant)
+    let insertIndex = parentIndex + 1;
+    while (insertIndex < rows.length && rows[insertIndex].indentLevel > parent.indentLevel) {
+      insertIndex++;
+    }
+
+    const newRows = [
+      ...rows.slice(0, insertIndex),
+      newRow,
+      ...rows.slice(insertIndex),
+    ];
+
+    set({
+      rows: newRows,
+      expandedNodes: newExpanded,
+      selectedNodeId: tempId,
+      selectedNodeIds: new Set([tempId]),
+    });
+
+    // Persist to backend
+    try {
+      const payload = {
+        tree_type: 'WBS',
+        code: newCode,
+        name: 'New Child Task',
+        path: newPath,
+        parent_id: parent.id,
+        security_classification: parent.security_classification || 'OFFICIAL',
+        caveats: parent.caveats || [],
+        odac_permissions: parent.odac_permissions || {},
+        custom_attributes: { scheduling_mode: 'AUTO' },
+        is_active: true,
+        delivery_mode: parent.delivery_mode || 'WATERFALL',
+        planned_start_date: startDate,
+        planned_end_date: endDate,
+        percent_complete: 0,
+      };
+      const resp = await api.post<any>('/wbs/nodes', payload);
+      const created = (resp?.data !== undefined ? resp.data : resp) as WBSNode;
+      if (created && created.id) {
+        const persistedRow = nodeToRow(created, newExpanded, childrenLoaded);
+        set({
+          rows: get().rows.map((r) => (r.id === tempId ? { ...persistedRow, selected: true } : r)),
+          selectedNodeId: created.id,
+          selectedNodeIds: new Set([created.id]),
+        });
+        return created;
+      } else {
+        // Backend returned but no valid node — remove draft
+        set({ rows: get().rows.filter((r) => r.id !== tempId) });
+      }
+    } catch (err) {
+      console.error('Failed to create child task on backend:', err);
+      // Remove the draft row on failure
+      set({ rows: get().rows.filter((r) => r.id !== tempId) });
+    }
+
+    return null;
+  },
+
+  insertSiblingTask: async (referenceNodeId: string, relationshipMode?: 'FOLLOW_ON' | 'PARALLEL') => {
+    const { rows, expandedNodes, childrenLoaded } = get();
+    const effectiveMode = relationshipMode || get().siblingRelationshipMode;
+    const refIndex = rows.findIndex((r) => r.id === referenceNodeId);
+    if (refIndex === -1) return null;
+
+    const ref = rows[refIndex];
+
+    // Find all existing direct siblings of this reference node (same parent_id)
+    const directSiblings = rows.filter((r) => r.parent_id === ref.parent_id);
+    const siblingNumbers = directSiblings.map((s) => {
+      const parts = s.path.split('.');
+      const last = parseInt(parts[parts.length - 1], 10);
+      return isNaN(last) ? 0 : last;
+    });
+    const nextNum = siblingNumbers.length > 0 ? Math.max(...siblingNumbers) + 1 : 1;
+    const pathParts = ref.path.split('.');
+    pathParts[pathParts.length - 1] = String(nextNum);
+    const newPath = pathParts.join('.');
+    const codePrefix = ref.code.includes('-') ? ref.code.split('-')[0] + '-' : '';
+    const newCode = `${codePrefix}${newPath}`;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    let startDate = ref.planned_start_date || todayStr;
+    let endDate = ref.planned_end_date || startDate;
+
+    if (effectiveMode === 'FOLLOW_ON') {
+      const refFinish = ref.planned_end_date || ref.planned_start_date || todayStr;
+      startDate = addWorkdays(refFinish, 1);
+      endDate = startDate;
+    }
+
+    const tempId = `draft-${Date.now()}`;
+    const newDraftNode: WBSNode = {
+      id: tempId,
+      parent_id: ref.parent_id,
+      version_id: 1,
+      tree_type: 'WBS',
+      code: newCode,
+      name: 'New Sibling Task',
+      path: newPath,
+      security_classification: ref.security_classification || 'OFFICIAL',
+      caveats: ref.caveats || [],
+      odac_permissions: ref.odac_permissions || {},
+      custom_attributes: { ...(ref.custom_attributes || {}), scheduling_mode: 'AUTO' },
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      delivery_mode: ref.delivery_mode || 'WATERFALL',
+      scheduling_mode: 'AUTO',
+      planned_start_date: startDate,
+      planned_end_date: endDate,
+      duration_days: null,
+      lag_days: null,
+      actual_start_date: null,
+      actual_end_date: null,
+      percent_complete: 0,
+      evm_technique: ref.evm_technique || null,
+      bac_cost: null,
+      planned_value: null,
+      earned_value: null,
+      actual_cost: null,
+      early_start: null,
+      early_finish: null,
+      late_start: null,
+      late_finish: null,
+      total_float: null,
+      free_float: null,
+      is_critical: null,
+      requires_vv_signoff: false,
+      is_sandbox_branch: false,
+      sandbox_scenario_id: null,
+      origin_node_id: null,
+      currency_code: ref.currency_code || 'GBP',
+      contract_exchange_rate_id: null,
+      export_control_regime: null,
+      eccn_or_usml_category: null,
+      authorized_nationalities: null,
+      taa_mla_reference: null,
+      calendar_id: ref.calendar_id || null,
+    };
+
+    const newRow = nodeToRow(newDraftNode, expandedNodes, childrenLoaded);
+
+    // Insert right after ref's subtree
+    let insertIndex = refIndex + 1;
+    while (insertIndex < rows.length && rows[insertIndex].indentLevel > ref.indentLevel) {
+      insertIndex++;
+    }
+
+    const newRows = [
+      ...rows.slice(0, insertIndex),
+      newRow,
+      ...rows.slice(insertIndex),
+    ];
+
+    set({
+      rows: newRows,
+      selectedNodeId: tempId,
+      selectedNodeIds: new Set([tempId]),
+    });
+
+    // Persist to backend
+    try {
+      const payload = {
+        tree_type: 'WBS',
+        code: newCode,
+        name: 'New Sibling Task',
+        path: newPath,
+        parent_id: ref.parent_id,
+        security_classification: ref.security_classification || 'OFFICIAL',
+        caveats: ref.caveats || [],
+        odac_permissions: ref.odac_permissions || {},
+        custom_attributes: { ...(ref.custom_attributes || {}), scheduling_mode: 'AUTO' },
+        is_active: true,
+        delivery_mode: ref.delivery_mode || 'WATERFALL',
+        planned_start_date: startDate,
+        planned_end_date: endDate,
+        percent_complete: 0,
+      };
+      const resp = await api.post<any>('/wbs/nodes', payload);
+      const created = (resp?.data !== undefined ? resp.data : resp) as WBSNode;
+      if (created && created.id) {
+        const persistedRow = nodeToRow(created, expandedNodes, childrenLoaded);
+        set({
+          rows: get().rows.map((r) => (r.id === tempId ? { ...persistedRow, selected: true } : r)),
+          selectedNodeId: created.id,
+          selectedNodeIds: new Set([created.id]),
+        });
+
+        // If FOLLOW_ON, create FS dependency from ref to new task
+        if (relationshipMode === 'FOLLOW_ON') {
+          await get().addDependency(ref.id, created.id, 'FS', 0);
+        }
+
+        return created;
+      } else {
+        // Backend returned but no valid node — remove draft
+        set({ rows: get().rows.filter((r) => r.id !== tempId) });
+      }
+    } catch (err) {
+      console.error('Failed to create sibling task on backend:', err);
+      // Remove the draft row on failure
+      set({ rows: get().rows.filter((r) => r.id !== tempId) });
+    }
+
+    return null;
+  },
+
+  indentTask: async (nodeId: string) => {
+    const rows = get().rows;
+    const index = rows.findIndex((r) => r.id === nodeId);
+    if (index <= 0) return;
+
+    const current = rows[index];
+    // Find preceding sibling with same indentLevel
+    let prevSiblingIndex = -1;
+    for (let i = index - 1; i >= 0; i--) {
+      if (rows[i].indentLevel === current.indentLevel) {
+        prevSiblingIndex = i;
+        break;
+      }
+      if (rows[i].indentLevel < current.indentLevel) {
+        break;
+      }
+    }
+
+    if (prevSiblingIndex === -1) return;
+    const newParent = rows[prevSiblingIndex];
+
+    // Compute new path
+    const directChildren = rows.filter((r) => r.parent_id === newParent.id);
+    const nextNum = directChildren.length + 1;
+    const newPath = `${newParent.path}.${nextNum}`;
+    const codePrefix = current.code.includes('-') ? current.code.split('-')[0] + '-' : '';
+    const newCode = `${codePrefix}${newPath}`;
+
+    await get().updateNode(nodeId, {
+      parent_id: newParent.id,
+      path: newPath,
+      code: newCode,
+    });
+  },
+
+  outdentTask: async (nodeId: string) => {
+    const rows = get().rows;
+    const index = rows.findIndex((r) => r.id === nodeId);
+    if (index === -1) return;
+
+    const current = rows[index];
+    if (!current.parent_id) return;
+
+    const parent = rows.find((r) => r.id === current.parent_id);
+    if (!parent) return;
+
+    const grandParentId = parent.parent_id;
+    const siblings = rows.filter((r) => r.parent_id === grandParentId);
+    const nextNum = siblings.length + 1;
+    const newPath = grandParentId && parent.path.includes('.')
+      ? `${parent.path.substring(0, parent.path.lastIndexOf('.'))}.${nextNum}`
+      : String(nextNum);
+    const codePrefix = current.code.includes('-') ? current.code.split('-')[0] + '-' : '';
+    const newCode = `${codePrefix}${newPath}`;
+
+    await get().updateNode(nodeId, {
+      parent_id: grandParentId,
+      path: newPath,
+      code: newCode,
+    });
+  },
+
+  deleteNode: async (nodeId: string) => {
+    try {
+      await api.delete(`/wbs/nodes/${nodeId}`);
+      const remainingRows = get().rows.filter((r) => r.id !== nodeId && r.parent_id !== nodeId);
+      set({
+        rows: remainingRows,
+        selectedNodeId: null,
+        selectedNodeIds: new Set(),
+      });
+    } catch (err) {
+      console.error('Failed to delete node:', err);
     }
   },
 }));

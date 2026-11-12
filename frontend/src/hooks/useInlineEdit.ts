@@ -135,6 +135,7 @@ export function useInlineEdit({ rows, rowHeight, onCommitField }: UseInlineEditP
     'successors',
     'planned_start_date',
     'planned_end_date',
+    'duration',
     'percent_complete',
   ];
 

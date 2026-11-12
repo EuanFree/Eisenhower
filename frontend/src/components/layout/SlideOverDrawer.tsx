@@ -25,8 +25,22 @@ import {
   GitCompareArrows,
   Upload,
   Settings,
+  Kanban,
+  Maximize2,
+  Minimize2,
+  Info,
+  Calendar,
+  Clock,
+  User,
+  Shield,
+  Link,
+  Percent,
+  Flag,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useScheduleStore } from '../../stores/useScheduleStore';
+import MiniKanban from '../drilldown/MiniKanban';
+import type { WBSRow } from '../../types/wbs';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,12 +49,20 @@ import { clsx } from 'clsx';
 /**
  * Drawer content panel types.
  */
-export type DrawerPanel = 'CDRL' | 'BCR' | 'ARTIFACTS' | 'SETTINGS' | 'CUSTOM';
+export type DrawerPanel = 'CDRL' | 'BCR' | 'ARTIFACTS' | 'SETTINGS' | 'KANBAN' | 'TASK_INFO' | 'CUSTOM';
 
 /**
  * Panel configuration: icon, label.
  */
 const PANEL_CONFIG: Record<Exclude<DrawerPanel, 'CUSTOM'>, { icon: React.ReactNode; label: string }> = {
+  KANBAN: {
+    icon: <Kanban size={14} />,
+    label: 'Sprint Kanban',
+  },
+  TASK_INFO: {
+    icon: <Info size={14} />,
+    label: 'Task Info',
+  },
   CDRL: {
     icon: <FileText size={14} />,
     label: 'CDRL Reviews',
@@ -243,6 +265,96 @@ const ArtifactsPanel: React.FC = () => {
 };
 
 // ---------------------------------------------------------------------------
+// Task Info Panel
+// ---------------------------------------------------------------------------
+
+const TaskInfoPanel: React.FC<{ row: WBSRow | null }> = ({ row }) => {
+  if (!row) {
+    return (
+      <div className="p-4">
+        <div className="text-sm text-text-ops-muted">
+          No task selected. Right-click a task and choose "Task Information..." to view details.
+        </div>
+      </div>
+    );
+  }
+
+  const formatDate = (d: string | null | undefined) => {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const duration = (() => {
+    const start = row.early_start || row.planned_start_date;
+    const end = row.early_finish || row.planned_end_date;
+    if (!start || !end) return null;
+    const diff = new Date(end).getTime() - new Date(start).getTime();
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return `${days} days`;
+  })();
+
+  const InfoRow: React.FC<{ icon: React.ReactNode; label: string; value: string | React.ReactNode }> = ({ icon, label, value }) => (
+    <div className="flex items-start gap-3 py-2">
+      <div className="text-text-ops-muted mt-0.5 flex-shrink-0">{icon}</div>
+      <div className="min-w-0">
+        <div className="text-xs text-text-ops-muted">{label}</div>
+        <div className="text-sm text-text-ops-primary break-words">{value}</div>
+      </div>
+    </div>
+  );
+
+  const assignedTo = (row.custom_attributes as Record<string, unknown>)?.assigned_to || null;
+  const predecessors = (row.custom_attributes as Record<string, unknown>)?.predecessors || null;
+  const description = (row.custom_attributes as Record<string, unknown>)?.description || null;
+
+  return (
+    <div className="p-4 space-y-1 overflow-y-auto">
+      {/* Title */}
+      <div className="pb-3 mb-3 border-b border-border-ops-subtle">
+        <div className="text-xs text-text-ops-muted mb-1">Task Name</div>
+        <div className="text-base font-semibold text-text-ops-primary">{row.name || 'Untitled'}</div>
+        <div className="text-xs font-mono text-text-ops-muted mt-1">{row.code}</div>
+        <div className="text-xs font-mono text-text-ops-muted">Path: {row.path}</div>
+      </div>
+
+      {/* Key details */}
+      <InfoRow icon={<Calendar size={14} />} label="Planned Start" value={formatDate(row.planned_start_date)} />
+      <InfoRow icon={<Calendar size={14} />} label="Planned End" value={formatDate(row.planned_end_date)} />
+      <InfoRow icon={<Calendar size={14} />} label="Actual Start" value={formatDate(row.actual_start_date)} />
+      <InfoRow icon={<Calendar size={14} />} label="Actual End" value={formatDate(row.actual_end_date)} />
+      <InfoRow icon={<Clock size={14} />} label="Duration" value={duration || '—'} />
+      <InfoRow icon={<Percent size={14} />} label="Progress" value={`${row.percent_complete ?? 0}%`} />
+      <InfoRow icon={<User size={14} />} label="Assigned To" value={assignedTo ? String(assignedTo) : 'Unassigned'} />
+      <InfoRow icon={<Flag size={14} />} label="Delivery Mode" value={row.delivery_mode || '—'} />
+      <InfoRow icon={<Shield size={14} />} label="Classification" value={row.security_classification || '—'} />
+      <InfoRow icon={<Link size={14} />} label="Predecessors" value={predecessors ? String(predecessors) : 'None'} />
+      <InfoRow icon={<Info size={14} />} label="Scheduling Mode" value={row.scheduling_mode || 'AUTO'} />
+      <InfoRow icon={<Info size={14} />} label="EVM Technique" value={row.evm_technique || '—'} />
+
+      {/* Description */}
+      {description && (
+        <div className="pt-3 mt-3 border-t border-border-ops-subtle">
+          <div className="text-xs text-text-ops-muted mb-1">Description</div>
+          <div className="text-sm text-text-ops-primary whitespace-pre-wrap">{String(description)}</div>
+        </div>
+      )}
+
+      {/* Progress bar */}
+      <div className="pt-3 mt-3 border-t border-border-ops-subtle">
+        <div className="text-xs text-text-ops-muted mb-2">Completion Progress</div>
+        <div className="w-full h-2 bg-bg-ops-overlay rounded-full overflow-hidden">
+          <div
+            className="h-full bg-sky-500 rounded-full transition-all"
+            style={{ width: `${row.percent_complete ?? 0}%` }}
+          />
+        </div>
+        <div className="text-xs text-text-ops-muted mt-1">{row.percent_complete ?? 0}% complete</div>
+      </div>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
 // Settings Panel (placeholder)
 // ---------------------------------------------------------------------------
 
@@ -303,6 +415,7 @@ const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
 }) => {
   const [activePanel, setActivePanel] = useState<DrawerPanel>(initialPanel);
   const [drawerWidth, setDrawerWidth] = useState(propWidth);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -360,6 +473,11 @@ const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
     };
   }, [isResizing]);
 
+  const selectedRow = useScheduleStore((s) => {
+    const id = s.selectedNodeId;
+    return id ? s.rows.find((r) => r.id === id) || null : null;
+  });
+
   // Backdrop click handler
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -376,12 +494,24 @@ const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
     }
 
     switch (activePanel) {
+      case 'KANBAN':
+        return (
+          <div className="flex-1 overflow-hidden p-2 h-full">
+            <MiniKanban
+              selectedRow={selectedRow}
+              isFullScreen={isFullScreen}
+              onToggleFullScreen={() => setIsFullScreen((prev) => !prev)}
+            />
+          </div>
+        );
       case 'CDRL':
         return <CDRLPanel />;
       case 'BCR':
         return <BCRPanel />;
       case 'ARTIFACTS':
         return <ArtifactsPanel />;
+      case 'TASK_INFO':
+        return <TaskInfoPanel row={selectedRow} />;
       case 'SETTINGS':
         return <SettingsPanel />;
       default:
@@ -409,9 +539,14 @@ const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
         className={clsx(
           'fixed top-0 right-0 h-full z-50 flex flex-col',
           'bg-bg-ops-surface border-l border-border-ops-subtle',
-          'shadow-2xl transition-transform duration-200 ease-out',
+          'shadow-2xl transition-all duration-200 ease-out',
+          isFullScreen && '!w-full !max-w-full border-l-0',
         )}
-        style={{ width: `${drawerWidth}px`, transform: open ? 'translateX(0)' : 'translateX(100%)' }}
+        style={{
+          width: isFullScreen ? '100vw' : `${drawerWidth}px`,
+          maxWidth: isFullScreen ? '100vw' : '100vw',
+          transform: open ? 'translateX(0)' : 'translateX(100%)',
+        }}
         role="dialog"
         aria-modal="true"
         aria-label={panelLabel}
@@ -422,6 +557,11 @@ const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
             {activePanel !== 'CUSTOM' && PANEL_CONFIG[activePanel as keyof typeof PANEL_CONFIG]?.icon}
             {activePanel === 'CUSTOM' && <Settings size={14} className="text-text-ops-muted" />}
             <span className="text-sm font-semibold text-text-ops-primary">{panelLabel}</span>
+            {isFullScreen && (
+              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono bg-sky-950 border border-sky-700 text-sky-300">
+                FULL SCREEN
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -440,6 +580,22 @@ const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
                 <option value="CUSTOM">{title || 'Custom'}</option>
               )}
             </select>
+
+            {/* Full screen toggle */}
+            <button
+              type="button"
+              onClick={() => setIsFullScreen((prev) => !prev)}
+              className={clsx(
+                'p-1.5 rounded-md transition-colors',
+                isFullScreen
+                  ? 'text-sky-400 bg-sky-950/60 hover:bg-sky-900/60'
+                  : 'text-text-ops-muted hover:text-text-ops-primary hover:bg-bg-ops-overlay',
+              )}
+              title={isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+              aria-label={isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+            >
+              {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            </button>
 
             {/* Close button */}
             <button
@@ -481,18 +637,20 @@ const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
 
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-2 border-t border-border-ops-subtle bg-bg-ops-overlay/50 text-xs text-text-ops-muted">
-          <span>Slide-over drawer — main view preserved</span>
-          <span className="font-mono">{drawerWidth}px</span>
+          <span>{isFullScreen ? 'Full-screen mode' : 'Slide-over drawer — main view preserved'}</span>
+          <span className="font-mono">{isFullScreen ? '100vw' : `${drawerWidth}px`}</span>
         </div>
 
         {/* Resize handle */}
-        <div
-          className="absolute left-0 top-0 w-1 h-full cursor-col-resize hover:bg-sky-500/30 transition-colors"
-          onMouseDown={handleResizeStart}
-          aria-label="Resize drawer"
-          role="separator"
-          tabIndex={0}
-        />
+        {!isFullScreen && (
+          <div
+            className="absolute left-0 top-0 w-1 h-full cursor-col-resize hover:bg-sky-500/30 transition-colors"
+            onMouseDown={handleResizeStart}
+            aria-label="Resize drawer"
+            role="separator"
+            tabIndex={0}
+          />
+        )}
       </div>
     </>
   );

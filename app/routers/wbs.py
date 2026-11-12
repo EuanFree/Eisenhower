@@ -27,8 +27,9 @@ from app.database import get_db
 from app.models.models import (
     User, UniversalBreakdownNode, PortfolioNode, TreeType, SecurityClassification,
     ForensicAuditLog, DependencyLink, DependencyType, ResourceAssignment, ResourceNode,
-    AssignmentStatus,
+    AssignmentStatus, NodeBlocker,
 )
+from app.services.cpm_engine import add_working_days as _add_workdays
 from app.schemas.schemas import (
     UBNCreate, UBNUpdate, PortfolioNodeCreate, PortfolioNodeUpdate,
     BatchRollbackRequest, BatchRollbackResponse, RevertOperationResult
@@ -54,6 +55,23 @@ router = APIRouter(prefix="/v1/wbs", tags=["WBS - Work Breakdown Structure"])
 def _get_user_clearance_info(user: User) -> tuple:
     """Extract clearance level and caveats from user."""
     return user.clearance_level, user.caveats
+
+
+def _compute_planned_end_date(start_date, duration_days, lag_days):
+    """Compute planned_end_date from start_date + duration + lag (all in workdays).
+    
+    If start_date is None or duration_days is None/0, returns None.
+    Lag defaults to 0 if None.
+    """
+    if not start_date or not duration_days or duration_days <= 0:
+        return None
+    lag = (lag_days or 0)
+    total_workdays = duration_days + lag
+    # add_working_days adds N workdays to the start date
+    # For a 1-day task: start + 0 = start (same day)
+    # For a 5-day task: start + 4 = end (5 working days inclusive)
+    end = _add_workdays(start_date, total_workdays - 1)
+    return end
 
 
 def _query_subtree(db: Session, root_id: UUID) -> List[UniversalBreakdownNode]:
@@ -84,7 +102,15 @@ def _query_subtree(db: Session, root_id: UUID) -> List[UniversalBreakdownNode]:
         sa_text(
             "SELECT ubn.*, pn.delivery_mode, pn.planned_start_date, "
             "pn.planned_end_date, pn.actual_start_date, pn.actual_end_date, "
-            "pn.percent_complete, pn.pv, pn.ev, pn.ac "
+            "pn.percent_complete, pn.pv, pn.ev, pn.ac, "
+            "pn.duration_days, pn.lag_days, pn.evm_technique, "
+            "pn.bac_cost, pn.planned_value, pn.earned_value, pn.actual_cost, "
+            "pn.requires_vv_signoff, pn.calendar_id, "
+            "pn.currency_code, pn.contract_exchange_rate_id, "
+            "pn.is_relative_t0_mode, pn.relative_start_day_offset, "
+            "pn.relative_finish_day_offset, pn.atp_anchor_date, "
+            "pn.cost_distribution_profile, "
+            "pn.baseline_effort_days, pn.agile_actual_effort_days "
             "FROM universal_breakdown_nodes ubn "
             "LEFT JOIN portfolio_nodes pn ON ubn.id = pn.id "
             "WHERE ubn.path <@ :root_path "
@@ -213,6 +239,78 @@ def _build_tree_structure(
         # Else: no visibility - exclude from results entirely
     
     return result
+
+
+@router.get("/projects", summary="List all root projects and programmes")
+def list_wbs_projects(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retrieve all top-level root WBS programmes/projects."""
+    user_clearance, user_caveats = _get_user_clearance_info(current_user)
+    root_nodes = (
+        db.query(UniversalBreakdownNode)
+        .filter(
+            UniversalBreakdownNode.tree_type == TreeType.WBS,
+            UniversalBreakdownNode.parent_id == None,
+            UniversalBreakdownNode.is_active == True,
+        )
+        .order_by(UniversalBreakdownNode.path.asc(), UniversalBreakdownNode.code.asc())
+        .all()
+    )
+    filtered = apply_abac_filtering(root_nodes, user_clearance, user_caveats)
+    
+    results = []
+    for n in filtered:
+        node_path = n.get("path") or ""
+        node_id_str = str(n.get("id"))
+        
+        # Count total active nodes in this tree
+        count = 1
+        active_blockers_count = 0
+        if node_path:
+            count = (
+                db.query(UniversalBreakdownNode)
+                .filter(
+                    UniversalBreakdownNode.path.op("<@")(sa_text(f"'{node_path}'")),
+                    UniversalBreakdownNode.is_active == True,
+                )
+                .count()
+            )
+            
+            # Count active blockers in this subtree
+            subtree_node_ids = [
+                row[0] for row in db.query(UniversalBreakdownNode.id).filter(
+                    UniversalBreakdownNode.path.op("<@")(sa_text(f"'{node_path}'")),
+                    UniversalBreakdownNode.is_active == True,
+                ).all()
+            ]
+            if subtree_node_ids:
+                active_blockers_count = (
+                    db.query(NodeBlocker)
+                    .filter(
+                        NodeBlocker.portfolio_node_id.in_(subtree_node_ids),
+                        NodeBlocker.resolved_at == None,
+                    )
+                    .count()
+                )
+            
+        results.append({
+            "id": node_id_str,
+            "code": n.get("code") or "",
+            "name": n.get("name") or "",
+            "path": node_path,
+            "security_classification": n.get("security_classification") or "OFFICIAL",
+            "caveats": n.get("caveats") or [],
+            "delivery_mode": n.get("delivery_mode") or "HYBRID",
+            "planned_start_date": n.get("planned_start_date"),
+            "planned_end_date": n.get("planned_end_date"),
+            "percent_complete": n.get("percent_complete") or 0.0,
+            "node_count": count,
+            "active_blockers_count": active_blockers_count,
+            "custom_attributes": n.get("custom_attributes") or {},
+        })
+    return results
 
 
 @router.get("/tree/{node_id}")
@@ -698,6 +796,13 @@ def create_wbs_node(
         
         parent_path = f"{parent.path}.{node_data.path.split('.')[-1]}" if node_data.path else None
     
+    # Auto-compute end date from start + duration + lag if not explicitly provided
+    planned_end = node_data.planned_end_date
+    if not planned_end and node_data.planned_start_date and node_data.duration_days:
+        planned_end = _compute_planned_end_date(
+            node_data.planned_start_date, node_data.duration_days, getattr(node_data, 'lag_days', None)
+        )
+
     # Create the new node
     new_node = PortfolioNode(
         tree_type=node_data.tree_type,
@@ -712,7 +817,9 @@ def create_wbs_node(
         is_active=node_data.is_active,
         delivery_mode=node_data.delivery_mode,
         planned_start_date=node_data.planned_start_date,
-        planned_end_date=node_data.planned_end_date,
+        planned_end_date=planned_end,
+        duration_days=node_data.duration_days,
+        lag_days=getattr(node_data, 'lag_days', 0),
         percent_complete=node_data.percent_complete,
         pv=node_data.pv,
         ev=node_data.ev,
@@ -720,9 +827,13 @@ def create_wbs_node(
     )
     
     db.add(new_node)
+
+    # Hybrid delivery: sync effort tracking on create too
+    _sync_hybrid_effort(db, new_node, {})
+
     db.commit()
     db.refresh(new_node)
-    
+
     return node_to_dict(new_node)
 
 
@@ -794,11 +905,63 @@ def update_wbs_node(
     update_data = node_update.model_dump(exclude_unset=True, exclude={"version_id"})
     for key, value in update_data.items():
         setattr(node, key, value)
-    
+
+    # Auto-compute end date from start + duration + lag if duration or start changed
+    if node.planned_start_date and node.duration_days:
+        computed_end = _compute_planned_end_date(
+            node.planned_start_date, node.duration_days, getattr(node, 'lag_days', None)
+        )
+        # Only auto-set if end date wasn't explicitly provided in this update
+        if 'planned_end_date' not in update_data and computed_end:
+            node.planned_end_date = computed_end
+
+    # Hybrid delivery: capture baseline effort when a Waterfall node first gets Agile children
+    _sync_hybrid_effort(db, node, update_data)
+
     db.commit()
     db.refresh(node)
-    
+
     return node_to_dict(node)
+
+
+def _sync_hybrid_effort(db: Session, node: PortfolioNode, update_data: dict) -> None:
+    """Synchronize baseline_effort_days and agile_actual_effort_days for hybrid delivery tracking.
+
+    When a Waterfall (or Hybrid) node has Agile children, preserve the original
+    estimate in ``baseline_effort_days`` and compute the sum of Agile child
+    durations in ``agile_actual_effort_days``.
+    """
+    from app.models.models import DeliveryMode
+
+    # Only relevant for non-Agile parents
+    if node.delivery_mode == DeliveryMode.AGILE:
+        node.agile_actual_effort_days = None
+        return
+
+    # Find direct children that are Agile
+    child_path_prefix = node.path + "."
+    children = db.query(PortfolioNode).join(
+        UniversalBreakdownNode, PortfolioNode.id == UniversalBreakdownNode.id
+    ).filter(
+        UniversalBreakdownNode.path.startswith(child_path_prefix),
+        UniversalBreakdownNode.depth == node.depth + 1,
+        PortfolioNode.delivery_mode == DeliveryMode.AGILE,
+    ).all()
+
+    if children:
+        # Capture baseline from duration_days if not already set
+        if node.baseline_effort_days is None and node.duration_days is not None:
+            node.baseline_effort_days = node.duration_days
+
+        # Sum Agile child durations
+        total_agile = sum(
+            child.duration_days or 0.0
+            for child in children
+        )
+        node.agile_actual_effort_days = total_agile if total_agile > 0 else None
+    else:
+        # No Agile children — clear the computed field but keep baseline
+        node.agile_actual_effort_days = None
 
 
 @router.delete("/nodes/{node_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -1159,6 +1322,23 @@ async def create_work_item(
     now = datetime.now(timezone.utc)
     new_node_id = uuid4()
 
+    # Compute planned dates from start + duration + lag
+    planned_start = getattr(data, 'planned_start', None)
+    planned_duration = getattr(data, 'duration_days', 0) or 0
+    planned_lag = getattr(data, 'lag_days', 0) or 0
+    planned_finish = getattr(data, 'planned_finish', None)
+
+    # Auto-compute finish date if not provided
+    if not planned_finish and planned_start and planned_duration and planned_duration > 0:
+        # Convert string dates to datetime for _compute_planned_end_date
+        if isinstance(planned_start, str):
+            start_dt = datetime.fromisoformat(planned_start)
+        else:
+            start_dt = planned_start
+        planned_finish_dt = _compute_planned_end_date(start_dt, int(planned_duration), int(planned_lag))
+        if planned_finish_dt:
+            planned_finish = planned_finish_dt.strftime('%Y-%m-%d') if isinstance(planned_finish_dt, datetime) else str(planned_finish_dt)[:10]
+
     new_node = PortfolioNode(
         id=new_node_id,
         parent_id=data.parent_id,
@@ -1171,6 +1351,10 @@ async def create_work_item(
         custom_attributes=data.custom_attributes or {},
         is_active=True,
         delivery_mode=data.delivery_mode,
+        planned_start_date=planned_start,
+        planned_end_date=planned_finish,
+        duration_days=int(planned_duration) if planned_duration else None,
+        lag_days=int(planned_lag) if planned_lag else 0,
         percent_complete=0.0,
         dal_sil_level=data.dal_sil_level,
         engineering_baseline_tier=data.engineering_baseline_tier,

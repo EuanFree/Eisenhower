@@ -129,7 +129,7 @@ interface DashboardStore {
 
   setActiveWidget: (widgetId: string | null) => void;
 
-  addWidget: (widgetType: WidgetType) => void;
+  addWidget: (widgetType: WidgetType, position?: { x: number; y: number }) => void;
   updateWidget: (widgetId: string, payload: DashboardWidgetUpdatePayload) => Promise<void>;
   deleteWidget: (widgetId: string) => Promise<void>;
 
@@ -161,8 +161,9 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   loadDashboards: async () => {
     set({ isLoadingDashboards: true });
     try {
-      const response = await api.get<Dashboard[]>('/dashboards');
-      const items = Array.isArray(response.data) ? response.data : [];
+      const response = await api.get<{ items: Dashboard[]; total: number }>('/dashboards');
+      const data = response.data;
+      const items = data?.items || [];
       set({ dashboards: Array.isArray(items) ? items : [] });
     } catch {
       // Silently fail — user may not have dashboards yet
@@ -220,40 +221,49 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
     set({ activeWidgetId: widgetId });
   },
 
-  addWidget: (widgetType) => {
+  addWidget: (widgetType, position) => {
     const info = WIDGET_TYPE_INFO.find((w) => w.type === widgetType);
     if (!info) return;
 
     const current = get().currentDashboard;
     if (!current) return;
 
-    // Find a non-overlapping position
-    const existingWidgets = current.widgets || [];
-    let x = snapToGrid(20);
-    let y = snapToGrid(20);
+    let x: number;
+    let y: number;
 
-    // Simple placement: find first available slot
-    for (let attempt = 0; attempt < 50; attempt++) {
-      let overlaps = false;
-      for (const w of existingWidgets) {
-        const pos = w.position;
-        if (pos) {
-          if (
-            x < pos.x + pos.width &&
-            x + info.defaultWidth > pos.x &&
-            y < pos.y + pos.height &&
-            y + info.defaultHeight > pos.y
-          ) {
-            overlaps = true;
-            break;
+    if (position) {
+      // Use the provided drop position
+      x = snapToGrid(position.x);
+      y = snapToGrid(position.y);
+    } else {
+      // Find a non-overlapping position
+      const existingWidgets = current.widgets || [];
+      x = snapToGrid(20);
+      y = snapToGrid(20);
+
+      // Simple placement: find first available slot
+      for (let attempt = 0; attempt < 50; attempt++) {
+        let overlaps = false;
+        for (const w of existingWidgets) {
+          const pos = w.position;
+          if (pos) {
+            if (
+              x < pos.x + pos.width &&
+              x + info.defaultWidth > pos.x &&
+              y < pos.y + pos.height &&
+              y + info.defaultHeight > pos.y
+            ) {
+              overlaps = true;
+              break;
+            }
           }
         }
-      }
-      if (!overlaps) break;
-      x = snapToGrid(x + GRID_SIZE * 2);
-      if (x + info.defaultWidth > get().canvasWidth) {
-        x = snapToGrid(20);
-        y = snapToGrid(y + GRID_SIZE * 2);
+        if (!overlaps) break;
+        x = snapToGrid(x + GRID_SIZE * 2);
+        if (x + info.defaultWidth > get().canvasWidth) {
+          x = snapToGrid(20);
+          y = snapToGrid(y + GRID_SIZE * 2);
+        }
       }
     }
 

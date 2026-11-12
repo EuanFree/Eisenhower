@@ -39,12 +39,14 @@ export interface EndpointDataSourceConfig {
   jsonPath: string;
   method?: 'GET';
   headers?: Record<string, string>;
+  refreshInterval?: number;
 }
 
 /** Configuration for a SQL query-based data source */
 export interface SqlQueryDataSourceConfig {
   sql: string;
   params?: Record<string, unknown>;
+  refreshInterval?: number;
 }
 
 /** Union of data source configuration types */
@@ -99,7 +101,7 @@ export interface Dashboard {
   id: string;
   name: string;
   description?: string;
-  owner_user_id: string;
+  owner_user_id: number;
   project_id?: string;
   sharing_scope: SharingScope;
   classification: PresetClassification;

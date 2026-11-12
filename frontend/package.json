@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:regression": "vitest run --reporter=verbose --reporter=default"
   },
   "dependencies": {
     "@floating-ui/react": "^0.26.0",
@@ -31,6 +33,7 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "@vitest/coverage-v8": "^2.1.0",
     "autoprefixer": "^10.4.19",
     "jest": "^30.5.2",
     "jest-environment-jsdom": "^30.5.2",

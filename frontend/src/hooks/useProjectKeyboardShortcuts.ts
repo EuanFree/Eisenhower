@@ -74,8 +74,12 @@ export interface KeyboardShortcutCallbacks {
   onIndent?: () => void;
   /** Called when Alt+Shift+Left is pressed (outdent selected tasks) */
   onOutdent?: () => void;
+  /** Called when Insert is pressed (insert sibling task) */
+  onInsertSibling?: () => void;
   /** Called when Insert is pressed (insert task above) */
   onInsertTaskAbove?: () => void;
+  /** Called when Ctrl+Enter is pressed (insert child task) */
+  onInsertChild?: () => void;
   /** Called when Delete is pressed (delete selected nodes) */
   onDelete?: () => void;
   /** Called when Ctrl+F2 is pressed (link selected tasks) */
@@ -281,24 +285,41 @@ export function useProjectKeyboardShortcuts(
       // Hierarchy (MS Project Standard)
       // ------------------------------------------------------------------
 
-      // Alt+Shift+Right: Indent selected tasks
-      if (altKey && shiftKey && key === 'ArrowRight' && !ctrlKey) {
+      // Alt+Shift+Right or Tab (outside inputs): Indent selected tasks
+      if (
+        (altKey && shiftKey && key === 'ArrowRight' && !ctrlKey) ||
+        (key === 'Tab' && !shiftKey && !ctrlKey && !altKey && !isInputFocused())
+      ) {
         e.preventDefault();
         callbacksRef.current.onIndent?.();
         consumed = true;
       }
 
-      // Alt+Shift+Left: Outdent selected tasks
-      if (altKey && shiftKey && key === 'ArrowLeft' && !ctrlKey) {
+      // Alt+Shift+Left or Shift+Tab (outside inputs): Outdent selected tasks
+      if (
+        (altKey && shiftKey && key === 'ArrowLeft' && !ctrlKey) ||
+        (key === 'Tab' && shiftKey && !ctrlKey && !altKey && !isInputFocused())
+      ) {
         e.preventDefault();
         callbacksRef.current.onOutdent?.();
         consumed = true;
       }
 
-      // Insert: Insert task above selected node
+      // Insert: Insert sibling task
       if (key === 'Insert' && !ctrlKey && !shiftKey && !altKey) {
         e.preventDefault();
-        callbacksRef.current.onInsertTaskAbove?.();
+        if (callbacksRef.current.onInsertSibling) {
+          callbacksRef.current.onInsertSibling();
+        } else {
+          callbacksRef.current.onInsertTaskAbove?.();
+        }
+        consumed = true;
+      }
+
+      // Ctrl+Enter / Cmd+Enter: Insert child task indented below selected
+      if (key === 'Enter' && (ctrlKey || (e as any).metaKey) && !shiftKey && !altKey) {
+        e.preventDefault();
+        callbacksRef.current.onInsertChild?.();
         consumed = true;
       }
 

@@ -1,7 +1,49 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Component, ErrorInfo, ReactNode } from 'react';
 import AppShell from './components/layout/AppShell';
 import { useWorkspaceStore, type ViewType } from './stores/useWorkspaceStore';
 import { setAuthToken } from './services/api';
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null; errorInfo: ErrorInfo | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('AppShell error:', error, errorInfo);
+    this.setState({ errorInfo });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 32, color: '#f87171', backgroundColor: '#0f172a', minHeight: '100vh', fontFamily: 'monospace' }}>
+          <h1 style={{ fontSize: 24, marginBottom: 16 }}>Error in AppShell</h1>
+          <pre style={{ whiteSpace: 'pre-wrap', color: '#fca5a5', marginBottom: 16 }}>
+            {this.state.error?.toString()}
+          </pre>
+          <details open>
+            <summary style={{ cursor: 'pointer', marginBottom: 8, color: '#93c5fd' }}>Component Stack</summary>
+            <pre style={{ whiteSpace: 'pre-wrap', color: '#94a3b8' }}>
+              {this.state.errorInfo?.componentStack}
+            </pre>
+          </details>
+          <details open style={{ marginTop: 16 }}>
+            <summary style={{ cursor: 'pointer', marginBottom: 8, color: '#93c5fd' }}>Stack Trace</summary>
+            <pre style={{ whiteSpace: 'pre-wrap', color: '#64748b' }}>
+              {this.state.error?.stack}
+            </pre>
+          </details>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const DETACHED_VIEW_ALIAS: Record<string, ViewType> = {
   GANTT: 'WBS_GANTT',
@@ -45,17 +87,19 @@ const App: React.FC = () => {
   const urlProjectId = params.get('projectId') || undefined;
 
   return (
-    <AppShell
-      classification="SECRET"
-      caveats={['UK_EYES_ONLY']}
-      breadcrumbs={[
-        { label: 'Home', href: '/' },
-        { label: 'Dashboard', href: '/dashboard' },
-      ]}
-      activeProject="Next-Gen Avionics Radar Suite"
-      userName="J. Smith"
-      projectId={urlProjectId}
-    />
+    <ErrorBoundary>
+      <AppShell
+        classification="SECRET"
+        caveats={['UK_EYES_ONLY']}
+        breadcrumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
+        ]}
+        activeProject="Next-Gen Avionics Radar Suite"
+        userName="J. Smith"
+        projectId={urlProjectId}
+      />
+    </ErrorBoundary>
   );
 };
 

@@ -39,6 +39,7 @@ import {
   Activity,
   FileText,
   Shield,
+  ShieldAlert,
   MapPin,
   Lock,
   GitMerge,
@@ -78,6 +79,7 @@ import { detachViewToWindow, isViewDetached } from '../../../utils/detachWindow'
 const VIEW_ICON_MAP: Record<ViewType, React.ElementType> = {
   WBS_GANTT: LayoutGrid,
   DAILY_COCKPIT: Home,
+  BLOCKED_ACTIVITIES: ShieldAlert,
   SRA_RISK: BarChart3,
   FACILITY_CHAMBER: Thermometer,
   SUPPLIER_PORTAL: Users,
@@ -141,6 +143,7 @@ const VIEW_ICON_MAP: Record<ViewType, React.ElementType> = {
     SANDTABLE: Shield,
     CAM_EVM_CLOSEOUT_WIZARD: Shield,
     AGENT_REVIEW_WORKBENCH: Bot,
+    SETTINGS: Settings,
 };
 
 // ---------------------------------------------------------------------------

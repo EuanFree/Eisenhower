@@ -33,6 +33,7 @@ import { useSessionStateStore } from './useSessionStateStore';
 export type ViewType =
   | 'WBS_GANTT'
   | 'DAILY_COCKPIT'
+  | 'BLOCKED_ACTIVITIES'
   | 'SRA_RISK'
   | 'FACILITY_CHAMBER'
   | 'SUPPLIER_PORTAL'
@@ -100,7 +101,9 @@ export type ViewType =
   | 'SANDTABLE'
   | 'CAM_EVM_CLOSEOUT_WIZARD'
   // AI Agent Governance
-  | 'AGENT_REVIEW_WORKBENCH';
+  | 'AGENT_REVIEW_WORKBENCH'
+  // User preferences
+  | 'SETTINGS';
 
 /** How a new view should be opened */
 export type TargetMode = 'ACTIVE_PANE' | 'SPLIT_RIGHT' | 'SPLIT_BOTTOM' | 'NEW_WINDOW';
@@ -232,6 +235,7 @@ const VIEW_METADATA: Record<ViewType, ViewMetadata> = {
   // ---------------------------------------------------------------------------
   WBS_GANTT: { label: 'WBS / Gantt', defaultTitle: 'Schedule', icon: '📊', category: 'Core', lucideIcon: 'BarChart3' },
   DAILY_COCKPIT: { label: 'Daily Cockpit', defaultTitle: 'My Cockpit', icon: '🎯', category: 'Core', lucideIcon: 'Target' },
+  BLOCKED_ACTIVITIES: { label: 'Blocked Activities', defaultTitle: 'Blocked Activities', icon: '🛑', category: 'Core', lucideIcon: 'ShieldAlert' },
   SRA_RISK: { label: 'Schedule Risk', defaultTitle: 'Risk Analysis', icon: '📈', category: 'Core', lucideIcon: 'TrendingUp' },
   FACILITY_CHAMBER: { label: 'Facility Scheduling', defaultTitle: 'Facilities', icon: '🔬', category: 'Core', lucideIcon: 'FlaskConical' },
   SUPPLIER_PORTAL: { label: 'Supplier Portal', defaultTitle: 'Supplier', icon: '👥', category: 'Core', lucideIcon: 'Users' },
@@ -323,6 +327,11 @@ const VIEW_METADATA: Record<ViewType, ViewMetadata> = {
   CAM_EVM_CLOSEOUT_WIZARD: { label: 'CAM EVM Closeout Wizard', defaultTitle: 'EVM Closeout', icon: '📊', category: 'Commercial', lucideIcon: 'ClipboardCheck' },
   // AI Agent Governance
   AGENT_REVIEW_WORKBENCH: { label: 'Agent Proposal Review', defaultTitle: 'Agent Proposals', icon: '🤖', category: 'Security', lucideIcon: 'Bot' },
+
+  // ---------------------------------------------------------------------------
+  // User Preferences
+  // ---------------------------------------------------------------------------
+  SETTINGS: { label: 'Settings', defaultTitle: 'Settings', icon: '⚙️', category: 'Core', lucideIcon: 'Settings' },
 };
 
 // ---------------------------------------------------------------------------

@@ -815,6 +815,10 @@ def node_to_dict(node: UniversalBreakdownNode) -> Dict[str, Any]:
         node_dict["actual_start_date"] = _iso(node.actual_start_date)
     if hasattr(node, 'actual_end_date'):
         node_dict["actual_end_date"] = _iso(node.actual_end_date)
+    if hasattr(node, 'duration_days'):
+        node_dict["duration_days"] = node.duration_days
+    if hasattr(node, 'lag_days'):
+        node_dict["lag_days"] = node.lag_days
     if hasattr(node, 'percent_complete'):
         node_dict["percent_complete"] = node.percent_complete
     if hasattr(node, 'pv'):
@@ -823,6 +827,45 @@ def node_to_dict(node: UniversalBreakdownNode) -> Dict[str, Any]:
         node_dict["ev"] = node.ev
     if hasattr(node, 'ac'):
         node_dict["ac"] = node.ac
+    # Formal EVM fields
+    if hasattr(node, 'evm_technique'):
+        node_dict["evm_technique"] = _val(node.evm_technique)
+    if hasattr(node, 'bac_cost'):
+        node_dict["bac_cost"] = float(node.bac_cost) if node.bac_cost is not None else None
+    if hasattr(node, 'planned_value'):
+        node_dict["planned_value"] = float(node.planned_value) if node.planned_value is not None else None
+    if hasattr(node, 'earned_value'):
+        node_dict["earned_value"] = float(node.earned_value) if node.earned_value is not None else None
+    if hasattr(node, 'actual_cost'):
+        node_dict["actual_cost"] = float(node.actual_cost) if node.actual_cost is not None else None
+    # V&V gate
+    if hasattr(node, 'requires_vv_signoff'):
+        node_dict["requires_vv_signoff"] = node.requires_vv_signoff
+    # Calendar binding
+    if hasattr(node, 'calendar_id'):
+        node_dict["calendar_id"] = str(node.calendar_id) if node.calendar_id else None
+    # Currency & exchange rate
+    if hasattr(node, 'currency_code'):
+        node_dict["currency_code"] = node.currency_code
+    if hasattr(node, 'contract_exchange_rate_id'):
+        node_dict["contract_exchange_rate_id"] = str(node.contract_exchange_rate_id) if node.contract_exchange_rate_id else None
+    # T0 relative scheduling
+    if hasattr(node, 'is_relative_t0_mode'):
+        node_dict["is_relative_t0_mode"] = node.is_relative_t0_mode
+    if hasattr(node, 'relative_start_day_offset'):
+        node_dict["relative_start_day_offset"] = node.relative_start_day_offset
+    if hasattr(node, 'relative_finish_day_offset'):
+        node_dict["relative_finish_day_offset"] = node.relative_finish_day_offset
+    if hasattr(node, 'atp_anchor_date'):
+        node_dict["atp_anchor_date"] = _iso(node.atp_anchor_date)
+    if hasattr(node, 'cost_distribution_profile'):
+        node_dict["cost_distribution_profile"] = node.cost_distribution_profile
+    # Hybrid delivery effort tracking
+    if hasattr(node, 'baseline_effort_days'):
+        node_dict["baseline_effort_days"] = float(node.baseline_effort_days) if node.baseline_effort_days is not None else None
+    if hasattr(node, 'agile_actual_effort_days'):
+        node_dict["agile_actual_effort_days"] = float(node.agile_actual_effort_days) if node.agile_actual_effort_days is not None else None
+    # Resource node fields
     if hasattr(node, 'resource_type'):
         node_dict["resource_type"] = _val(node.resource_type)
     if hasattr(node, 'standard_hourly_rate'):
@@ -837,6 +880,27 @@ def node_to_dict(node: UniversalBreakdownNode) -> Dict[str, Any]:
         node_dict["is_scif_or_tempest"] = node.is_scif_or_tempest
     if hasattr(node, 'escort_required'):
         node_dict["escort_required"] = node.escort_required
+    # UBN-level fields not in base dict
+    if hasattr(node, 'export_control_regime'):
+        node_dict["export_control_regime"] = _val(node.export_control_regime)
+    if hasattr(node, 'eccn_or_usml_category'):
+        node_dict["eccn_or_usml_category"] = node.eccn_or_usml_category
+    if hasattr(node, 'authorized_nationalities'):
+        node_dict["authorized_nationalities"] = node.authorized_nationalities
+    if hasattr(node, 'taa_mla_reference'):
+        node_dict["taa_mla_reference"] = node.taa_mla_reference
+    if hasattr(node, 'dal_sil_level'):
+        node_dict["dal_sil_level"] = _val(node.dal_sil_level)
+    if hasattr(node, 'engineering_baseline_tier'):
+        node_dict["engineering_baseline_tier"] = _val(node.engineering_baseline_tier)
+    if hasattr(node, 'linked_requirements_manifest'):
+        node_dict["linked_requirements_manifest"] = node.linked_requirements_manifest
+    if hasattr(node, 'is_sandbox_branch'):
+        node_dict["is_sandbox_branch"] = node.is_sandbox_branch
+    if hasattr(node, 'sandbox_scenario_id'):
+        node_dict["sandbox_scenario_id"] = str(node.sandbox_scenario_id) if node.sandbox_scenario_id else None
+    if hasattr(node, 'origin_node_id'):
+        node_dict["origin_node_id"] = str(node.origin_node_id) if node.origin_node_id else None
 
     # Extract CPM schedule metrics from custom_attributes.schedule if present
     custom_attrs = node.custom_attributes if isinstance(node.custom_attributes, dict) else {}

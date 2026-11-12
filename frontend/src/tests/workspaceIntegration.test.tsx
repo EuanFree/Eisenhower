@@ -27,22 +27,7 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import { create } from 'zustand';
-
-// Jest globals: describe, it, expect, beforeEach, afterEach, vi
-const { describe, it, expect, beforeEach, afterEach } = globalThis as any;
-const vi = {
-  fn: (impl?: () => any) => jest.fn(impl),
-  stubGlobal: (name: string, value: any) => {
-    (globalThis as any)[name] = value;
-  },
-  restoreAllMocks: () => jest.restoreAllMocks(),
-  spyOn: (obj: object, method: string) => {
-    if (!(method as string in obj)) {
-      (obj as any)[method] = jest.fn();
-    }
-    return jest.spyOn(obj, method as keyof typeof obj);
-  },
-};
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Mock Zustand stores for testing
@@ -624,8 +609,8 @@ describe('Multi-Window BroadcastChannel Sync', () => {
 
   beforeEach(() => {
     // Mock BroadcastChannel for jsdom
-    (vi as any).stubGlobal('BroadcastChannel', vi.fn(() => ({
-      name,
+    vi.stubGlobal('BroadcastChannel', vi.fn((channelName?: string) => ({
+      name: channelName || '',
       postMessage: vi.fn(),
       onmessage: null,
       close: vi.fn(),
