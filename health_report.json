@@ -1,0 +1,847 @@
+{
+  "timestamp": "2026-11-11T17:37:54.208083",
+  "duration_seconds": 5.406176567077637,
+  "summary": {
+    "total": 77,
+    "passed": 72,
+    "failed": 0,
+    "skipped": 5,
+    "errors": 0,
+    "pass_rate": 0.935064935064935
+  },
+  "results": [
+    {
+      "name": "Health Check",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 593ms",
+      "duration_ms": 593.2691097259521,
+      "details": {
+        "url": "/health",
+        "status": 200
+      }
+    },
+    {
+      "name": "WBS Tree Default",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 557ms",
+      "duration_ms": 557.159423828125,
+      "details": {
+        "url": "/api/v1/wbs/tree/default",
+        "status": 200
+      }
+    },
+    {
+      "name": "WBS Nodes",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 291ms",
+      "duration_ms": 290.71760177612305,
+      "details": {
+        "url": "/api/v1/wbs/nodes",
+        "status": 200
+      }
+    },
+    {
+      "name": "Auth Login",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 422 in 61ms (expected)",
+      "duration_ms": 60.71162223815918,
+      "details": {
+        "url": "/api/v1/auth/login",
+        "status": 422
+      }
+    },
+    {
+      "name": "Cockpit Overview",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 54ms",
+      "duration_ms": 54.34894561767578,
+      "details": {
+        "url": "/api/v1/cockpit/overview",
+        "status": 200
+      }
+    },
+    {
+      "name": "Blocked Activities",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 383ms",
+      "duration_ms": 383.3656311035156,
+      "details": {
+        "url": "/api/v1/cockpit/blocked-activities",
+        "status": 200
+      }
+    },
+    {
+      "name": "Admin Service Health",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 137ms",
+      "duration_ms": 136.56115531921387,
+      "details": {
+        "url": "/api/v1/admin/health",
+        "status": 200
+      }
+    },
+    {
+      "name": "Admin Health Summary",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 42ms",
+      "duration_ms": 41.748762130737305,
+      "details": {
+        "url": "/api/v1/admin/health/summary",
+        "status": 200
+      }
+    },
+    {
+      "name": "Resources List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 62ms",
+      "duration_ms": 61.773061752319336,
+      "details": {
+        "url": "/api/v1/resources",
+        "status": 200
+      }
+    },
+    {
+      "name": "Schedule Overview",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 22ms",
+      "duration_ms": 21.510839462280273,
+      "details": {
+        "url": "/api/v1/schedule/overview",
+        "status": 200
+      }
+    },
+    {
+      "name": "Dashboard Widgets",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 60ms",
+      "duration_ms": 59.509992599487305,
+      "details": {
+        "url": "/api/v1/dashboards",
+        "status": 200
+      }
+    },
+    {
+      "name": "EVM Data",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 622ms",
+      "duration_ms": 622.3740577697754,
+      "details": {
+        "url": "/api/v1/evm/data",
+        "status": 200
+      }
+    },
+    {
+      "name": "Commercial Overview",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 28ms",
+      "duration_ms": 27.82130241394043,
+      "details": {
+        "url": "/api/v1/commercial",
+        "status": 200
+      }
+    },
+    {
+      "name": "Engineering Items",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 27ms",
+      "duration_ms": 26.82042121887207,
+      "details": {
+        "url": "/api/v1/engineering",
+        "status": 200
+      }
+    },
+    {
+      "name": "Supplier Portal",
+      "category": "api",
+      "status": "SKIP",
+      "message": "Requires authentication (HTTP 403)",
+      "duration_ms": 17.46845245361328,
+      "details": {
+        "url": "/api/v1/supplier-portal/tasks",
+        "status": 403
+      }
+    },
+    {
+      "name": "Artifacts List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 57ms",
+      "duration_ms": 56.908369064331055,
+      "details": {
+        "url": "/api/v1/artifacts",
+        "status": 200
+      }
+    },
+    {
+      "name": "Audit Log",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 32ms",
+      "duration_ms": 31.540393829345703,
+      "details": {
+        "url": "/api/v1/audit/log",
+        "status": 200
+      }
+    },
+    {
+      "name": "Notifications",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 500 in 43ms (expected)",
+      "duration_ms": 43.46609115600586,
+      "details": {
+        "url": "/api/v1/notifications/webhooks",
+        "status": 500
+      }
+    },
+    {
+      "name": "Templates List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 81ms",
+      "duration_ms": 80.78908920288086,
+      "details": {
+        "url": "/api/v1/templates",
+        "status": 200
+      }
+    },
+    {
+      "name": "Programmes List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 467ms",
+      "duration_ms": 466.8567180633545,
+      "details": {
+        "url": "/api/v1/wbs/projects",
+        "status": 200
+      }
+    },
+    {
+      "name": "Facilities List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 16ms (expected)",
+      "duration_ms": 15.740156173706055,
+      "details": {
+        "url": "/api/v1/facilities",
+        "status": 404
+      }
+    },
+    {
+      "name": "Calendars List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 36ms",
+      "duration_ms": 35.724639892578125,
+      "details": {
+        "url": "/api/v1/calendars",
+        "status": 200
+      }
+    },
+    {
+      "name": "Currency Rates",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 64ms",
+      "duration_ms": 63.80271911621094,
+      "details": {
+        "url": "/api/v1/currency/rates",
+        "status": 200
+      }
+    },
+    {
+      "name": "Reserves List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 15ms (expected)",
+      "duration_ms": 14.571905136108398,
+      "details": {
+        "url": "/api/v1/reserves",
+        "status": 404
+      }
+    },
+    {
+      "name": "Procurement Items",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 81ms",
+      "duration_ms": 80.62577247619629,
+      "details": {
+        "url": "/api/v1/procurement/items",
+        "status": 200
+      }
+    },
+    {
+      "name": "Costing Data",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 27ms",
+      "duration_ms": 26.894569396972656,
+      "details": {
+        "url": "/api/v1/costing/rates",
+        "status": 200
+      }
+    },
+    {
+      "name": "Delegation List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 27ms",
+      "duration_ms": 27.027130126953125,
+      "details": {
+        "url": "/api/v1/delegation/active",
+        "status": 200
+      }
+    },
+    {
+      "name": "Line Management",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 13ms (expected)",
+      "duration_ms": 13.045310974121094,
+      "details": {
+        "url": "/api/line-management",
+        "status": 404
+      }
+    },
+    {
+      "name": "Merkle Sync Status",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 13ms (expected)",
+      "duration_ms": 13.010263442993164,
+      "details": {
+        "url": "/api/v1/merkle-sync",
+        "status": 404
+      }
+    },
+    {
+      "name": "AirGap Status",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 28ms (expected)",
+      "duration_ms": 28.430461883544922,
+      "details": {
+        "url": "/api/v1/airgap",
+        "status": 404
+      }
+    },
+    {
+      "name": "DB Health",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 345ms",
+      "duration_ms": 344.6524143218994,
+      "details": {
+        "url": "/api/v1/admin/db-health",
+        "status": 200
+      }
+    },
+    {
+      "name": "Backup Status",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 22ms",
+      "duration_ms": 21.576881408691406,
+      "details": {
+        "url": "/api/v1/admin/backups/status",
+        "status": 200
+      }
+    },
+    {
+      "name": "Users List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 147ms",
+      "duration_ms": 147.19009399414062,
+      "details": {
+        "url": "/api/v1/users",
+        "status": 200
+      }
+    },
+    {
+      "name": "Display Settings",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 75ms",
+      "duration_ms": 75.39248466491699,
+      "details": {
+        "url": "/api/v1/users/me/display-settings",
+        "status": 200
+      }
+    },
+    {
+      "name": "Presets List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 14ms (expected)",
+      "duration_ms": 13.61989974975586,
+      "details": {
+        "url": "/api/v1/presets",
+        "status": 404
+      }
+    },
+    {
+      "name": "Baselines List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 13ms (expected)",
+      "duration_ms": 12.891054153442383,
+      "details": {
+        "url": "/api/v1/baselines",
+        "status": 404
+      }
+    },
+    {
+      "name": "Milestones List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 13ms (expected)",
+      "duration_ms": 12.978792190551758,
+      "details": {
+        "url": "/api/v1/milestones",
+        "status": 404
+      }
+    },
+    {
+      "name": "Comments List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 15ms (expected)",
+      "duration_ms": 14.98103141784668,
+      "details": {
+        "url": "/api/v1/comments",
+        "status": 404
+      }
+    },
+    {
+      "name": "Leases List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 12.33363151550293,
+      "details": {
+        "url": "/api/v1/leases",
+        "status": 404
+      }
+    },
+    {
+      "name": "Sandboxes List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 14ms (expected)",
+      "duration_ms": 13.523340225219727,
+      "details": {
+        "url": "/api/sandboxes",
+        "status": 404
+      }
+    },
+    {
+      "name": "Subcontractors List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 16ms (expected)",
+      "duration_ms": 16.04175567626953,
+      "details": {
+        "url": "/api/v1/subcontractors",
+        "status": 404
+      }
+    },
+    {
+      "name": "Requisitions List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 34ms",
+      "duration_ms": 33.89596939086914,
+      "details": {
+        "url": "/api/v1/requisitions/inbox",
+        "status": 200
+      }
+    },
+    {
+      "name": "CDRL List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 41ms",
+      "duration_ms": 40.92216491699219,
+      "details": {
+        "url": "/api/v1/cdrl",
+        "status": 200
+      }
+    },
+    {
+      "name": "Clashes List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 12.460470199584961,
+      "details": {
+        "url": "/api/v1/clashes",
+        "status": 404
+      }
+    },
+    {
+      "name": "Spatial Data",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 12.008905410766602,
+      "details": {
+        "url": "/api/v1/spatial",
+        "status": 404
+      }
+    },
+    {
+      "name": "Agents List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 11.983633041381836,
+      "details": {
+        "url": "/api/v1/agents",
+        "status": 404
+      }
+    },
+    {
+      "name": "Copilot Status",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 14ms (expected)",
+      "duration_ms": 14.484643936157227,
+      "details": {
+        "url": "/api/v1/copilot",
+        "status": 404
+      }
+    },
+    {
+      "name": "Export Jobs",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 12.15052604675293,
+      "details": {
+        "url": "/api/v1/export",
+        "status": 404
+      }
+    },
+    {
+      "name": "Preview Status",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 12.064933776855469,
+      "details": {
+        "url": "/api/v1/previews",
+        "status": 404
+      }
+    },
+    {
+      "name": "Portfolios List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 11.7950439453125,
+      "details": {
+        "url": "/api/v1/portfolios",
+        "status": 404
+      }
+    },
+    {
+      "name": "Projects List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 200 in 73ms",
+      "duration_ms": 72.71647453308105,
+      "details": {
+        "url": "/api/v1/wbs/projects",
+        "status": 200
+      }
+    },
+    {
+      "name": "Tasks List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 13ms (expected)",
+      "duration_ms": 13.163089752197266,
+      "details": {
+        "url": "/api/v1/tasks",
+        "status": 404
+      }
+    },
+    {
+      "name": "Views List",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 12.011528015136719,
+      "details": {
+        "url": "/api/v1/views",
+        "status": 404
+      }
+    },
+    {
+      "name": "IPMR Reports",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 12.499094009399414,
+      "details": {
+        "url": "/api/v1/reports/evm",
+        "status": 404
+      }
+    },
+    {
+      "name": "Briefing Data",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 13ms (expected)",
+      "duration_ms": 12.850284576416016,
+      "details": {
+        "url": "/api/v1/reports/briefing",
+        "status": 404
+      }
+    },
+    {
+      "name": "Schedule Quarantine",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 13ms (expected)",
+      "duration_ms": 12.641191482543945,
+      "details": {
+        "url": "/api/v1/schedule_quarantine",
+        "status": 404
+      }
+    },
+    {
+      "name": "Oracle Timesheets",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 11.852741241455078,
+      "details": {
+        "url": "/api/v1/timesheets/oracle",
+        "status": 404
+      }
+    },
+    {
+      "name": "MCP Status",
+      "category": "api",
+      "status": "PASS",
+      "message": "HTTP 404 in 12ms (expected)",
+      "duration_ms": 11.56926155090332,
+      "details": {
+        "url": "/api/v1/mcp",
+        "status": 404
+      }
+    },
+    {
+      "name": "ViewResolver Coverage",
+      "category": "views",
+      "status": "PASS",
+      "message": "All 65 ViewTypes have resolver cases",
+      "duration_ms": 10.155677795410156,
+      "details": {
+        "total_views": 65,
+        "resolved": 66
+      }
+    },
+    {
+      "name": "View File Exports",
+      "category": "views",
+      "status": "PASS",
+      "message": "All 54 view files have valid exports",
+      "duration_ms": 57.570695877075195,
+      "details": {
+        "total_views": 54
+      }
+    },
+    {
+      "name": "View Metadata Completeness",
+      "category": "views",
+      "status": "SKIP",
+      "message": "Could not parse VIEW_METADATA",
+      "duration_ms": 11.779308319091797,
+      "details": {}
+    },
+    {
+      "name": "TypeScript Compilation",
+      "category": "views",
+      "status": "SKIP",
+      "message": "npx not found \u2014 skip TypeScript check",
+      "duration_ms": 23.417234420776367,
+      "details": {}
+    },
+    {
+      "name": "Vite Build",
+      "category": "views",
+      "status": "SKIP",
+      "message": "npx not found \u2014 skip Vite build check",
+      "duration_ms": 5.7811737060546875,
+      "details": {}
+    },
+    {
+      "name": "Ribbon Actions",
+      "category": "controls",
+      "status": "PASS",
+      "message": "249 ribbon action references found",
+      "duration_ms": 4.407167434692383,
+      "details": {
+        "action_count": 249
+      }
+    },
+    {
+      "name": "Action Registry",
+      "category": "controls",
+      "status": "SKIP",
+      "message": "builtInActions.ts not found",
+      "duration_ms": 0.6492137908935547,
+      "details": {}
+    },
+    {
+      "name": "Workspace Store Actions",
+      "category": "controls",
+      "status": "PASS",
+      "message": "All 5 required workspace actions present",
+      "duration_ms": 0.9529590606689453,
+      "details": {
+        "actions": [
+          "openView",
+          "closeTab",
+          "setActiveTab",
+          "splitOrientation",
+          "persistLayout"
+        ]
+      }
+    },
+    {
+      "name": "Schedule Store Actions",
+      "category": "controls",
+      "status": "PASS",
+      "message": "All 5 required schedule actions present",
+      "duration_ms": 1.3959407806396484,
+      "details": {
+        "actions": [
+          "loadTree",
+          "updateNode",
+          "deleteNode",
+          "insertChildTask",
+          "insertSiblingTask"
+        ]
+      }
+    },
+    {
+      "name": "Kanban Components",
+      "category": "controls",
+      "status": "PASS",
+      "message": "All Kanban features present",
+      "duration_ms": 2.1016597747802734,
+      "details": {
+        "features": [
+          "handleMoveCard",
+          "KanbanColumn",
+          "KanbanCard",
+          "Backlog",
+          "In Progress",
+          "Blocked",
+          "Completed"
+        ]
+      }
+    },
+    {
+      "name": "WBS Table Components",
+      "category": "controls",
+      "status": "PASS",
+      "message": "All WBS Table features present",
+      "duration_ms": 1.6589164733886719,
+      "details": {
+        "features": [
+          "useScheduleStore",
+          "columns"
+        ]
+      }
+    },
+    {
+      "name": "Store Persistence",
+      "category": "controls",
+      "status": "PASS",
+      "message": "5/10 stores have persistence",
+      "duration_ms": 11.81793212890625,
+      "details": {
+        "total_stores": 10,
+        "persistent": 5
+      }
+    },
+    {
+      "name": "Component File Integrity",
+      "category": "controls",
+      "status": "PASS",
+      "message": "All 122 component files have valid structure",
+      "duration_ms": 132.88092613220215,
+      "details": {
+        "total_components": 122
+      }
+    },
+    {
+      "name": "Sprint Kanban Features",
+      "category": "controls",
+      "status": "PASS",
+      "message": "All Sprint Kanban features present (priority, duration, resources, card detail)",
+      "duration_ms": 0.9915828704833984,
+      "details": {}
+    },
+    {
+      "name": "Dashboard Components",
+      "category": "controls",
+      "status": "PASS",
+      "message": "All dashboard components present (canvas, widgets, palette, editor, toolbar, store)",
+      "duration_ms": 2.243518829345703,
+      "details": {}
+    },
+    {
+      "name": "Inline Task Creation",
+      "category": "controls",
+      "status": "PASS",
+      "message": "Inline task creation features present (keyboard shortcuts, store actions, draft rows)",
+      "duration_ms": 2.7544498443603516,
+      "details": {}
+    },
+    {
+      "name": "Scheduling Mode Support",
+      "category": "controls",
+      "status": "PASS",
+      "message": "Scheduling mode support present (AUTO/MANUAL, CPM engine)",
+      "duration_ms": 12.334823608398438,
+      "details": {}
+    },
+    {
+      "name": "Blocked Activities Dashboard",
+      "category": "controls",
+      "status": "PASS",
+      "message": "Blocked activities dashboard present (view, endpoint, resolver)",
+      "duration_ms": 3.5331249237060547,
+      "details": {}
+    },
+    {
+      "name": "Project Selector",
+      "category": "controls",
+      "status": "PASS",
+      "message": "Project selector present (AppShell project state, backend endpoint)",
+      "duration_ms": 1.9958019256591797,
+      "details": {}
+    }
+  ]
+}

@@ -42799,3 +42799,27 @@ TypeError: object ChunkedIteratorResult can't be used in 'await' expression
 [2026-11-12 09:07:16 +0000] [122] [INFO] Started server process [122]
 [2026-11-12 09:07:16 +0000] [122] [INFO] Waiting for application startup.
 [2026-11-12 09:07:16 +0000] [122] [INFO] Application startup complete.
+[2026-11-12 12:43:53 +0000] [1] [INFO] Starting gunicorn 26.2.0
+[2026-11-12 12:43:53 +0000] [1] [INFO] Listening at: http://0.0.0.0:8000 (1)
+[2026-11-12 12:43:53 +0000] [1] [INFO] Using worker: uvicorn.workers.UvicornWorker
+[2026-11-12 12:43:53 +0000] [8] [INFO] Booting worker with pid: 8
+[2026-11-12 12:43:53 +0000] [9] [INFO] Booting worker with pid: 9
+[2026-11-12 12:43:54 +0000] [15] [INFO] Booting worker with pid: 15
+[2026-11-12 12:43:54 +0000] [16] [INFO] Booting worker with pid: 16
+[2026-11-12 12:43:54 +0000] [1] [INFO] Control socket listening at /home/appuser/.gunicorn/gunicorn.ctl
+[2026-11-12 12:44:36 +0000] [8] [INFO] Started server process [8]
+[2026-11-12 12:44:36 +0000] [9] [INFO] Started server process [9]
+[2026-11-12 12:44:36 +0000] [15] [INFO] Started server process [15]
+[2026-11-12 12:44:36 +0000] [16] [INFO] Started server process [16]
+[2026-11-12 12:44:36 +0000] [8] [INFO] Waiting for application startup.
+[2026-11-12 12:44:36 +0000] [9] [INFO] Waiting for application startup.
+[2026-11-12 12:44:36 +0000] [15] [INFO] Waiting for application startup.
+[2026-11-12 12:44:36 +0000] [16] [INFO] Waiting for application startup.
+[2026-11-12 12:44:36 +0000] [16] [INFO] Application startup complete.
+[2026-11-12 12:44:36 +0000] [9] [INFO] Application startup complete.
+[2026-11-12 12:44:36 +0000] [8] [INFO] Application startup complete.
+[2026-11-12 12:44:36 +0000] [15] [INFO] Application startup complete.
+[2026-11-12 12:47:37 +0000] [1] [CRITICAL] WORKER TIMEOUT (pid:8)
+[2026-11-12 12:47:41 +0000] [1] [ERROR] Worker (pid:8) was sent SIGKILL! Perhaps out of memory?
+[2026-11-12 12:47:41 +0000] [122] [INFO] Booting worker with pid: 122
+[2026-11-12 12:47:41 +0000] [1] [INFO] Control socket listening at /home/appuser/.gunicorn/gunicorn.ctl
